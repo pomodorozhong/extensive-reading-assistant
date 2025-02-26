@@ -1,0 +1,283 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: Extensive Reading
+  use_icon_as_answer_icon: false
+kind: app
+version: 0.1.5
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        sourceType: start
+        targetType: code
+      id: 1739002611756-source-1739002636377-target
+      source: '1739002611756'
+      sourceHandle: source
+      target: '1739002636377'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: code
+        targetType: code
+      id: 1739002636377-source-1739004346573-target
+      source: '1739002636377'
+      sourceHandle: source
+      target: '1739004346573'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: code
+        targetType: llm
+      id: 1739004346573-source-1739002617701-target
+      source: '1739004346573'
+      sourceHandle: source
+      target: '1739002617701'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: end
+      id: 1739002617701-source-1739004498774-target
+      source: '1739002617701'
+      sourceHandle: source
+      target: '1739004498774'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: Start
+        type: start
+        variables:
+        - label: Theme
+          max_length: 48
+          options: []
+          required: true
+          type: text-input
+          variable: theme
+        - label: Genre
+          max_length: 48
+          options: []
+          required: false
+          type: text-input
+          variable: genre
+        - label: Vocabulary Size
+          max_length: 48
+          options: []
+          required: false
+          type: text-input
+          variable: vocabulary_size
+      height: 142
+      id: '1739002611756'
+      position:
+        x: 80
+        y: 282
+      positionAbsolute:
+        x: 80
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: llama3.1
+          provider: ollama
+        prompt_template:
+        - id: e46d3e3e-bc7a-4d58-a869-9a24c512c8d9
+          role: system
+          text: '# Task
+
+            Generate a story with a specific genre, and theme and use a certain vocabulary
+            level to write the story.
+
+            '
+        - id: 0f0d5a8d-dfa2-45bb-9272-f963eeede292
+          role: user
+          text: '# Theme
+
+            {{#1739002611756.theme#}}
+
+
+            # Genre
+
+            {{#1739002636377.genre#}}
+
+
+            # Vocabulary Level
+
+            {{#1739004346573.vocabulary_level#}}
+
+
+            # Notice
+
+            - Fill with as much dialogue as possible
+
+            - Must have a title
+
+            - No explanation
+
+            - End with "THE END"'
+        selected: true
+        title: LLM
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: '1739002617701'
+      position:
+        x: 984
+        y: 282
+      positionAbsolute:
+        x: 984
+        y: 282
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: "\ndef main() -> dict:\n    return {\n        \"genre\": \"Children's\
+          \ Literature\",\n    }\n"
+        code_language: python3
+        desc: ''
+        outputs:
+          genre:
+            children: null
+            type: string
+        selected: false
+        title: Set Genre
+        type: code
+        variables: []
+      height: 54
+      id: '1739002636377'
+      position:
+        x: 384
+        y: 282
+      positionAbsolute:
+        x: 384
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: "\ndef main() -> dict:\n    return {\n        \"vocabulary_level\":\
+          \ \"Preschool\",\n    }\n"
+        code_language: python3
+        desc: ''
+        outputs:
+          vocabulary_level:
+            children: null
+            type: string
+        selected: false
+        title: Set Vocabulary Level
+        type: code
+        variables: []
+      height: 54
+      id: '1739004346573'
+      position:
+        x: 684
+        y: 282
+      positionAbsolute:
+        x: 684
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1739002617701'
+          - text
+          variable: text
+        selected: false
+        title: End
+        type: end
+      height: 90
+      id: '1739004498774'
+      position:
+        x: 1288
+        y: 282
+      positionAbsolute:
+        x: 1288
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: -373.25937258565386
+      y: 292.37920933651856
+      zoom: 0.5615314699189035
