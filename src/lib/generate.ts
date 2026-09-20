@@ -52,7 +52,7 @@ async function callGemini(
     return {
       ok: false,
       message:
-        'The request failed in the browser. Check your network, then confirm the Gemini API key and model in Settings.',
+        'Could not reach Gemini. Story generation requires an internet connection; check your network and API settings.',
     }
   }
 

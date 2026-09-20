@@ -1,6 +1,7 @@
 import { HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { Button, DropdownMenu, Flex, IconButton, Text } from '@radix-ui/themes'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { PwaStatus } from './PwaStatus'
 
 const NAV = [
   { to: '/new', label: 'New Story' },
@@ -60,6 +61,7 @@ export function Layout() {
       <main className="app-main">
         <Outlet />
       </main>
+      <PwaStatus />
     </div>
   )
 }
