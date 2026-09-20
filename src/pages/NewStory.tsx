@@ -9,7 +9,7 @@ import {
   Text,
   TextField,
 } from '@radix-ui/themes'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { generateStory } from '../lib/generate'
 import { loadSettings, upsertStory } from '../lib/storage'
@@ -21,11 +21,24 @@ export function NewStory() {
   const [theme, setTheme] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
+  const [isOnline, setIsOnline] = useState(
+    () => typeof navigator === 'undefined' || navigator.onLine,
+  )
   const hasKey = Boolean(settings.apiKey.trim())
+
+  useEffect(() => {
+    const updateConnection = () => setIsOnline(navigator.onLine)
+    window.addEventListener('online', updateConnection)
+    window.addEventListener('offline', updateConnection)
+    return () => {
+      window.removeEventListener('online', updateConnection)
+      window.removeEventListener('offline', updateConnection)
+    }
+  }, [])
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!hasKey || generating) {
+    if (!hasKey || !isOnline || generating) {
       return
     }
 
@@ -79,6 +92,18 @@ export function NewStory() {
         </Callout.Root>
       )}
 
+      {!isOnline && (
+        <Callout.Root color="amber" mb="4" role="status">
+          <Callout.Icon>
+            <InfoCircledIcon />
+          </Callout.Icon>
+          <Callout.Text>
+            You’re offline. Saved stories remain available, but Gemini story generation requires an
+            internet connection.
+          </Callout.Text>
+        </Callout.Root>
+      )}
+
       {error && (
         <Callout.Root color="red" mb="4">
           <Callout.Icon>
@@ -102,7 +127,7 @@ export function NewStory() {
             />
           </label>
 
-          <Button type="submit" size="3" disabled={!hasKey} loading={generating}>
+          <Button type="submit" size="3" disabled={!hasKey || !isOnline} loading={generating}>
             Generate
           </Button>
         </Flex>

@@ -15,6 +15,16 @@ Then open the URL Vite prints (usually `http://localhost:5173`).
 
 Build a production bundle with `npm run build`. Preview it with `npm run preview`.
 
+## Install and read offline
+
+The published site can be installed as a web app from a supported mobile browser. On iPhone or iPad, open the site in Safari, tap **Share → Add to Home Screen**, keep **Open as Web App** enabled if prompted, then launch it from the new home-screen icon. On Android, use the browser menu’s **Install app** or **Add to Home screen** action.
+
+Open the app online once and wait for the **Offline reading is ready on this device** message. The app shell, bundled dictionary, and stories saved in that same browser context can then be read offline on this device. Story generation still needs an internet connection because it calls Gemini.
+
+Stories and settings stay in local storage for the browser context where they were created and do not sync between devices. On iOS, an installed Home Screen web app has separate storage from Safari, so stories saved in Safari are not copied into the installed app automatically. Use Safari to keep reading those stories, or save new stories from the installed app for offline use there.
+
+When an update is available, choose **Reload** in the update message to load the latest version.
+
 ## Settings
 
 In **Settings**:
