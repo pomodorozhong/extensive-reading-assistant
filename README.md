@@ -4,13 +4,13 @@ A small web app for extensive reading: set a CEFR level, generate a story at tha
 
 Stories, word marks, and settings are stored in this browser (`localStorage`). There is no account or server.
 
-Story View also shows an **approximate vocabulary difficulty** report against each story's recorded CEFR level. Validation runs locally with bundled A1–C2 vocabulary data, needs no API key, and works offline after the app is cached. Above-level words include occurrence counts and a percentage; unlisted words appear separately. Reports are advisory and do not block reading or saving.
+Enable **Settings → Debugging → Show approximate vocabulary difficulty** to display a report against each story's recorded CEFR level. This option is off by default. Validation runs locally with bundled A1–C2 vocabulary data, needs no API key, and works offline after the app is cached. Above-level words include occurrence counts and a percentage; unlisted words and detected names appear separately. Reports are advisory and do not block reading or saving.
 
 See [dataset attribution, calculation, limitations, and verification](data/cefr/README.md). The bundled dataset has its own terms, including CC BY-SA 4.0 for the derived vocabulary JSON.
 
 For a detailed implementation walkthrough, flowcharts, and links to related code, see [How CEFR vocabulary validation works](doc/cefr-vocabulary-validation.md).
 
-To try the report without generating a story, enable **Settings → Debugging → Show CEFR fixture articles in My Stories**. This option is off by default and adds six bundled articles labeled A1–C2. They are illustrative debugging samples, not certified CEFR texts. Their word marks and definitions are stored separately; switching the option off hides the fixtures and preserves your saved stories.
+To try the report without generating a story, also enable **Settings → Debugging → Show CEFR fixture articles in My Stories**. This option is off by default and adds six bundled articles labeled A1–C2. They are illustrative debugging samples, not certified CEFR texts. Their word marks and definitions are stored separately; switching the option off hides the fixtures and preserves your saved stories.
 
 ## Run locally
 
