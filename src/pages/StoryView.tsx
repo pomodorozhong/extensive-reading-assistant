@@ -140,8 +140,6 @@ export function StoryView() {
           </Text>
         </div>
 
-        <VocabularyReport body={story.body} level={story.level} />
-
         <Flex gap="3" wrap="wrap">
           <Text size="2">
             <span className="mark-swatch unknown">word</span> unknown
@@ -263,6 +261,7 @@ export function StoryView() {
             </Flex>
           </Card>
         )}
+        <VocabularyReport body={story.body} level={story.level} />
       </Flex>
     </Container>
   )
