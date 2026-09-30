@@ -10,7 +10,9 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "generate:pwa-assets": "pwa-assets-generator"
+    "generate:pwa-assets": "pwa-assets-generator",
+    "build:cefr": "node scripts/build-cefr.mjs",
+    "test:cefr": "node --test tests/cefr.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",

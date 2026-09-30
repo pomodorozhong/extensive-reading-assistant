@@ -2,6 +2,7 @@ import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
 import { useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { VocabularyReport } from '../components/VocabularyReport'
 import { lookupDefinition } from '../lib/dictionary'
 import { getStory, updateWordExplanation, updateWordMark } from '../lib/storage'
 import { nextMark, tokenize } from '../lib/tokenize'
@@ -138,6 +139,8 @@ export function StoryView() {
             under the line.
           </Text>
         </div>
+
+        <VocabularyReport body={story.body} level={story.level} />
 
         <Flex gap="3" wrap="wrap">
           <Text size="2">

@@ -4,6 +4,10 @@ A small web app for extensive reading: set a CEFR level, generate a story at tha
 
 Stories, word marks, and settings are stored in this browser (`localStorage`). There is no account or server.
 
+Story View also shows an **approximate vocabulary difficulty** report against each story's recorded CEFR level. Validation runs locally with bundled A1–C2 vocabulary data, needs no API key, and works offline after the app is cached. Above-level words include occurrence counts and a percentage; unlisted words appear separately. Reports are advisory and do not block reading or saving.
+
+See [dataset attribution, calculation, limitations, and verification](data/cefr/README.md). The bundled dataset has its own terms, including CC BY-SA 4.0 for the derived vocabulary JSON.
+
 ## Run locally
 
 ```bash
