@@ -61,6 +61,33 @@ test('duplicate senses use lowest level, without stripping already listed forms'
   assert.equal(analyzeVocabulary('abandoned', 'B1').aboveCount, 1)
 })
 
+test('additional irregular verbs use their existing lemma levels', () => {
+  const report = analyzeVocabulary('Met met became understood', 'A1')
+  assert.equal(report.total, 4)
+  assert.equal(report.unlistedCount, 0)
+  assert.equal(report.aboveCount, 1)
+  assert.deepEqual(report.aboveLevel[0], {
+    word: 'understood', count: 1, level: 'A2', lemmas: ['understand'],
+  })
+  assert.equal(analyzeVocabulary('met became understood', 'A2').aboveCount, 0)
+})
+
+test('reviewed spelling alias preserves level and original displayed spelling', () => {
+  const report = analyzeVocabulary('Tranquillity tranquillity tranquility', 'B2')
+  assert.equal(report.total, 3)
+  assert.equal(report.unlistedCount, 0)
+  assert.equal(report.aboveCount, 3)
+  assert.deepEqual(report.aboveLevel[0], {
+    word: 'tranquillity', count: 2, level: 'C1', lemmas: ['tranquility'],
+  })
+  assert.equal(analyzeVocabulary('tranquillity', 'C1').aboveCount, 0)
+})
+
+test('derivations and missing base words do not inherit a related word level', () => {
+  const words = 'unused incidental measurable promotional solely allocation belies collective communal countable discerning eclipse inadequacy ownership transience uncomplicated unequal'
+  assert.equal(analyzeVocabulary(words, 'C2').unlistedCount, 17)
+})
+
 test('saved fixture uses recorded level even when Settings has a different level', () => {
   const fixture = JSON.parse(readFileSync(new URL('./fixtures/cefr-stories.json', import.meta.url), 'utf8'))
   assert.equal(fixture.settings.cefrLevel, 'C2')

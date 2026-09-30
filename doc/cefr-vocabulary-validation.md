@@ -28,7 +28,7 @@ flowchart TD
     Seen -->|Yes| Increment["Increment existing entry count"]
     Increment --> Next
     Seen -->|No| Expand["Expand supported contractions into components"]
-    Expand --> Lookup["Resolve each component: exact entry, irregular form, suffix candidates"]
+    Expand --> Lookup["Resolve each component: exact entry, spelling alias, irregular form, suffix candidates"]
     Lookup --> Complete{"All components resolved?"}
     Complete -->|No| Unlisted["Store unlisted entry with count 1"]
     Complete -->|Yes| Level["Use highest component level; store count 1 and matched lemmas"]
@@ -94,8 +94,9 @@ A contraction contributes **one original occurrence**. Its assigned level is the
 ### Each component is resolved in this order
 
 1. **Exact entry:** use the normalized component if it exists in the dataset.
-2. **Explicit irregular form:** try the hand-maintained map, such as `went → go`, `children → child`, or `better → good`, and require the mapped lemma to exist.
-3. **Suffix candidates:** construct possible lemmas and use the first candidate present in the dataset.
+2. **Reviewed spelling alias:** try the explicit alias table. Currently `tranquillity → tranquility` reuses the existing C1 entry while preserving the original spelling in the report. Exact entries still win if the dataset later lists the original spelling.
+3. **Explicit irregular form:** try the hand-maintained map, such as `went → go`, `children → child`, `better → good`, `met → meet` (A1), `became → become` (A1), or `understood → understand` (A2), and require the mapped lemma to exist.
+4. **Suffix candidates:** construct possible lemmas and use the first candidate present in the dataset.
 
 The suffix rules cover possessive `'s`, plural `ies`, past `ied`, `ves`, selected plural `es` endings, ordinary plural `s`, and the suffixes `ing`, `ed`, `er`, and `est`. Candidates include removing the suffix, restoring final `e`, removing a doubled final letter, and changing final `i` back to `y` where applicable.
 
@@ -104,6 +105,30 @@ Examples include `studies → study`, `walked → walk`, `stopped → stop`, `kn
 **Exact lookup takes precedence over stemming.** The dataset lists `running` and `walking` at A2, so those exact entries remain A2 even though the verbs `run` and `walk` are A1. Similarly, `abandoned` is a listed B2 entry and is not reduced to the B1 verb `abandon`.
 
 These rules are approximate. They can miss unsupported irregular forms, select an unrelated lemma, or treat a misspelling as an inflection. The output should be read as a vocabulary estimate with documented coverage gaps.
+
+### Fixture coverage audit
+
+The built-in articles originally had 23 unlisted occurrences across 21 distinct words. Three added irregular mappings resolve five occurrences; the spelling alias resolves one. The articles themselves are unchanged.
+
+| Article | Before | After | Remaining unlisted words |
+| --- | ---: | ---: | --- |
+| A1 | 0 | 0 | None |
+| A2 | 1 | 0 | None |
+| B1 | 3 | 0 | None |
+| B2 | 2 | 1 | `unused` |
+| C1 | 4 | 4 | `incidental`, `measurable`, `promotional`, `solely` |
+| C2 | 13 | 12 | `allocation`, `belies`, `collective`, `communal`, `countable`, `discerning`, `eclipse`, `inadequacy`, `ownership`, `transience`, `uncomplicated`, `unequal` |
+
+The remaining 17 words are coverage gaps, not spelling variants resolved by the current profiles. Some have listed relatives, but a derivation does not establish the original word's level. For example, `collect` is A1, while this does not establish a level for `collective`. `belies` could be reduced to `belie`, but `belie` itself is absent, so fixing its morphology alone would not classify it.
+
+To add supplemental entries, require an explicit level for the actual word, the source URL and version, and terms permitting bundled redistribution. Keep such entries separate from the original CSVs and merge them through the dataset build script with a documented conflict policy. Do not assign a level solely from an article's target, an LLM guess, or a related word.
+
+Source review on October 1, 2026 identified two useful references but did not establish a redistributable supplement for these words:
+
+- [British Council Word Family Framework](https://www.teachingenglish.org.uk/professional-development/teachers/planning-lessons-and-courses/articles/word-family-framework) explicitly distinguishes levels within word families and includes an X category for entries outside the scale or lacking sufficient evidence. Its public description offers lookup/download, but that description alone does not establish permission to redistribute its data in this app. An X entry must remain unclassified.
+- [English Vocabulary Profile](https://englishprofile.org/?menu=english-vocabulary-profile) is a reference for word and sense levels; its [contact page](https://englishprofile.org/?menu=contact-us) states that the profile data is not licensed for commercial purposes. Public lookup availability is not a verified open-data redistribution license.
+
+No supplemental levels have been bundled. Regression tests preserve the exact remaining unlisted lists so future coverage changes are reviewable.
 
 ## 5. Cumulative levels and entry classification
 

@@ -26,6 +26,8 @@ Case is ignored. Names are treated like ordinary words: a listed name receives t
 
 Exact entries take precedence over inflection rules. Common irregular forms and regular plural, past, progressive, comparative, superlative, and possessive patterns are checked against the dataset. Contractions expand into components; the hardest component determines the original occurrence's level. If any component is unlisted, the whole contraction is unlisted. Pronoun `'s` is approximated as `be` (is/has are A1); `'d` as `would` (would/had are A1). These rules are approximate: they can miss rare inflections or match an unrelated lemma. They are not a contextual lemmatizer.
 
+After exact lookup, a reviewed spelling-alias table maps `tranquillity` to the existing C1 `tranquility` entry. Additional irregular verb mappings include `met → meet` (A1), `became → become` (A1), and `understood → understand` (A2). These reuse bundled levels rather than inventing new levels or inheriting levels across derived words. The [fixture coverage audit](../../doc/cefr-vocabulary-validation.md#fixture-coverage-audit) records the remaining gaps and criteria for supplemental data.
+
 Multiword expressions, part of speech, word sense, grammar, idioms, and sentence complexity are not assessed. Choosing the lowest level can understate a difficult sense. The profiles are finite learner vocabulary lists and contain omissions and inaccuracies; they do not certify CEFR proficiency. Unlisted words and names can dilute the percentage, so always read it alongside the unlisted count. Readers can save and read flagged stories normally.
 
 ## Reproducible verification

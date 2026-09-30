@@ -10,8 +10,13 @@ const irregular: Record<string, string> = {
   made: 'make', said: 'say', bought: 'buy', brought: 'bring', thought: 'think', knew: 'know',
   known: 'know', wrote: 'write', written: 'write', gave: 'give', given: 'give', got: 'get',
   gotten: 'get', came: 'come', felt: 'feel', found: 'find', left: 'leave', told: 'tell',
+  met: 'meet', became: 'become', understood: 'understand',
   children: 'child', men: 'man', women: 'woman', mice: 'mouse', feet: 'foot', teeth: 'tooth',
   people: 'person', better: 'good', best: 'good', worse: 'bad', worst: 'bad',
+}
+// Reviewed spelling equivalences reuse a listed lemma's level, not a derived word's level.
+const spellingAliases: Readonly<Record<string, string>> = {
+  tranquillity: 'tranquility',
 }
 const contractions: Record<string, string[]> = {
   "can't": ['can', 'not'], "cannot": ['can', 'not'], "won't": ['will', 'not'],
@@ -20,7 +25,10 @@ const contractions: Record<string, string[]> = {
 
 function lemma(word: string): string | undefined {
   if (Object.hasOwn(lexicon, word)) return word
-  if (irregular[word] && Object.hasOwn(lexicon, irregular[word])) return irregular[word]
+  if (Object.hasOwn(spellingAliases, word) && Object.hasOwn(lexicon, spellingAliases[word])) {
+    return spellingAliases[word]
+  }
+  if (Object.hasOwn(irregular, word) && Object.hasOwn(lexicon, irregular[word])) return irregular[word]
   const candidates: string[] = []
   if (word.endsWith("'s")) candidates.push(word.slice(0, -2))
   if (word.endsWith('ies')) candidates.push(`${word.slice(0, -3)}y`)

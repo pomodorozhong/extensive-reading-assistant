@@ -83,3 +83,15 @@ test('malformed fixture state falls back to readable unmarked fixtures', () => {
   localStorage.setItem('era.v1.debug-fixtures', '{broken')
   assert.deepEqual(getStory('debug-cefr-a1').wordMarks, {})
 })
+
+test('article coverage resolves reviewed inflections and spelling aliases', () => {
+  const expected = [[], [], [], ['unused'],
+    ['incidental', 'measurable', 'promotional', 'solely'],
+    ['allocation', 'belies', 'collective', 'communal', 'countable', 'discerning',
+      'eclipse', 'inadequacy', 'ownership', 'transience', 'uncomplicated', 'unequal'],
+  ]
+  for (const [index, story] of DEBUG_FIXTURES.entries()) {
+    const report = analyzeVocabulary(story.body, story.level)
+    assert.deepEqual(report.unlisted.map((entry) => entry.word), expected[index], story.level)
+  }
+})
