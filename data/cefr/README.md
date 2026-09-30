@@ -1,5 +1,7 @@
 # Bundled CEFR vocabulary
 
+For the complete algorithm walkthrough, Mermaid flowcharts, and related implementation files, see [How CEFR vocabulary validation works](../../doc/cefr-vocabulary-validation.md).
+
 Source: [Open Language Profiles — English datasets from CEFR-J](https://github.com/openlanguageprofiles/olp-en-cefrj), pinned at commit `d4e45b75b38f27b30dfc5c44d8c571aec7e7092f`.
 
 - **CEFR-J Wordlist Version 1.5** (A1–B2), compiled by Yukio Tono, Tokyo University of Foreign Studies. Upstream retrieved it from <http://www.cefr-j.org/download.html> on January 20, 2020. Copyright belongs to Tono Laboratory at TUFS. Upstream permits research and commercial use without charge with proper citation; retain this attribution and the source terms when redistributing.

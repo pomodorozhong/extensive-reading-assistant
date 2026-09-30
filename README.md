@@ -8,6 +8,8 @@ Story View also shows an **approximate vocabulary difficulty** report against ea
 
 See [dataset attribution, calculation, limitations, and verification](data/cefr/README.md). The bundled dataset has its own terms, including CC BY-SA 4.0 for the derived vocabulary JSON.
 
+For a detailed implementation walkthrough, flowcharts, and links to related code, see [How CEFR vocabulary validation works](doc/cefr-vocabulary-validation.md).
+
 ## Run locally
 
 ```bash
