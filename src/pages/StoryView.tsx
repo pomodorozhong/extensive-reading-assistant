@@ -2,8 +2,10 @@ import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
 import { useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { VocabularyReport } from '../components/VocabularyReport'
+import { isDebugFixture } from '../lib/debug-fixtures'
 import { lookupDefinition } from '../lib/dictionary'
-import { getStory, updateWordExplanation, updateWordMark } from '../lib/storage'
+import { getStory, loadSettings, updateWordExplanation, updateWordMark } from '../lib/storage'
 import { nextMark, tokenize } from '../lib/tokenize'
 import type { Story, WordMark } from '../types'
 
@@ -20,6 +22,7 @@ function markLabel(mark: WordMark | undefined): string {
 export function StoryView() {
   const { id } = useParams()
   const [story, setStory] = useState<Story | undefined>(() => (id ? getStory(id) : undefined))
+  const [showVocabularyReport] = useState(() => loadSettings().showVocabularyReport)
   const [loadingKeys, setLoadingKeys] = useState<Record<string, boolean>>({})
   const [lookupErrors, setLookupErrors] = useState<Record<string, string>>({})
   const storyRef = useRef(story)
@@ -132,6 +135,7 @@ export function StoryView() {
           <Flex align="center" gap="2" wrap="wrap" mb="2">
             <Heading size="7">{story.title}</Heading>
             <Badge color="blue">{story.level}</Badge>
+            {isDebugFixture(story.id) && <Badge color="amber">Debug fixture</Badge>}
           </Flex>
           <Text as="p" size="2" color="gray">
             Tap a word to mark it: unmarked → unknown → known. Unknown words show a definition
@@ -260,6 +264,7 @@ export function StoryView() {
             </Flex>
           </Card>
         )}
+        {showVocabularyReport && <VocabularyReport body={story.body} level={story.level} />}
       </Flex>
     </Container>
   )

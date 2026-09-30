@@ -1,0 +1,12 @@
+{
+  "settings": { "cefrLevel": "C2", "apiKey": "", "apiBaseUrl": "https://generativelanguage.googleapis.com/v1beta", "model": "gemini-3.1-flash-lite" },
+  "stories": [{
+    "id": "cefr-fixture",
+    "title": "Vocabulary report fixture",
+    "body": "Cats walked. She’s happy. Concur, CONCUR! Ephemeral Zorblax.",
+    "level": "A1",
+    "createdAt": "2026-10-01T00:00:00.000Z",
+    "wordMarks": {},
+    "explanations": {}
+  }]
+}
