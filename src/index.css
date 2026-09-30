@@ -73,6 +73,10 @@ body {
   border-radius: 4px;
   padding: 0.05em 0.12em;
   margin: 0 -0.02em;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
 }
 
 .story-word:hover {
@@ -84,25 +88,6 @@ body {
   box-shadow: inset 0 -2px 0 var(--amber-9);
 }
 
-.story-word.known {
-  background: var(--green-a4);
-}
-
-.mark-swatch {
-  border-radius: 4px;
-  padding: 0.05em 0.12em;
-  margin-right: 0.25rem;
-}
-
-.mark-swatch.unknown {
-  background: var(--amber-a4);
-  box-shadow: inset 0 -2px 0 var(--amber-9);
-}
-
-.mark-swatch.known {
-  background: var(--green-a4);
-}
-
 .story-word:focus-visible {
   outline: 2px solid var(--accent-9);
   outline-offset: 1px;
@@ -110,27 +95,48 @@ body {
 
 .inline-gloss {
   display: block;
-  width: 100%;
-  box-sizing: border-box;
-  margin: 0.2em 0 0.45em;
-  padding: 0.45em 0.75em;
-  font-size: 0.9rem;
+  margin: 0.1em 0;
+  font-size: 0.8rem;
   line-height: 1.45;
   white-space: normal;
-  background: var(--amber-a3);
-  border-left: 3px solid var(--amber-9);
-  border-radius: 6px;
+  color: var(--gray-11);
+  overflow-wrap: anywhere;
 }
 
 .inline-gloss-word {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 0.15em;
+  font-weight: 500;
 }
 
-.inline-gloss-body {
-  display: block;
+.inline-gloss-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.75em;
+  margin-left: 0.75em;
+}
+
+.gloss-action {
+  border: 0;
+  padding: 0.15em 0;
+  background: transparent;
+  color: var(--gray-11);
+  font: inherit;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.gloss-action:hover {
   color: var(--gray-12);
+}
+
+.gloss-action:focus-visible {
+  outline: 2px solid var(--accent-9);
+  outline-offset: 2px;
+}
+
+.glossary-known {
+  flex-shrink: 0;
 }
 
 .glossary {
@@ -139,7 +145,9 @@ body {
 
 .glossary-item {
   display: block;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
   text-align: left;
   padding: 0;
   border: none;
@@ -153,6 +161,13 @@ body {
 .glossary-item:focus-visible {
   outline: 2px solid var(--accent-9);
   outline-offset: 2px;
+}
+
+.glossary-definition {
+  display: block;
+  margin-top: 0.25em;
+  font-size: 0.875rem;
+  color: var(--gray-11);
 }
 
 .app-main {

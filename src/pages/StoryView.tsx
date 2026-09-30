@@ -6,18 +6,8 @@ import { VocabularyReport } from '../components/VocabularyReport'
 import { isDebugFixture } from '../lib/debug-fixtures'
 import { lookupDefinition } from '../lib/dictionary'
 import { getStory, loadSettings, updateWordExplanation, updateWordMark } from '../lib/storage'
-import { nextMark, tokenize } from '../lib/tokenize'
-import type { Story, WordMark } from '../types'
-
-function markLabel(mark: WordMark | undefined): string {
-  if (mark === 'unknown') {
-    return 'unknown'
-  }
-  if (mark === 'known') {
-    return 'known'
-  }
-  return 'unmarked'
-}
+import { tokenize } from '../lib/tokenize'
+import type { Story } from '../types'
 
 export function StoryView() {
   const { id } = useParams()
@@ -25,9 +15,10 @@ export function StoryView() {
   const [showVocabularyReport] = useState(() => loadSettings().showVocabularyReport)
   const [loadingKeys, setLoadingKeys] = useState<Record<string, boolean>>({})
   const [lookupErrors, setLookupErrors] = useState<Record<string, string>>({})
+  const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  const pendingLookups = useRef(new Set<string>())
   const storyRef = useRef(story)
-  storyRef.current = story
-  const tokens = useMemo(() => (story ? tokenize(story.body) : []), [story])
+  const tokens = useMemo(() => tokenize(story?.body ?? ''), [story?.body])
 
   const unknownEntries = useMemo(() => {
     if (!story) {
@@ -43,14 +34,6 @@ export function StoryView() {
     })
     return entries
   }, [story, tokens])
-
-  const firstUnknownIndex = useMemo(() => {
-    const indexes = new Map<string, number>()
-    for (const entry of unknownEntries) {
-      indexes.set(entry.key, entry.index)
-    }
-    return indexes
-  }, [unknownEntries])
 
   if (!story) {
     return (
@@ -69,10 +52,11 @@ export function StoryView() {
   }
 
   async function lookupWord(key: string, currentStory: Story) {
-    if (currentStory.explanations[key]) {
+    if (currentStory.explanations[key] || pendingLookups.current.has(key)) {
       return
     }
 
+    pendingLookups.current.add(key)
     setLoadingKeys((keys) => ({ ...keys, [key]: true }))
     setLookupErrors((errors) => {
       const next = { ...errors }
@@ -82,6 +66,7 @@ export function StoryView() {
 
     const result = await lookupDefinition(key)
 
+    pendingLookups.current.delete(key)
     setLoadingKeys((keys) => {
       const next = { ...keys }
       delete next[key]
@@ -100,26 +85,46 @@ export function StoryView() {
 
     const saved = updateWordExplanation(latest.id, key, result.text)
     if (saved) {
+      storyRef.current = saved
       setStory(saved)
     }
   }
 
-  function cycleWord(key: string) {
+  function openWord(key: string, index: number) {
     const latest = storyRef.current
     if (!latest) {
       return
     }
 
-    const mark = nextMark(latest.wordMarks[key])
-    const next = updateWordMark(latest.id, key, mark)
+    const next =
+      latest.wordMarks[key] === 'unknown'
+        ? latest
+        : updateWordMark(latest.id, key, 'unknown')
     if (!next) {
       return
     }
+    storyRef.current = next
     setStory(next)
+    setActiveIndex(index)
+    void lookupWord(key, next)
+  }
 
-    if (mark === 'unknown') {
-      void lookupWord(key, next)
+  function closeNote() {
+    if (activeIndex !== null) {
+      document.getElementById(`word-${activeIndex}`)?.focus({ preventScroll: true })
     }
+    setActiveIndex(null)
+  }
+
+  function markKnown(key: string) {
+    const latest = storyRef.current
+    if (!latest || latest.wordMarks[key] !== 'unknown') return
+    const next = updateWordMark(latest.id, key, 'known')
+    if (!next) return
+    const activeToken = activeIndex === null ? undefined : tokens[activeIndex]
+    if (activeToken?.type === 'word' && activeToken.key === key) closeNote()
+    storyRef.current = next
+    setStory(next)
   }
 
   return (
@@ -138,19 +143,10 @@ export function StoryView() {
             {isDebugFixture(story.id) && <Badge color="amber">Debug fixture</Badge>}
           </Flex>
           <Text as="p" size="2" color="gray">
-            Tap a word to mark it: unmarked → unknown → known. Unknown words show a definition
-            under the line.
+            Tap a word when you need a definition. Looked-up words are highlighted until you
+            mark them as known.
           </Text>
         </div>
-
-        <Flex gap="3" wrap="wrap">
-          <Text size="2">
-            <span className="mark-swatch unknown">word</span> unknown
-          </Text>
-          <Text size="2">
-            <span className="mark-swatch known">word</span> known
-          </Text>
-        </Flex>
 
         <div className="story-body">
           {tokens.map((token, index) => {
@@ -159,44 +155,63 @@ export function StoryView() {
             }
 
             const mark = story.wordMarks[token.key]
-            const className = mark ? `story-word ${mark}` : 'story-word'
-            const showGloss = firstUnknownIndex.get(token.key) === index
+            const className = mark === 'unknown' ? 'story-word unknown' : 'story-word'
+            const showGloss = activeIndex === index
             const explanation = story.explanations[token.key]
             const error = lookupErrors[token.key]
             const loading = Boolean(loadingKeys[token.key])
 
             return (
               <span key={`word-${index}`}>
-                <span
-                  id={showGloss ? `word-${token.key}` : undefined}
+                <button
+                  type="button"
+                  id={`word-${index}`}
                   className={className}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => cycleWord(token.key)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault()
-                      cycleWord(token.key)
+                  onClick={() => {
+                    if (showGloss) {
+                      closeNote()
+                    } else {
+                      openWord(token.key, index)
                     }
                   }}
-                  aria-label={`${token.value}, ${markLabel(mark)}. Activate to change mark.`}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Escape' && showGloss) {
+                      event.preventDefault()
+                      closeNote()
+                    }
+                  }}
+                  aria-label={`Look up ${token.value}`}
+                  aria-expanded={showGloss}
+                  aria-controls={showGloss ? `gloss-${index}` : undefined}
                 >
                   {token.value}
-                </span>
+                </button>
                 {showGloss && (
-                  <span className="inline-gloss" role="note">
-                    <span className="inline-gloss-word">{token.value}</span>
-                    {loading && (
-                      <span className="inline-gloss-body">
-                        <Spinner size="1" /> Looking up…
-                      </span>
-                    )}
-                    {!loading && error && (
-                      <span className="inline-gloss-body">
-                        {error}{' '}
-                        <Button
-                          size="1"
-                          variant="soft"
+                  <span
+                    className="inline-gloss"
+                    id={`gloss-${index}`}
+                    role="note"
+                    aria-label={`Definition of ${token.value}`}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape') {
+                        event.preventDefault()
+                        closeNote()
+                      }
+                    }}
+                  >
+                    <span className="inline-gloss-word">{token.value}: </span>
+                    <span className="inline-gloss-body" aria-live="polite">
+                      {loading ? (
+                        <><Spinner size="1" /> Looking up…</>
+                      ) : (
+                        error ?? explanation ?? 'No definition saved.'
+                      )}
+                    </span>
+                    <span className="inline-gloss-actions">
+                      {!loading && error && (
+                        <button
+                          type="button"
+                          className="gloss-action"
                           onClick={() => {
                             const latest = storyRef.current
                             if (latest) {
@@ -205,12 +220,19 @@ export function StoryView() {
                           }}
                         >
                           Retry
-                        </Button>
-                      </span>
-                    )}
-                    {!loading && !error && explanation && (
-                      <span className="inline-gloss-body">{explanation}</span>
-                    )}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="gloss-action"
+                        onClick={() => markKnown(token.key)}
+                      >
+                        Mark as known
+                      </button>
+                      <button type="button" className="gloss-action" onClick={closeNote}>
+                        Close
+                      </button>
+                    </span>
                   </span>
                 )}
               </span>
@@ -225,41 +247,41 @@ export function StoryView() {
             </Heading>
             <Flex direction="column" gap="3">
               {unknownEntries.map((entry) => (
-                <button
-                  key={entry.key}
-                  type="button"
-                  className="glossary-item"
-                  onClick={() => {
-                    document.getElementById(`word-${entry.key}`)?.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center',
-                    })
-                    const latest = storyRef.current
-                    if (latest && !latest.explanations[entry.key]) {
-                      void lookupWord(entry.key, latest)
-                    }
-                  }}
-                >
-                  <Text weight="medium" size="2">
-                    {entry.sample}
-                  </Text>
-                  {loadingKeys[entry.key] ? (
-                    <Flex align="center" gap="2" mt="1">
-                      <Spinner size="1" />
-                      <Text size="2" color="gray">
-                        Looking up…
-                      </Text>
-                    </Flex>
-                  ) : lookupErrors[entry.key] ? (
-                    <Text size="2" color="red" as="p">
-                      {lookupErrors[entry.key]}
+                <Flex key={entry.key} gap="3" align="start" justify="between">
+                  <button
+                    type="button"
+                    className="glossary-item"
+                    aria-label={`Go to ${entry.sample} in the story`}
+                    onClick={() => {
+                      openWord(entry.key, entry.index)
+                      requestAnimationFrame(() => {
+                        const word = document.getElementById(`word-${entry.index}`)
+                        word?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                        word?.focus({ preventScroll: true })
+                      })
+                    }}
+                  >
+                    <Text weight="medium" size="2">
+                      {entry.sample}
                     </Text>
-                  ) : (
-                    <Text size="2" color="gray" as="p">
-                      {story.explanations[entry.key] ?? 'Looking up…'}
-                    </Text>
-                  )}
-                </button>
+                    <span className="glossary-definition">
+                      {loadingKeys[entry.key] ? (
+                        <><Spinner size="1" /> Looking up…</>
+                      ) : (
+                        lookupErrors[entry.key] ?? story.explanations[entry.key] ??
+                        'Tap to look up a definition.'
+                      )}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="gloss-action glossary-known"
+                    aria-label={`Mark ${entry.sample} as known`}
+                    onClick={() => markKnown(entry.key)}
+                  >
+                    Mark as known
+                  </button>
+                </Flex>
               ))}
             </Flex>
           </Card>
