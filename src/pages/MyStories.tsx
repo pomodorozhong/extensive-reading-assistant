@@ -1,6 +1,7 @@
 import { Badge, Button, Card, Container, Flex, Heading, Text } from '@radix-ui/themes'
 import { Link } from 'react-router-dom'
-import { loadStories } from '../lib/storage'
+import { isDebugFixture } from '../lib/debug-fixtures'
+import { loadVisibleStories } from '../lib/storage'
 
 function formatDate(iso: string): string {
   const date = new Date(iso)
@@ -11,7 +12,7 @@ function formatDate(iso: string): string {
 }
 
 export function MyStories() {
-  const stories = loadStories()
+  const stories = loadVisibleStories()
 
   return (
     <Container size="2" px="4">
@@ -36,6 +37,7 @@ export function MyStories() {
               <Link to={`/stories/${story.id}`} className="card-link">
                 <Flex justify="between" align="start" gap="3">
                   <div>
+                    {isDebugFixture(story.id) && <Badge color="amber" mb="1">Debug fixture</Badge>}
                     <Heading size="4" mb="1">
                       {story.title}
                     </Heading>

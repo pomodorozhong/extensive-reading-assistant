@@ -220,6 +220,18 @@ Each entry has `word`, `count`, optional `level`, and `lemmas`. Unlisted entries
 
 ## 9. Verification and maintenance
 
+### Built-in articles for debugging
+
+Enable **Settings → Debugging → Show CEFR fixture articles in My Stories** to display six original articles about a community garden, one labeled for each CEFR level. The setting is off by default, including for existing saved Settings that predate the option. It persists locally and needs no API key.
+
+[`debug-fixtures.ts`](../src/lib/debug-fixtures.ts) contains the articles and stable IDs. These are illustrative targets for inspecting the report, not certified examples guaranteed to contain only vocabulary within their labeled level. Increasing grammatical complexity is also intentionally present, although the validator assesses vocabulary only.
+
+[`storage.ts`](../src/lib/storage.ts) exposes `loadVisibleStories()` to combine saved stories with enabled fixtures. `loadStories()` continues to return only actual saved stories. Fixture text is bundled rather than inserted into saved-story storage. Marking a fixture word or saving its definition writes only its reading state to `era.v1.debug-fixtures`, separate from `era.v1.stories`. Turning the option off hides the fixtures, including direct fixture routes, but keeps saved stories and fixture reading state. Re-enabling restores that state.
+
+[`MyStories.tsx`](../src/pages/MyStories.tsx) lists the enabled articles with a “Debug fixture” badge, and [`StoryView.tsx`](../src/pages/StoryView.tsx) identifies them while displaying the ordinary reading controls and vocabulary report. [`Settings.tsx`](../src/pages/Settings.tsx) provides the switch. [`debug-fixtures.test.mjs`](../tests/debug-fixtures.test.mjs) verifies the default, legacy-settings behavior, visibility, independent persistence, and preservation of saved stories.
+
+### Automated checks
+
 The focused tests live in [`tests/cefr.test.mjs`](../tests/cefr.test.mjs). Run them with Node.js 22.18 or newer, which supports the native TypeScript stripping used to import the analyzer:
 
 ```bash
@@ -256,5 +268,9 @@ The validator does not inspect grammatical complexity, idioms, word senses, read
 | [`data/cefr/README.md`](../data/cefr/README.md) | Source versions, permissions, limitations, and browser reproduction steps. |
 | [`tests/cefr.test.mjs`](../tests/cefr.test.mjs) | Validator behavior tests. |
 | [`tests/fixtures/cefr-stories.json`](../tests/fixtures/cefr-stories.json) | Disposable story and Settings fixture. |
+| [`src/lib/debug-fixtures.ts`](../src/lib/debug-fixtures.ts) | Six bundled articles for the optional debugging view. |
+| [`src/pages/MyStories.tsx`](../src/pages/MyStories.tsx) | Lists saved stories and enabled debugging fixtures. |
+| [`src/pages/Settings.tsx`](../src/pages/Settings.tsx) | Off-by-default fixture visibility switch. |
+| [`tests/debug-fixtures.test.mjs`](../tests/debug-fixtures.test.mjs) | Fixture visibility and separate reading-state persistence tests. |
 | [`vite.config.ts`](../vite.config.ts) | Production asset bundling and PWA precache configuration. |
 | [`package.json`](../package.json) | Dataset rebuild, test, build, and development commands. |

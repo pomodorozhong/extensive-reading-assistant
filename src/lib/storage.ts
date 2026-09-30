@@ -1,13 +1,16 @@
-import { CEFR_LEVELS, type CefrLevel, type Settings, type Story, type WordMark } from '../types'
+import { CEFR_LEVELS, type CefrLevel, type Settings, type Story, type WordMark } from '../types.ts'
+import { DEBUG_FIXTURES, isDebugFixture } from './debug-fixtures.ts'
 
 const SETTINGS_KEY = 'era.v1.settings'
 const STORIES_KEY = 'era.v1.stories'
+const FIXTURE_STATE_KEY = 'era.v1.debug-fixtures'
 
 export const DEFAULT_SETTINGS: Settings = {
   cefrLevel: 'A1',
   apiKey: '',
   apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
   model: 'gemini-3.1-flash-lite',
+  showDebugFixtures: false,
 }
 
 function isCefrLevel(value: unknown): value is CefrLevel {
@@ -30,6 +33,7 @@ export function loadSettings(): Settings {
     return {
       cefrLevel: isCefrLevel(parsed.cefrLevel) ? parsed.cefrLevel : DEFAULT_SETTINGS.cefrLevel,
       apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : DEFAULT_SETTINGS.apiKey,
+      showDebugFixtures: parsed.showDebugFixtures === true,
       apiBaseUrl:
         !legacyOpenAi && typeof parsed.apiBaseUrl === 'string' && parsed.apiBaseUrl.trim()
           ? parsed.apiBaseUrl
@@ -74,8 +78,45 @@ function saveStories(stories: Story[]): void {
   localStorage.setItem(STORIES_KEY, JSON.stringify(stories))
 }
 
+type FixtureState = Pick<Story, 'wordMarks' | 'explanations'>
+
+function loadFixtureState(): Record<string, FixtureState> {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(FIXTURE_STATE_KEY) ?? '{}')
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+/** Debug fixtures are a view overlay; they never become generated/saved stories. */
+export function loadVisibleStories(): Story[] {
+  const saved = loadStories()
+  if (!loadSettings().showDebugFixtures) return saved
+  const state = loadFixtureState()
+  const savedIds = new Set(saved.map((story) => story.id))
+  return [...saved, ...DEBUG_FIXTURES.filter((story) => !savedIds.has(story.id)).map((story) => ({
+    ...story,
+    wordMarks: state[story.id]?.wordMarks ?? {},
+    explanations: state[story.id]?.explanations ?? {},
+  }))]
+}
+
 export function getStory(id: string): Story | undefined {
-  return loadStories().find((story) => story.id === id)
+  return loadVisibleStories().find((story) => story.id === id)
+}
+
+function saveStoryChanges(story: Story): void {
+  const saved = loadStories()
+  const index = saved.findIndex((item) => item.id === story.id)
+  if (index >= 0) {
+    saved[index] = story
+    saveStories(saved)
+  } else if (isDebugFixture(story.id) && loadSettings().showDebugFixtures) {
+    const state = loadFixtureState()
+    state[story.id] = { wordMarks: story.wordMarks, explanations: story.explanations }
+    localStorage.setItem(FIXTURE_STATE_KEY, JSON.stringify(state))
+  }
 }
 
 export function upsertStory(story: Story): void {
@@ -85,13 +126,11 @@ export function upsertStory(story: Story): void {
 }
 
 export function updateWordMark(id: string, key: string, mark: WordMark | undefined): Story | undefined {
-  const stories = loadStories()
-  const index = stories.findIndex((story) => story.id === id)
-  if (index < 0) {
+  const current = getStory(id)
+  if (!current) {
     return undefined
   }
 
-  const current = stories[index]
   const wordMarks = { ...current.wordMarks }
   if (mark) {
     wordMarks[key] = mark
@@ -100,24 +139,20 @@ export function updateWordMark(id: string, key: string, mark: WordMark | undefin
   }
 
   const next = { ...current, wordMarks, explanations: current.explanations ?? {} }
-  stories[index] = next
-  saveStories(stories)
+  saveStoryChanges(next)
   return next
 }
 
 export function updateWordExplanation(id: string, key: string, explanation: string): Story | undefined {
-  const stories = loadStories()
-  const index = stories.findIndex((story) => story.id === id)
-  if (index < 0) {
+  const current = getStory(id)
+  if (!current) {
     return undefined
   }
 
-  const current = stories[index]
   const next = {
     ...current,
     explanations: { ...current.explanations, [key]: explanation },
   }
-  stories[index] = next
-  saveStories(stories)
+  saveStoryChanges(next)
   return next
 }

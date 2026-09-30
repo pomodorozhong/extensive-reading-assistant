@@ -3,6 +3,7 @@ import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@r
 import { useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { VocabularyReport } from '../components/VocabularyReport'
+import { isDebugFixture } from '../lib/debug-fixtures'
 import { lookupDefinition } from '../lib/dictionary'
 import { getStory, updateWordExplanation, updateWordMark } from '../lib/storage'
 import { nextMark, tokenize } from '../lib/tokenize'
@@ -133,6 +134,7 @@ export function StoryView() {
           <Flex align="center" gap="2" wrap="wrap" mb="2">
             <Heading size="7">{story.title}</Heading>
             <Badge color="blue">{story.level}</Badge>
+            {isDebugFixture(story.id) && <Badge color="amber">Debug fixture</Badge>}
           </Flex>
           <Text as="p" size="2" color="gray">
             Tap a word to mark it: unmarked → unknown → known. Unknown words show a definition

@@ -10,6 +10,8 @@ See [dataset attribution, calculation, limitations, and verification](data/cefr/
 
 For a detailed implementation walkthrough, flowcharts, and links to related code, see [How CEFR vocabulary validation works](doc/cefr-vocabulary-validation.md).
 
+To try the report without generating a story, enable **Settings → Debugging → Show CEFR fixture articles in My Stories**. This option is off by default and adds six bundled articles labeled A1–C2. They are illustrative debugging samples, not certified CEFR texts. Their word marks and definitions are stored separately; switching the option off hides the fixtures and preserves your saved stories.
+
 ## Run locally
 
 ```bash
