@@ -42,7 +42,7 @@ test('expands straight and curly contractions but counts each original token onc
   assert.equal(analyzeVocabulary("zorblax'll", 'A1').unlistedCount, 1)
 })
 
-test('names follow ordinary case-insensitive lookup; punctuation and numbers are excluded', () => {
+test('undetected words retain case-insensitive lookup; punctuation and numbers are excluded', () => {
   const report = analyzeVocabulary('Zorblax ZORBLAX Cat — 123 !!! cat-dog', 'C2')
   assert.equal(report.total, 5)
   assert.equal(report.unlisted[0].word, 'zorblax')
@@ -50,6 +50,40 @@ test('names follow ordinary case-insensitive lookup; punctuation and numbers are
   assert.equal(report.aboveCount, 0)
   assert.equal(analyzeVocabulary('123 ...', 'A1').abovePercent, 0)
   assert.equal(analyzeVocabulary('', 'C2').total, 0)
+})
+
+test('morphology resolves irregular verbs without assigning levels to missing base words', () => {
+  const report = analyzeVocabulary('sat drank drove wagged woof', 'A1')
+  assert.equal(report.total, 5)
+  assert.deepEqual(report.unlisted.map((entry) => entry.word), ['wagged', 'woof'])
+  assert.equal(report.aboveCount, 0)
+})
+
+test('detected names and possessives are excluded from both vocabulary lists and denominator', () => {
+  const report = analyzeVocabulary("Sarah concurred. Sarah’s cat drank. Sarah's dog drove home.", 'A1')
+  assert.equal(report.wordCount, 9)
+  assert.equal(report.nameCount, 3)
+  assert.equal(report.total, 6)
+  assert.equal(report.aboveCount, 1)
+  assert.ok(Math.abs(report.abovePercent - 100 / 6) < 1e-10)
+  assert.equal(report.unlistedCount, 0)
+  assert.deepEqual(report.names.map(({ word, count }) => ({ word, count })), [
+    { word: "sarah's", count: 2 }, { word: 'sarah', count: 1 },
+  ])
+  const namesOnly = analyzeVocabulary('Sarah Sarah Sarah', 'A1')
+  assert.equal(namesOnly.total, 0)
+  assert.equal(namesOnly.abovePercent, 0)
+  assert.equal(namesOnly.nameCount, 3)
+})
+
+test('name detection uses occurrence spans rather than a lowercase blacklist', () => {
+  const report = analyzeVocabulary('Mark said hello. Please mark the paper.', 'A1')
+  assert.equal(report.nameCount, 1)
+  assert.equal(report.names[0].word, 'mark')
+  assert.equal(report.total, 6)
+  // The common verb mark is still analyzed (B1), despite the earlier name.
+  assert.equal(report.aboveLevel.find((entry) => entry.word === 'mark')?.count, 1)
+  assert.equal(report.wordCount, report.total + report.nameCount)
 })
 
 test('prototype-like and non-Latin words are safely unlisted', () => {

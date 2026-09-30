@@ -1,23 +1,16 @@
 import vocabulary from '../data/cefr.json' with { type: 'json' }
+import nlp from 'compromise'
+import lemmatize from 'wink-lemmatizer'
 import { CEFR_LEVELS, type CefrLevel } from '../types.ts'
 import { tokenize } from './tokenize.ts'
 
 const lexicon: Readonly<Record<string, CefrLevel>> = vocabulary as Record<string, CefrLevel>
-const irregular: Record<string, string> = {
-  am: 'be', is: 'be', are: 'be', was: 'be', were: 'be', been: 'be', being: 'be',
-  has: 'have', had: 'have', does: 'do', did: 'do', done: 'do', went: 'go', gone: 'go',
-  ran: 'run', ate: 'eat', eaten: 'eat', saw: 'see', seen: 'see', took: 'take', taken: 'take',
-  made: 'make', said: 'say', bought: 'buy', brought: 'bring', thought: 'think', knew: 'know',
-  known: 'know', wrote: 'write', written: 'write', gave: 'give', given: 'give', got: 'get',
-  gotten: 'get', came: 'come', felt: 'feel', found: 'find', left: 'leave', told: 'tell',
-  met: 'meet', became: 'become', understood: 'understand',
-  children: 'child', men: 'man', women: 'woman', mice: 'mouse', feet: 'foot', teeth: 'tooth',
-  people: 'person', better: 'good', best: 'good', worse: 'bad', worst: 'bad',
-}
 // Reviewed spelling equivalences reuse a listed lemma's level, not a derived word's level.
 const spellingAliases: Readonly<Record<string, string>> = {
   tranquillity: 'tranquility',
 }
+// wink-lemmatizer handles nouns/verbs/adjectives, but not this plural pronoun.
+const pronounAliases: Readonly<Record<string, string>> = { others: 'other' }
 const contractions: Record<string, string[]> = {
   "can't": ['can', 'not'], "cannot": ['can', 'not'], "won't": ['will', 'not'],
   "shan't": ['shall', 'not'], "ain't": ['be', 'not'], "let's": ['let', 'us'],
@@ -28,22 +21,9 @@ function lemma(word: string): string | undefined {
   if (Object.hasOwn(spellingAliases, word) && Object.hasOwn(lexicon, spellingAliases[word])) {
     return spellingAliases[word]
   }
-  if (Object.hasOwn(irregular, word) && Object.hasOwn(lexicon, irregular[word])) return irregular[word]
-  const candidates: string[] = []
-  if (word.endsWith("'s")) candidates.push(word.slice(0, -2))
-  if (word.endsWith('ies')) candidates.push(`${word.slice(0, -3)}y`)
-  if (word.endsWith('ied')) candidates.push(`${word.slice(0, -3)}y`)
-  if (word.endsWith('ves')) candidates.push(`${word.slice(0, -3)}f`, `${word.slice(0, -3)}fe`)
-  if (/(?:ches|shes|sses|xes|zes|oes)$/.test(word)) candidates.push(word.slice(0, -2))
-  if (word.endsWith('s') && !word.endsWith('ss')) candidates.push(word.slice(0, -1))
-  for (const suffix of ['ing', 'ed', 'er', 'est']) {
-    if (!word.endsWith(suffix)) continue
-    const stem = word.slice(0, -suffix.length)
-    candidates.push(stem, `${stem}e`)
-    if (/(.)\1$/.test(stem)) candidates.push(stem.slice(0, -1))
-    if (stem.endsWith('i')) candidates.push(`${stem.slice(0, -1)}y`)
-  }
-  return candidates.find((candidate) => Object.hasOwn(lexicon, candidate))
+  const base = word.endsWith("'s") ? word.slice(0, -2) : word
+  const candidates = [base, pronounAliases[base], lemmatize.verb(base), lemmatize.noun(base), lemmatize.adjective(base)]
+  return candidates.find((candidate) => candidate !== undefined && Object.hasOwn(lexicon, candidate))
 }
 
 function expand(word: string): string[] {
@@ -69,11 +49,26 @@ export type VocabularyEntry = {
 
 export function analyzeVocabulary(body: string, target: CefrLevel) {
   const entries = new Map<string, VocabularyEntry>()
+  const names = new Map<string, VocabularyEntry>()
+  // Character offsets preserve context: a detected name does not exempt every
+  // lowercase occurrence of the same word elsewhere in the story.
+  const spans: { offset: { start: number; length: number } }[] = nlp(body).match('#Person').json({ offset: true })
   let total = 0
+  let nameCount = 0
+  let offset = 0
   for (const token of tokenize(body)) {
+    const start = offset
+    offset += token.value.length
     if (token.type !== 'word') continue
-    total++
     const word = token.value.toLowerCase().replaceAll('’', "'")
+    if (spans.some(({ offset: span }) => start >= span.start && offset <= span.start + span.length)) {
+      nameCount++
+      const existing = names.get(word)
+      if (existing) existing.count++
+      else names.set(word, { word, count: 1, lemmas: [] })
+      continue
+    }
+    total++
     const existing = entries.get(word)
     if (existing) {
       existing.count++
@@ -94,6 +89,8 @@ export function analyzeVocabulary(body: string, target: CefrLevel) {
   const unlistedCount = unlisted.reduce((sum, entry) => sum + entry.count, 0)
   return {
     target, total, aboveLevel, unlisted, aboveCount, unlistedCount,
+    names: [...names.values()].sort((a, b) => b.count - a.count || a.word.localeCompare(b.word)),
+    nameCount, wordCount: total + nameCount,
     abovePercent: total ? aboveCount / total * 100 : 0,
   }
 }

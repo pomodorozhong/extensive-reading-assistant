@@ -2,7 +2,7 @@
 
 The app estimates how much of a story's vocabulary is above its recorded CEFR level. It compares words with a bundled vocabulary list and shows an advisory report at the bottom of Story View, after the story and any unknown-word glossary. It does not ask an LLM to evaluate the story, prevent saving, or certify the story's overall CEFR level.
 
-The main entry point is [`analyzeVocabulary(body, target)`](../src/lib/cefr.ts). Its two inputs are the story body and a target such as `A1` or `B2`. Its output contains the total number of word occurrences, above-level and unlisted entries, occurrence counts, and an above-level percentage.
+The main entry point is [`analyzeVocabulary(body, target)`](../src/lib/cefr.ts). Its two inputs are the story body and a target such as `A1` or `B2`. Its output contains original and analyzed word counts, detected names excluded from analysis, above-level and unlisted entries, occurrence counts, and an above-level percentage. Name detection uses [compromise](https://github.com/spencermountain/compromise); morphology uses [wink-lemmatizer](https://github.com/winkjs/wink-lemmatizer). Both run locally in the browser.
 
 ## 1. Where the story's target level comes from
 
@@ -18,25 +18,29 @@ The report is computed when rendered and memoized by body and level with React `
 
 ```mermaid
 flowchart TD
-    Story["Story View supplies body and recorded level"] --> Tokens["Tokenize body into word and other tokens"]
+    Story["Story View supplies body and recorded level"] --> Names["compromise: detect Person spans in original body"]
+    Names --> Tokens["Tokenize body; track original character offsets"]
     Tokens --> Next{"Another token?"}
-    Next -->|No| Sort["Sort entries by count, then alphabetically"]
+    Next -->|No| Sort["Sort vocabulary and name entries by count, then alphabetically"]
     Next -->|Yes| Word{"Word token?"}
     Word -->|No| Next
-    Word -->|Yes| Normalize["Increment total; lowercase and normalize apostrophes"]
+    Word -->|Yes| Name{"Inside a detected Person span?"}
+    Name -->|Yes| Exclude["Count detected name; exclude from vocabulary denominator"]
+    Exclude --> Next
+    Name -->|No| Normalize["Increment analyzed total; lowercase and normalize apostrophes"]
     Normalize --> Seen{"Normalized word already counted?"}
     Seen -->|Yes| Increment["Increment existing entry count"]
     Increment --> Next
     Seen -->|No| Expand["Expand supported contractions into components"]
-    Expand --> Lookup["Resolve each component: exact entry, spelling alias, irregular form, suffix candidates"]
+    Expand --> Lookup["Resolve components: exact entry, spelling alias, possessive base, pronoun alias, wink verb/noun/adjective lemmas"]
     Lookup --> Complete{"All components resolved?"}
     Complete -->|No| Unlisted["Store unlisted entry with count 1"]
     Complete -->|Yes| Level["Use highest component level; store count 1 and matched lemmas"]
     Unlisted --> Next
     Level --> Next
     Sort --> Classify["Select entries above target and entries without a level"]
-    Classify --> Counts["Sum occurrence counts and calculate percentage"]
-    Counts --> Render["Render advisory report below story and glossary"]
+    Classify --> Counts["Calculate percentage from analyzed occurrences only"]
+    Counts --> Render["Render report and excluded names below story and glossary"]
 ```
 
 There are no remote validation requests anywhere in this flow. The analyzer imports the JSON vocabulary directly into the app bundle.
@@ -63,11 +67,17 @@ The analyzer reuses [`tokenize.ts`](../src/lib/tokenize.ts), which recognizes th
 
 The analyzer lowercases each word and replaces curly `’` with straight `'`. Thus `CONCUR` and `concur` share an entry, as do `she’s` and `she's`.
 
-Names are treated exactly like other words. Capitalization does not exclude a name, because sentence-initial common words are also capitalized. A name found in the dataset receives that entry's level; an absent name is unlisted. There is no named-entity detector or automatic name exemption.
+### Name detection before vocabulary lookup
+
+The analyzer calls `nlp(body).match('#Person').json({ offset: true })` using compromise on the original text, before lowercasing. Its matches supply character spans. The shared tokenizer preserves every character through word and other tokens, so accumulating token lengths gives offsets into the same body. A word wholly inside a detected span is grouped in `names`, increments `nameCount`, and is skipped by vocabulary lookup. This includes recognized possessives such as `Sarah's` and `Sarah’s`, and detected names already present in the CEFR lexicon.
+
+Exclusion is per occurrence, rather than a global lowercase blacklist. In `Mark said hello. Please mark the paper.`, the detected name is excluded while the ordinary verb `mark` is still analyzed. Names are shown under **Detected names**, with their excluded occurrence counts; they are not assigned a CEFR level.
+
+This is automatic, approximate **person-name detection**, not general named-entity recognition. It does not automatically exclude places, organizations, or every capitalized word. It can miss names or incorrectly tag common words. In representative excerpts of the dog-adoption story, compromise recognizes Sarah but misses Leo and the pet Max. Undetected names continue through normal lookup: Leo can remain unlisted while Max matches the existing A2 entry. There is no character metadata, custom name dictionary, manual override, or extra LLM call in this implementation. Reopening a story reruns detection with the installed package version.
 
 ## 4. Contractions and inflections
 
-The private `expand` and `lemma` functions in [`cefr.ts`](../src/lib/cefr.ts) implement deterministic lookup rules. They do not infer grammar or word sense from surrounding text.
+The private `expand` and `lemma` functions in [`cefr.ts`](../src/lib/cefr.ts) combine explicit contraction handling with wink-lemmatizer. Morphology does not use contextual part-of-speech or word-sense disambiguation; compromise is used only for person-name spans.
 
 ### Contractions are expanded before component lookup
 
@@ -95,20 +105,21 @@ A contraction contributes **one original occurrence**. Its assigned level is the
 
 1. **Exact entry:** use the normalized component if it exists in the dataset.
 2. **Reviewed spelling alias:** try the explicit alias table. Currently `tranquillity → tranquility` reuses the existing C1 entry while preserving the original spelling in the report. Exact entries still win if the dataset later lists the original spelling.
-3. **Explicit irregular form:** try the hand-maintained map, such as `went → go`, `children → child`, `better → good`, `met → meet` (A1), `became → become` (A1), or `understood → understand` (A2), and require the mapped lemma to exist.
-4. **Suffix candidates:** construct possible lemmas and use the first candidate present in the dataset.
+3. **Possessive base:** remove a trailing `'s` and try the remaining word directly.
+4. **Pronoun alias:** map `others → other`, because wink-lemmatizer handles verbs, nouns, and adjectives rather than this plural pronoun.
+5. **wink-lemmatizer candidates:** try `verb(base)`, then `noun(base)`, then `adjective(base)`. Select the first result actually present in the CEFR lexicon. The package replaces the previous manual irregular map and suffix heuristics.
 
-The suffix rules cover possessive `'s`, plural `ies`, past `ied`, `ves`, selected plural `es` endings, ordinary plural `s`, and the suffixes `ing`, `ed`, `er`, and `est`. Candidates include removing the suffix, restoring final `e`, removing a doubled final letter, and changing final `i` back to `y` where applicable.
+Examples include `sat → sit`, `drank → drink`, `drove → drive`, `studies → study`, `stopped → stop`, `knives → knife`, and `happier → happy`. A form can have different lemmas depending on part of speech; the fixed candidate order is an approximation rather than contextual disambiguation.
 
-Examples include `studies → study`, `walked → walk`, `stopped → stop`, `knives → knife`, and `dog's → dog`. Candidate ordering matters: the analyzer selects the first matching candidate, not the lowest-level candidate among all possible lemmas.
+**Exact lookup takes precedence over lemmatization.** The dataset lists `running` and `walking` at A2, so those exact entries remain A2 even though `run` and `walk` are A1. Similarly, `abandoned` remains the listed B2 entry rather than reducing to B1 `abandon`.
 
-**Exact lookup takes precedence over stemming.** The dataset lists `running` and `walking` at A2, so those exact entries remain A2 even though the verbs `run` and `walk` are A1. Similarly, `abandoned` is a listed B2 entry and is not reduced to the B1 verb `abandon`.
+Neither npm package supplies CEFR levels. A successful morphological reduction does not establish a level unless the resulting lemma exists in our bundled profiles. For example, `wagged → wag` still remains unlisted because `wag` is absent. `woof` also remains unlisted. No frequency-estimated supplemental CEFR dataset is bundled.
 
-These rules are approximate. They can miss unsupported irregular forms, select an unrelated lemma, or treat a misspelling as an inflection. The output should be read as a vocabulary estimate with documented coverage gaps.
+The dependencies are [compromise](https://github.com/spencermountain/compromise) and [wink-lemmatizer](https://github.com/winkjs/wink-lemmatizer), both MIT-licensed. [`package.json`](../package.json) declares their version ranges and [`package-lock.json`](../package-lock.json) records installed versions. [`src/wink-lemmatizer.d.ts`](../src/wink-lemmatizer.d.ts) declares the three string-to-string methods used by the app because the package does not ship TypeScript declarations.
 
 ### Fixture coverage audit
 
-The built-in articles originally had 23 unlisted occurrences across 21 distinct words. Three added irregular mappings resolve five occurrences; the spelling alias resolves one. The articles themselves are unchanged.
+The built-in articles originally had 23 unlisted occurrences across 21 distinct words. The current wink-lemmatizer flow resolves the same five irregular-form occurrences; the spelling alias resolves one. The pronoun alias preserves classification of `others`. No person names are detected in these garden articles, and the articles themselves are unchanged.
 
 | Article | Before | After | Remaining unlisted words |
 | --- | ---: | ---: | --- |
@@ -140,34 +151,37 @@ A1 < A2 < B1 < B2 < C1 < C2
 
 An entry is above level only when its assigned level has a greater index than the target. This makes coverage cumulative: A2 accepts A1 and A2; B1 accepts A1, A2, and B1; C2 accepts every listed level.
 
-An entry has one of three interpretations:
+A word occurrence has one of four interpretations:
 
 | Result | Condition | Report behavior |
 | --- | --- | --- |
+| Detected name | Original occurrence falls inside a compromise Person span. | Shown separately; excluded from both numerator and denominator. |
 | Within level | Assigned level is equal to or below target. | Included in total; omitted from flagged lists. |
 | Above level | Assigned level is higher than target. | Included in the above-level list and numerator. |
 | Unlisted | At least one required component has no matched lemma. | Included in a separate list and total, but excluded from the numerator. |
 
-“Unlisted” does not mean “advanced,” “easy,” or “incorrect.” The word may be a name, specialized term, unsupported inflection, non-English text, or simply an omission in the profiles.
+“Unlisted” does not mean “advanced,” “easy,” or “incorrect.” The word may be an undetected name, specialized term, unsupported inflection, non-English text, or simply an omission in the profiles.
 
 ## 6. Counts, grouping, and percentage
 
-Entries are grouped by their **normalized original word**, not by lemma. `cat` and `cats` remain separate display entries even if both match `cat`. `concur` and `CONCUR` share one entry because their normalized originals are identical. This grouping is independent of the story's known/unknown word marks.
+Vocabulary entries and detected names are grouped separately by their **normalized original word**, not by lemma. The same spelling can appear in both groups when occurrences receive different contextual tags. `cat` and `cats` remain separate display entries even if both match `cat`. `concur` and `CONCUR` share one vocabulary entry because their normalized originals are identical. This grouping is independent of the story's known/unknown word marks.
 
 For a repeated normalized word, lookup runs once and subsequent occurrences increment its count. Display entries are sorted by descending count, then alphabetically using `localeCompare`.
 
 The report calculates:
 
 ```text
-total         = every original word occurrence
+wordCount     = every original word occurrence
+nameCount     = word occurrences inside detected Person spans
+total         = wordCount - nameCount
 aboveCount    = sum of counts for above-level entries
 unlistedCount = sum of counts for unlisted entries
 abovePercent  = aboveCount / total × 100
 ```
 
-For zero word occurrences, `abovePercent` is zero; the UI displays “No word occurrences to analyze.” Otherwise, the UI formats the percentage to one decimal place using `toFixed(1)`.
+For zero analyzed vocabulary occurrences, including a body consisting only of detected names, `abovePercent` is zero; the UI displays “No vocabulary occurrences to analyze.” The excluded-name list remains available. Otherwise, the UI formats the percentage to one decimal place using `toFixed(1)`.
 
-Unlisted occurrences stay in the denominator without being treated as within level. This choice means many unlisted words can lower the displayed percentage. Always interpret the percentage alongside the unlisted count.
+Detected names are excluded from the denominator. Unlisted occurrences stay in the denominator without being treated as within level. This choice means many unlisted words can lower the displayed percentage. Always interpret the percentage alongside the unlisted and excluded-name counts.
 
 ### Worked example
 
@@ -187,7 +201,7 @@ Cats walked. She’s happy. Concur, CONCUR! Ephemeral Zorblax.
 | `ephemeral` | 1 | `ephemeral` | C2 | Above level |
 | `zorblax` | 1 | No match | Unlisted | Separate result |
 
-There are eight original word occurrences, three above-level occurrences, and one unlisted occurrence. The percentage is `3 / 8 × 100 = 37.5%`. The above-level list has **two distinct words**, even though its occurrence count is three. Expanding `she's` does not increase the denominator from eight to nine.
+No names are detected in this fixture. There are eight original and analyzed word occurrences, three above-level occurrences, and one unlisted occurrence. The percentage is `3 / 8 × 100 = 37.5%`. The above-level list has **two distinct words**, even though its occurrence count is three. Expanding `she's` does not increase the denominator from eight to nine.
 
 The fixture's Settings level is C2, which deliberately differs from the story's recorded A1 level. The expected report remains A1.
 
@@ -221,7 +235,7 @@ The CSVs and generated JSON contain some multiword expressions. Runtime tokeniza
 
 `npm run build:cefr` is an explicit maintenance command. It is not automatically invoked by `npm run build` or `npm run dev`; both use the checked-in JSON. After editing a source profile, rebuild and commit the JSON together with the source change.
 
-[`vite.config.ts`](../vite.config.ts) includes app JavaScript in the PWA precache. Because vocabulary is imported into that JavaScript, no separate runtime CSV or JSON fetch is needed. Once the production app has been loaded and cached successfully, saved-story reports work without the origin server. First loading the app still requires obtaining its assets. Story generation remains a separate online operation.
+[`vite.config.ts`](../vite.config.ts) includes app JavaScript in the PWA precache. Because vocabulary, compromise, and wink-lemmatizer are imported into that JavaScript, no separate runtime dataset fetch, NLP model download, or server request is needed. Once the production app has been loaded and cached successfully, saved-story reports work without the origin server. First loading the app still requires obtaining its assets. Story generation remains a separate online operation.
 
 Attribution, the pinned upstream commit, original source checksums, and dataset permissions are documented in the [dataset README](../data/cefr/README.md). The [upstream terms](../data/cefr/UPSTREAM-README.md) and [CC BY-SA 4.0 legal code](../data/cefr/CC-BY-SA-4.0.txt) are bundled too. The combined JSON is distributed under CC BY-SA 4.0; dataset permissions are separate from the code license.
 
@@ -232,7 +246,10 @@ Attribution, the pinned upstream commit, original source checksums, and dataset 
 | Field | Meaning |
 | --- | --- |
 | `target` | Recorded CEFR level used for comparison. |
-| `total` | All original word occurrences. |
+| `wordCount` | All original word occurrences before name exclusion. |
+| `nameCount` | Word occurrences excluded as detected person names. |
+| `names` | Sorted excluded-name entries without assigned levels. |
+| `total` | Analyzed occurrences: `wordCount - nameCount`. |
 | `aboveLevel` | Sorted above-level entries. |
 | `unlisted` | Sorted entries without an assigned level. |
 | `aboveCount` | Occurrences belonging to above-level entries. |
@@ -263,7 +280,7 @@ The focused tests live in [`tests/cefr.test.mjs`](../tests/cefr.test.mjs). Run t
 npm run test:cefr
 ```
 
-They cover representative A1–C2 entries and cumulative thresholds, repeated-word percentages, regular and irregular inflections, exact-entry precedence, straight/curly contractions, names, punctuation, unlisted and non-Latin words, empty input, duplicate senses, and the recorded-level fixture.
+They cover representative A1–C2 entries and cumulative thresholds, repeated-word percentages, regular and irregular inflections, exact-entry precedence, straight/curly contractions, detected names and possessives, name exclusion from the denominator, occurrence-specific name handling, punctuation, unlisted and non-Latin words, empty input, duplicate senses, and the recorded-level fixture.
 
 Additional existing checks are:
 
@@ -281,7 +298,8 @@ The validator does not inspect grammatical complexity, idioms, word senses, read
 
 | File | Role |
 | --- | --- |
-| [`src/lib/cefr.ts`](../src/lib/cefr.ts) | Contraction expansion, lemma matching, classification, and counting. |
+| [`src/lib/cefr.ts`](../src/lib/cefr.ts) | Person-span detection, contraction expansion, wink lemma matching, classification, and counting. |
+| [`src/wink-lemmatizer.d.ts`](../src/wink-lemmatizer.d.ts) | Local TypeScript declarations for the lemmatizer methods. |
 | [`src/lib/tokenize.ts`](../src/lib/tokenize.ts) | Shared word boundaries and punctuation handling. |
 | [`src/types.ts`](../src/types.ts) | CEFR ordering and story/settings types. |
 | [`src/components/VocabularyReport.tsx`](../src/components/VocabularyReport.tsx) | Report display and memoization. |
