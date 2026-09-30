@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: Settings = {
   apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
   model: 'gemini-3.1-flash-lite',
   showDebugFixtures: false,
+  showVocabularyReport: false,
 }
 
 function isCefrLevel(value: unknown): value is CefrLevel {
@@ -34,6 +35,7 @@ export function loadSettings(): Settings {
       cefrLevel: isCefrLevel(parsed.cefrLevel) ? parsed.cefrLevel : DEFAULT_SETTINGS.cefrLevel,
       apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : DEFAULT_SETTINGS.apiKey,
       showDebugFixtures: parsed.showDebugFixtures === true,
+      showVocabularyReport: parsed.showVocabularyReport === true,
       apiBaseUrl:
         !legacyOpenAi && typeof parsed.apiBaseUrl === 'string' && parsed.apiBaseUrl.trim()
           ? parsed.apiBaseUrl

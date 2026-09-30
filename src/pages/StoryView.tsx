@@ -5,7 +5,7 @@ import { Link, useParams } from 'react-router-dom'
 import { VocabularyReport } from '../components/VocabularyReport'
 import { isDebugFixture } from '../lib/debug-fixtures'
 import { lookupDefinition } from '../lib/dictionary'
-import { getStory, updateWordExplanation, updateWordMark } from '../lib/storage'
+import { getStory, loadSettings, updateWordExplanation, updateWordMark } from '../lib/storage'
 import { nextMark, tokenize } from '../lib/tokenize'
 import type { Story, WordMark } from '../types'
 
@@ -22,6 +22,7 @@ function markLabel(mark: WordMark | undefined): string {
 export function StoryView() {
   const { id } = useParams()
   const [story, setStory] = useState<Story | undefined>(() => (id ? getStory(id) : undefined))
+  const [showVocabularyReport] = useState(() => loadSettings().showVocabularyReport)
   const [loadingKeys, setLoadingKeys] = useState<Record<string, boolean>>({})
   const [lookupErrors, setLookupErrors] = useState<Record<string, string>>({})
   const storyRef = useRef(story)
@@ -263,7 +264,7 @@ export function StoryView() {
             </Flex>
           </Card>
         )}
-        <VocabularyReport body={story.body} level={story.level} />
+        {showVocabularyReport && <VocabularyReport body={story.body} level={story.level} />}
       </Flex>
     </Container>
   )

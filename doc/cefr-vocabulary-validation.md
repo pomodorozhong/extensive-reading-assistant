@@ -1,6 +1,6 @@
 # How CEFR vocabulary validation works
 
-The app estimates how much of a story's vocabulary is above its recorded CEFR level. It compares words with a bundled vocabulary list and shows an advisory report at the bottom of Story View, after the story and any unknown-word glossary. It does not ask an LLM to evaluate the story, prevent saving, or certify the story's overall CEFR level.
+The app estimates how much of a story's vocabulary is above its recorded CEFR level. Enable **Settings → Debugging → Show approximate vocabulary difficulty (debugging)** to show the advisory report at the bottom of Story View, after the story and any unknown-word glossary. This setting is **off by default**, including for existing settings without the new field. It persists locally and applies independently of fixture visibility to both saved stories and debugging fixtures. When disabled, the report component is not mounted and vocabulary analysis does not run. The validator does not ask an LLM to evaluate the story, prevent saving, or certify the story's overall CEFR level.
 
 The main entry point is [`analyzeVocabulary(body, target)`](../src/lib/cefr.ts). Its two inputs are the story body and a target such as `A1` or `B2`. Its output contains original and analyzed word counts, detected names excluded from analysis, above-level and unlisted entries, occurrence counts, and an above-level percentage. Name detection uses [compromise](https://github.com/spencermountain/compromise); morphology uses [wink-lemmatizer](https://github.com/winkjs/wink-lemmatizer). Both run locally in the browser.
 
@@ -8,7 +8,7 @@ The main entry point is [`analyzeVocabulary(body, target)`](../src/lib/cefr.ts).
 
 [`NewStory.tsx`](../src/pages/NewStory.tsx) reads the Settings level and passes it to the story-generation request. After generation succeeds, it records that same level in `Story.level`, saves the story, and navigates to Story View. Generation still requires the configured provider and API key; vocabulary analysis does not.
 
-[`storage.ts`](../src/lib/storage.ts) stores stories in browser `localStorage`. [`StoryView.tsx`](../src/pages/StoryView.tsx) loads the saved story and renders [`VocabularyReport`](../src/components/VocabularyReport.tsx) with `story.body` and `story.level`. This path handles both a newly generated story and a story reopened later.
+[`storage.ts`](../src/lib/storage.ts) stores stories and settings in browser `localStorage`. [`StoryView.tsx`](../src/pages/StoryView.tsx) loads the saved story and, when `showVocabularyReport` is enabled, renders [`VocabularyReport`](../src/components/VocabularyReport.tsx) with `story.body` and `story.level`. This path handles both a newly generated story and a story reopened later.
 
 Changing Settings does not change the target of an existing story. For example, a story generated at A1 continues to be checked against A1 after Settings changes to C2. The analyzer examines the body, excluding the title, theme, and saved word marks.
 
@@ -18,7 +18,9 @@ The report is computed when rendered and memoized by body and level with React `
 
 ```mermaid
 flowchart TD
-    Story["Story View supplies body and recorded level"] --> Names["compromise: detect Person spans in original body"]
+    Settings{"Debug vocabulary report enabled?"} -->|No| Hidden["Do not mount report or run analysis"]
+    Settings -->|Yes| Story["Story View supplies body and recorded level"]
+    Story --> Names["compromise: detect Person spans in original body"]
     Names --> Tokens["Tokenize body; track original character offsets"]
     Tokens --> Next{"Another token?"}
     Next -->|No| Sort["Sort vocabulary and name entries by count, then alphabetically"]
@@ -264,7 +266,7 @@ Each entry has `word`, `count`, optional `level`, and `lemmas`. Unlisted entries
 
 ### Built-in articles for debugging
 
-Enable **Settings → Debugging → Show CEFR fixture articles in My Stories** to display six original articles about a community garden, one labeled for each CEFR level. The setting is off by default, including for existing saved Settings that predate the option. It persists locally and needs no API key.
+Enable **Settings → Debugging → Show CEFR fixture articles in My Stories** to display six original articles about a community garden, one labeled for each CEFR level. Also enable **Show approximate vocabulary difficulty (debugging)** to inspect their reports. Both switches are off by default, including for existing saved Settings that predate the options. They persist independently, locally, and need no API key.
 
 [`debug-fixtures.ts`](../src/lib/debug-fixtures.ts) contains the articles and stable IDs. These are illustrative targets for inspecting the report, not certified examples guaranteed to contain only vocabulary within their labeled level. Increasing grammatical complexity is also intentionally present, although the validator assesses vocabulary only.
 

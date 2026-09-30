@@ -181,6 +181,19 @@ export function SettingsPage() {
             Off by default. Adds six bundled example articles, one per level from A1 to C2.
             These are debugging samples, not certified CEFR texts. Hiding them keeps your saved stories.
           </Text>
+          <Text as="label" size="2" mt="4">
+            <Flex align="center" gap="2">
+              <Switch
+                checked={settings.showVocabularyReport}
+                onCheckedChange={(checked) => patch({ showVocabularyReport: checked })}
+              />
+              Show approximate vocabulary difficulty (debugging)
+            </Flex>
+          </Text>
+          <Text as="p" size="2" color="gray" mt="2">
+            Off by default. Shows the vocabulary report at the bottom of Story View for saved
+            stories and debugging fixtures.
+          </Text>
         </div>
 
         <Callout.Root color="gray">

@@ -10,6 +10,7 @@ export type Settings = {
   apiBaseUrl: string
   model: string
   showDebugFixtures: boolean
+  showVocabularyReport: boolean
 }
 
 export type Story = {
