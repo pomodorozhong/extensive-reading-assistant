@@ -1,6 +1,6 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
-import { useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { VocabularyReport } from '../components/VocabularyReport'
 import { isDebugFixture } from '../lib/debug-fixtures'
@@ -18,7 +18,15 @@ export function StoryView() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const pendingLookups = useRef(new Set<string>())
   const storyRef = useRef(story)
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const noteRef = useRef<HTMLSpanElement>(null)
+  const noteSpaceRef = useRef<HTMLSpanElement>(null)
   const tokens = useMemo(() => tokenize(story?.body ?? ''), [story?.body])
+  const activeToken = activeIndex === null ? undefined : tokens[activeIndex]
+  const activeKey = activeToken?.type === 'word' ? activeToken.key : undefined
+  const explanation = activeKey ? story?.explanations[activeKey] : undefined
+  const error = activeKey ? lookupErrors[activeKey] : undefined
+  const loading = activeKey ? Boolean(loadingKeys[activeKey]) : false
 
   const unknownEntries = useMemo(() => {
     if (!story) {
@@ -34,6 +42,41 @@ export function StoryView() {
     })
     return entries
   }, [story, tokens])
+
+  useLayoutEffect(() => {
+    if (activeIndex === null) return
+    const body = bodyRef.current
+    const note = noteRef.current
+    const space = noteSpaceRef.current
+    const word = document.getElementById(`word-${activeIndex}`)
+    if (!body || !note || !space || !word) return
+
+    function positionNote() {
+      if (!body || !note || !space || !word) return
+      const wordRect = word.getBoundingClientRect()
+      const bodyRect = body.getBoundingClientRect()
+      // A zero-width spacer extends the line below its baseline. The note is
+      // positioned separately so it cannot change which words fit on that line.
+      space.style.height = `${wordRect.height + note.getBoundingClientRect().height + 4}px`
+      note.style.top = `${wordRect.bottom - bodyRect.top + 2}px`
+      note.style.visibility = 'visible'
+    }
+
+    positionNote()
+    let frame = 0
+    const observer = new ResizeObserver(() => {
+      // Updating the spacer also resizes the body. Defer those writes to avoid
+      // changing an observed element during the observer's delivery cycle.
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(positionNote)
+    })
+    observer.observe(body)
+    observer.observe(note)
+    return () => {
+      observer.disconnect()
+      cancelAnimationFrame(frame)
+    }
+  }, [activeIndex])
 
   if (!story) {
     return (
@@ -148,7 +191,7 @@ export function StoryView() {
           </Text>
         </div>
 
-        <div className="story-body">
+        <div className="story-body" ref={bodyRef}>
           {tokens.map((token, index) => {
             if (token.type !== 'word') {
               return <span key={`other-${index}`}>{token.value}</span>
@@ -157,9 +200,6 @@ export function StoryView() {
             const mark = story.wordMarks[token.key]
             const className = mark === 'unknown' ? 'story-word unknown' : 'story-word'
             const showGloss = activeIndex === index
-            const explanation = story.explanations[token.key]
-            const error = lookupErrors[token.key]
-            const loading = Boolean(loadingKeys[token.key])
 
             return (
               <span key={`word-${index}`}>
@@ -187,9 +227,13 @@ export function StoryView() {
                   {token.value}
                 </button>
                 {showGloss && (
+                  <span className="story-note-space" ref={noteSpaceRef} aria-hidden="true" />
+                )}
+                {showGloss && (
                   <span
                     className="inline-gloss"
-                    id={`gloss-${index}`}
+                    ref={noteRef}
+                    id={`gloss-${activeIndex}`}
                     role="note"
                     aria-label={`Definition of ${token.value}`}
                     onKeyDown={(event) => {

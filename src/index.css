@@ -62,6 +62,7 @@ body {
 }
 
 .story-body {
+  position: relative;
   max-width: 65ch;
   font-size: 1.125rem;
   line-height: 1.85;
@@ -94,13 +95,22 @@ body {
 }
 
 .inline-gloss {
-  display: block;
-  margin: 0.1em 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  visibility: hidden;
   font-size: 0.8rem;
   line-height: 1.45;
   white-space: normal;
   color: var(--gray-11);
   overflow-wrap: anywhere;
+}
+
+.story-note-space {
+  display: inline-block;
+  width: 0;
+  vertical-align: top;
+  pointer-events: none;
 }
 
 .inline-gloss-word {
