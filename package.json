@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "generate:pwa-assets": "pwa-assets-generator",
     "build:cefr": "node scripts/build-cefr.mjs",
-    "test:cefr": "node --test tests/cefr.test.mjs tests/debug-fixtures.test.mjs"
+    "test:cefr": "node --test tests/cefr.test.mjs tests/debug-fixtures.test.mjs",
+    "test:vocabulary": "node --test tests/vocabulary.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",

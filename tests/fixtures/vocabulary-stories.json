@@ -1,0 +1,29 @@
+[
+  {
+    "id": "vocabulary-cat-window",
+    "title": "The Window",
+    "body": "Cat sat by the window. The cat watched a bird.",
+    "level": "A1",
+    "createdAt": "2026-10-01T00:00:00Z",
+    "wordMarks": { "cat": "unknown" },
+    "explanations": { "cat": "A small animal." }
+  },
+  {
+    "id": "vocabulary-cat-rug",
+    "title": "The Rug",
+    "body": "A CAT slept on the rug.",
+    "level": "A1",
+    "createdAt": "2026-10-01T00:00:00Z",
+    "wordMarks": { "cat": "unknown" },
+    "explanations": { "cat": "A pet that purrs." }
+  },
+  {
+    "id": "vocabulary-zorblax",
+    "title": "The Visitor",
+    "body": "The cat saw a zorblax.",
+    "level": "A1",
+    "createdAt": "2026-10-01T00:00:00Z",
+    "wordMarks": { "cat": "known", "zorblax": "unknown" },
+    "explanations": {}
+  }
+]

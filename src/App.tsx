@@ -5,6 +5,7 @@ import { MyStories } from './pages/MyStories'
 import { NewStory } from './pages/NewStory'
 import { SettingsPage } from './pages/Settings'
 import { StoryView } from './pages/StoryView'
+import { Vocabulary } from './pages/Vocabulary'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/new" element={<NewStory />} />
         <Route path="/stories" element={<MyStories />} />
         <Route path="/stories/:id" element={<StoryView />} />
+        <Route path="/vocabulary" element={<Vocabulary />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
     </Routes>

@@ -4,6 +4,14 @@ A small web app for extensive reading: set a CEFR level, generate a story at tha
 
 Stories, word marks, and settings are stored in this browser (`localStorage`). There is no account or server.
 
+Open **Vocabulary** from Home or the desktop/mobile menu to review unknown words across stories. Words are grouped without regard to case, with each source story's saved definition, sentence, and link to the occurrence. Missing definitions remain visible. The collection has its own browser-local storage: removing a saved story keeps its unknown words, definitions, and sentences, with the source labeled **Story removed**. **Mark as known** in Vocabulary clears a word from the collection and marks it known in all remaining saved stories and enabled debugging fixtures. Marking a word known inside one story clears only that source; another unknown source, including a removed saved story, keeps the word tracked.
+
+Existing saved marks are imported automatically when the app opens; subsequent story and word updates keep the collection current. No re-marking is needed. With **Show CEFR fixture articles in My Stories** enabled, unknown fixture words appear too, with a **Debug fixture** label and source link. Turning the option off hides fixture sources and words known only from fixtures; words with an unknown saved-story source, including a removed saved story, remain. Turning it back on restores fixture words still marked unknown. Fixture marks and definitions stay in their existing separate storage, so hiding fixtures does not archive them as removed saved stories. This collection tracks words still being learned, with no flashcards or review scheduling. Clearing browser data also clears Vocabulary.
+
+Vocabulary shows each distinct saved definition once, followed by the sentences and story links for every source using it. Different definitions remain separate, and sources without a definition have their own unavailable group.
+
+See [Vocabulary verification steps](doc/vocabulary-verification.md) for a disposable fixture and removal/persistence checks.
+
 Enable **Settings → Debugging → Show approximate vocabulary difficulty** to display a report against each story's recorded CEFR level. This option is off by default. Validation runs locally with bundled A1–C2 vocabulary data, needs no API key, and works offline after the app is cached. Above-level words include occurrence counts and a percentage; unlisted words and detected names appear separately. Reports are advisory and do not block reading or saving.
 
 See [dataset attribution, calculation, limitations, and verification](data/cefr/README.md). The bundled dataset has its own terms, including CC BY-SA 4.0 for the derived vocabulary JSON.

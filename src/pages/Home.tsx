@@ -15,7 +15,7 @@ export function Home() {
         <Badge color="blue">{settings.cefrLevel}</Badge>
       </Text>
 
-      <Grid columns={{ initial: '1', sm: '3' }} gap="4">
+      <Grid columns={{ initial: '1', sm: '2' }} gap="4">
         <Card asChild>
           <Link to="/new" className="card-link">
             <Heading size="4" mb="2">
@@ -35,6 +35,13 @@ export function Home() {
             <Text as="p" color="gray" size="2">
               Open a story you have already generated.
             </Text>
+          </Link>
+        </Card>
+
+        <Card asChild>
+          <Link to="/vocabulary" className="card-link">
+            <Heading size="4" mb="2">Vocabulary</Heading>
+            <Text as="p" color="gray" size="2">Review words you are learning across your stories.</Text>
           </Link>
         </Card>
 
