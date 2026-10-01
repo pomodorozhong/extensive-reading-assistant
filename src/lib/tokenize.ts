@@ -36,13 +36,3 @@ export function tokenize(text: string): Token[] {
 
   return tokens
 }
-
-export function nextMark(current: 'known' | 'unknown' | undefined): 'known' | 'unknown' | undefined {
-  if (!current) {
-    return 'unknown'
-  }
-  if (current === 'unknown') {
-    return 'known'
-  }
-  return undefined
-}
