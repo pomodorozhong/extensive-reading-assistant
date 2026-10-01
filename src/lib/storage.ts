@@ -1,9 +1,12 @@
 import { CEFR_LEVELS, type CefrLevel, type Settings, type Story, type WordMark } from '../types.ts'
 import { DEBUG_FIXTURES, isDebugFixture } from './debug-fixtures.ts'
+import { normalizeWord } from './tokenize.ts'
+import { reconcileVocabulary, type VocabularyWord } from './vocabulary.ts'
 
 const SETTINGS_KEY = 'era.v1.settings'
 const STORIES_KEY = 'era.v1.stories'
 const FIXTURE_STATE_KEY = 'era.v1.debug-fixtures'
+const VOCABULARY_KEY = 'era.v1.vocabulary'
 
 export const DEFAULT_SETTINGS: Settings = {
   cefrLevel: 'A1',
@@ -77,7 +80,54 @@ export function loadStories(): Story[] {
 }
 
 function saveStories(stories: Story[]): void {
+  // Capture old sources before removal/replacement, even before Vocabulary is opened.
+  const previous = reconcileVocabulary(readVocabulary(), loadStories())
+  const vocabulary = reconcileVocabulary(previous, stories)
+  writeVocabulary(vocabulary)
   localStorage.setItem(STORIES_KEY, JSON.stringify(stories))
+}
+
+function readVocabulary(): VocabularyWord[] {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(VOCABULARY_KEY) ?? '[]')
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((entry): entry is VocabularyWord =>
+      entry && typeof entry.key === 'string' && typeof entry.word === 'string' &&
+      Array.isArray(entry.sources) && entry.sources.every((source: Record<string, unknown>) =>
+        source && typeof source.storyId === 'string' && typeof source.title === 'string' &&
+        typeof source.sentence === 'string' &&
+        (source.tokenIndex === null || (Number.isInteger(source.tokenIndex) && Number(source.tokenIndex) >= 0)) &&
+        (source.definition === null || typeof source.definition === 'string'),
+      ),
+    )
+  } catch {
+    return []
+  }
+}
+
+function writeVocabulary(words: VocabularyWord[]): void {
+  const json = JSON.stringify(words)
+  if (localStorage.getItem(VOCABULARY_KEY) !== json) localStorage.setItem(VOCABULARY_KEY, json)
+}
+
+/** Seed legacy saved marks automatically and preserve removed-story snapshots. */
+export function loadVocabulary(): VocabularyWord[] {
+  const words = reconcileVocabulary(readVocabulary(), loadStories())
+  writeVocabulary(words)
+  return words
+}
+
+export function markVocabularyKnown(key: string): void {
+  const normalized = normalizeWord(key)
+  const stories = loadStories().map((story) => {
+    const wordMarks = { ...story.wordMarks }
+    for (const [word, mark] of Object.entries(wordMarks)) {
+      if (normalizeWord(word) === normalized && mark === 'unknown') wordMarks[word] = 'known'
+    }
+    return { ...story, wordMarks }
+  })
+  saveStories(stories)
+  writeVocabulary(readVocabulary().filter((word) => word.key !== normalized))
 }
 
 type FixtureState = Pick<Story, 'wordMarks' | 'explanations'>

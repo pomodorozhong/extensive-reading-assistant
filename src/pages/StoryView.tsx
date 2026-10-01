@@ -1,7 +1,7 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { VocabularyReport } from '../components/VocabularyReport'
 import { isDebugFixture } from '../lib/debug-fixtures'
 import { lookupDefinition } from '../lib/dictionary'
@@ -11,6 +11,7 @@ import type { Story } from '../types'
 
 export function StoryView() {
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
   const [story, setStory] = useState<Story | undefined>(() => (id ? getStory(id) : undefined))
   const [showVocabularyReport] = useState(() => loadSettings().showVocabularyReport)
   const [loadingKeys, setLoadingKeys] = useState<Record<string, boolean>>({})
@@ -42,6 +43,16 @@ export function StoryView() {
     })
     return entries
   }, [story, tokens])
+
+  useLayoutEffect(() => {
+    const target = searchParams.get('word')
+    if (target === null || !/^\d+$/.test(target)) return
+    const index = Number(target)
+    if (tokens[index]?.type !== 'word') return
+    const word = document.getElementById(`word-${index}`)
+    word?.scrollIntoView({ block: 'center' })
+    word?.focus({ preventScroll: true })
+  }, [searchParams, tokens])
 
   useLayoutEffect(() => {
     if (activeIndex === null) return

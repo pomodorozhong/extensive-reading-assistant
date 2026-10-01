@@ -1,11 +1,14 @@
 import { HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { Button, DropdownMenu, Flex, IconButton, Text } from '@radix-ui/themes'
+import { useEffect } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { loadVocabulary } from '../lib/storage'
 import { PwaStatus } from './PwaStatus'
 
 const NAV = [
   { to: '/new', label: 'New Story' },
   { to: '/stories', label: 'My Stories' },
+  { to: '/vocabulary', label: 'Vocabulary' },
   { to: '/settings', label: 'Settings' },
 ] as const
 
@@ -18,6 +21,9 @@ function navVariant(pathname: string, to: string): 'soft' | 'ghost' {
 
 export function Layout() {
   const { pathname } = useLocation()
+  useEffect(() => {
+    loadVocabulary()
+  }, [])
 
   return (
     <div className="app-shell">

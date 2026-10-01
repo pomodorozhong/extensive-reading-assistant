@@ -1,0 +1,30 @@
+# Vocabulary verification
+
+Use a disposable browser profile so these steps do not overwrite personal stories. Start the app with `npm install` and `npm run dev`, then open the Vite URL. No API key is required. These steps assume the default local asset base `/`.
+
+In the browser developer console, seed three saved stories and reset the disposable Vocabulary collection:
+
+```js
+const stories = await (await fetch('/tests/fixtures/vocabulary-stories.json')).json()
+localStorage.setItem('era.v1.stories', JSON.stringify(stories))
+localStorage.removeItem('era.v1.vocabulary')
+location.hash = '#/vocabulary'
+location.reload()
+```
+
+1. Open Vocabulary from Home and navigation at desktop and mobile widths. Expect one `Cat` entry with two sources: **The Window** / **A small animal.** and **The Rug** / **A pet that purrs.** Each source has its own sentence. `zorblax` remains visible with **No definition saved.**
+2. Follow each `Cat` source link. Expect the correct story and the first occurrence of that word to receive focus and scroll into view. Click it to see its saved definition. Mark `Cat` known only in **The Window** and reopen Vocabulary: **The Rug** keeps the entry. Clear the remaining source and expect `Cat` to disappear. Looking up `Cat` again adds it back.
+3. Reseed using the console block above. Simulate removal of **The Window** in the disposable profile (the app currently has no story deletion control):
+
+   ```js
+   localStorage.setItem('era.v1.stories', JSON.stringify(
+     JSON.parse(localStorage.getItem('era.v1.stories')).filter(story => story.id !== 'vocabulary-cat-window')
+   ))
+   location.reload()
+   ```
+
+   Expect `Cat` to retain both definitions and sentences. **The Window** has a **Story removed** label and no broken source link; **The Rug** still links to its occurrence. Mark `Cat` known only in **The Rug** and reopen Vocabulary: the removed source still keeps `Cat` tracked.
+4. Choose **Mark as known** on `Cat` in Vocabulary. Expect the entry to disappear and all remaining saved stories to mark `cat` known. Reload to confirm it remains cleared. Choose the same action for `zorblax` and expect the explanatory empty state.
+5. Reseed, remove all stories with `localStorage.removeItem('era.v1.stories')`, and reload. Expect both words with their saved context and **Story removed** labels. Clear them in Vocabulary, reload, and expect the empty state.
+
+Automated checks: `npm run test:vocabulary`, `npm run test:cefr`, `npm run lint`, and `npm run build`.
