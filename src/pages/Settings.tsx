@@ -85,7 +85,14 @@ export function SettingsPage() {
             Install app
           </Text>
           <Text as="p" size="2" color="gray" mb="3">
-            Add the reading assistant to your device for quick access.
+            Add the reading assistant to your device for quick access.{' '}
+            <Link
+              href="https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/What_is_a_progressive_web_app"
+              target="_blank"
+              rel="noreferrer"
+            >
+              (What is PWA?)
+            </Link>
           </Text>
           <Button onClick={handleInstallClick} disabled={installState.isInstalled}>
             {installState.isInstalled ? 'Installed' : 'Install app'}
