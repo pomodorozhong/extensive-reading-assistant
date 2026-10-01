@@ -8,7 +8,7 @@ Open **Vocabulary** from Home or the desktop/mobile menu to review unknown words
 
 Existing saved marks are imported automatically when the app opens; subsequent story and word updates keep the collection current. No re-marking is needed. With **Show CEFR fixture articles in My Stories** enabled, unknown fixture words appear too, with a **Debug fixture** label and source link. Turning the option off hides fixture sources and words known only from fixtures; words with an unknown saved-story source, including a removed saved story, remain. Turning it back on restores fixture words still marked unknown. Fixture marks and definitions stay in their existing separate storage, so hiding fixtures does not archive them as removed saved stories. This collection tracks words still being learned, with no flashcards or review scheduling. Clearing browser data also clears Vocabulary.
 
-Vocabulary shows each distinct saved definition once, followed by the sentences and story links for every source using it. Different definitions remain separate, and sources without a definition have their own unavailable group.
+Vocabulary groups unknown words into approximate A1–C2 sections, followed by Unlisted, using the bundled offline CEFR data independently of story and Settings levels. Words are alphabetized within each nonempty section, and each section shows its word count. Each distinct saved definition appears once, followed by the sentences and story links for every source using it. Different definitions remain separate, and sources without a definition have their own unavailable group.
 
 See [Vocabulary verification steps](doc/vocabulary-verification.md) for a disposable fixture and removal/persistence checks.
 

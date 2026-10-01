@@ -12,7 +12,7 @@ location.hash = '#/vocabulary'
 location.reload()
 ```
 
-1. Open Vocabulary from Home and navigation at desktop and mobile widths. Expect one `Cat` entry with two sources: **The Window** / **A small animal.** and **The Rug** / **A pet that purrs.** Each source has its own sentence. `zorblax` remains visible with **No definition saved.**
+1. Open Vocabulary from Home and navigation at desktop and mobile widths. Expect `Cat` under **A1** with a count of one word and `zorblax` under **Unlisted** with a count of one word. Empty sections do not appear. Each word is sorted alphabetically within its section. The explanatory copy identifies CEFR levels as approximate and independent of story and Settings levels.
 2. Follow each `Cat` source link. Expect the correct story and the first occurrence of that word to receive focus and scroll into view. Click it to see its saved definition. Mark `Cat` known only in **The Window** and reopen Vocabulary: **The Rug** keeps the entry. Clear the remaining source and expect `Cat` to disappear. Looking up `Cat` again adds it back.
 3. Reseed using the console block above. Simulate removal of **The Window** in the disposable profile (the app currently has no story deletion control):
 
@@ -24,12 +24,13 @@ location.reload()
    ```
 
    Expect `Cat` to retain both definitions and sentences. **The Window** has a **Story removed** label and no broken source link; **The Rug** still links to its occurrence. Mark `Cat` known only in **The Rug** and reopen Vocabulary: the removed source still keeps `Cat` tracked.
-4. Choose **Mark as known** on `Cat` in Vocabulary. Expect the entry to disappear and all remaining saved stories to mark `cat` known. Reload to confirm it remains cleared. Choose the same action for `zorblax` and expect the explanatory empty state.
+4. Choose **Mark as known** on `Cat` in Vocabulary. Expect the entry and its **A1** section to disappear while **Unlisted** remains. All remaining saved stories should mark `cat` known. Reload to confirm it remains cleared. Choose the same action for `zorblax` and expect the section headings and explanatory empty state to disappear.
 5. Reseed, remove all stories with `localStorage.removeItem('era.v1.stories')`, and reload. Expect both words with their saved context and **Story removed** labels. Clear them in Vocabulary, reload, and expect the empty state.
 6. Reseed and enable **Settings → Debugging → Show CEFR fixture articles in My Stories**. Open **A small garden** in My Stories and look up `garden` and `cat`. Open Vocabulary: expect `garden` with a **Debug fixture** source link and `Cat` with both saved-story and fixture sources. Follow the fixture link to check occurrence focus.
 7. Turn the fixture option off and reopen Vocabulary. Expect `garden` to disappear and `Cat` to keep only its saved-story sources. Reload to confirm. Turn fixtures on again: both fixture sources return with their saved definitions.
 8. With fixtures on, mark `Cat` known in Vocabulary. Expect it to clear from both saved and fixture stories and stay cleared after toggling off/on. A word marked known while fixtures are hidden affects only saved stories; an unknown fixture source reappears when enabled again.
-9. Reseed, then add a third source with the same definition as **The Window**:
+9. Reseed, then add a disposable story containing an inflection such as `children`, a contraction such as `won’t`, and an unresolved token such as `zorblax`. Mark them unknown and reopen Vocabulary. Expect the inflected and contracted forms to use the same bundled classification rules as story analysis, while the unresolved token remains in **Unlisted**.
+10. Reseed, then add a third source with the same definition as **The Window**:
 
    ```js
    const duplicateStories = JSON.parse(localStorage.getItem('era.v1.stories'))
