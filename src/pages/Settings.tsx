@@ -85,7 +85,14 @@ export function SettingsPage() {
             Install app
           </Text>
           <Text as="p" size="2" color="gray" mb="3">
-            Add the reading assistant to your device for quick access.
+            Add the reading assistant to your device for quick access.{' '}
+            <Link
+              href="https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/What_is_a_progressive_web_app"
+              target="_blank"
+              rel="noreferrer"
+            >
+              (What is PWA?)
+            </Link>
           </Text>
           <Button onClick={handleInstallClick} disabled={installState.isInstalled}>
             {installState.isInstalled ? 'Installed' : 'Install app'}
@@ -132,18 +139,33 @@ export function SettingsPage() {
           </div>
         </div>
 
-        <label>
-          <Text as="div" size="2" weight="medium" mb="1">
-            Gemini API key
-          </Text>
-          <TextField.Root
-            type="password"
-            autoComplete="off"
-            placeholder="AIza…"
-            value={settings.apiKey}
-            onChange={(event) => patch({ apiKey: event.target.value })}
-          />
-        </label>
+        <div>
+          <label>
+            <Text as="div" size="2" weight="medium" mb="1">
+              Gemini API key
+            </Text>
+            <TextField.Root
+              type="password"
+              autoComplete="off"
+              placeholder="AIza…"
+              aria-describedby="gemini-api-key-guidance"
+              value={settings.apiKey}
+              onChange={(event) => patch({ apiKey: event.target.value })}
+            />
+          </label>
+          <Callout.Root color="gray" mt="3" id="gemini-api-key-guidance">
+            <Callout.Icon>
+              <InfoCircledIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              Create a Gemini API key in{' '}
+              <Link href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
+                Google AI Studio
+              </Link>
+              . Restrict the key by HTTP referrer if you host this app on the public web.
+            </Callout.Text>
+          </Callout.Root>
+        </div>
 
         <label>
           <Text as="div" size="2" weight="medium" mb="1">
@@ -174,12 +196,12 @@ export function SettingsPage() {
                 checked={settings.showDebugFixtures}
                 onCheckedChange={(checked) => patch({ showDebugFixtures: checked })}
               />
-              Show CEFR fixture articles in My Stories (debugging)
+              Show CEFR fixture articles in My Stories
             </Flex>
           </Text>
           <Text as="p" size="2" color="gray" mt="2">
-            Off by default. Adds six bundled example articles, one per level from A1 to C2.
-            These are debugging samples, not certified CEFR texts. Hiding them keeps your saved stories.
+            Off by default. Adds six illustrative A1–C2 articles, not certified CEFR texts.
+            Hiding them keeps your saved stories.
           </Text>
           <Text as="label" size="2" mt="4">
             <Flex align="center" gap="2">
@@ -187,27 +209,14 @@ export function SettingsPage() {
                 checked={settings.showVocabularyReport}
                 onCheckedChange={(checked) => patch({ showVocabularyReport: checked })}
               />
-              Show approximate vocabulary difficulty (debugging)
+              Show approximate vocabulary difficulty
             </Flex>
           </Text>
           <Text as="p" size="2" color="gray" mt="2">
-            Off by default. Shows the vocabulary report at the bottom of Story View for saved
-            stories and debugging fixtures.
+            Off by default. Shows an approximate vocabulary report below saved stories and fixture
+            articles in Story View.
           </Text>
         </div>
-
-        <Callout.Root color="gray">
-          <Callout.Icon>
-            <InfoCircledIcon />
-          </Callout.Icon>
-          <Callout.Text>
-            Create a Gemini API key in{' '}
-            <Link href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
-              Google AI Studio
-            </Link>
-            . Restrict the key by HTTP referrer if you host this app on the public web.
-          </Callout.Text>
-        </Callout.Root>
       </Flex>
     </Container>
   )
