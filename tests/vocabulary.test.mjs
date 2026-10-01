@@ -3,7 +3,7 @@ import { beforeEach, test } from 'node:test'
 import { readFileSync } from 'node:fs'
 import { reconcileVocabulary, vocabularySourcePath } from '../src/lib/vocabulary.ts'
 import {
-  DEFAULT_SETTINGS, loadStories, loadVocabulary, markVocabularyKnown, saveSettings,
+  DEFAULT_SETTINGS, getStory, loadStories, loadVocabulary, markVocabularyKnown, saveSettings,
   updateWordExplanation, updateWordMark, upsertStory,
 } from '../src/lib/storage.ts'
 
@@ -125,11 +125,82 @@ test('blank/missing definitions and stale text marks do not hide unknown words',
   assert.equal(vocabularySourcePath(entry.sources[0]), `/stories/${story.id}`)
 })
 
-test('debug fixture marks never enter saved Vocabulary', () => {
+test('fixture-only words appear while enabled, hide when disabled, and return after re-enabling', () => {
   saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true })
   updateWordMark('debug-cefr-a1', 'garden', 'unknown')
-  assert.deepEqual(loadVocabulary(), [])
+  updateWordExplanation('debug-cefr-a1', 'garden', 'A place for plants.')
+  const [entry] = loadVocabulary()
+  assert.equal(entry.key, 'garden')
+  assert.equal(entry.sources[0].definition, 'A place for plants.')
+  assert.equal(vocabularySourcePath(entry.sources[0]), `/stories/debug-cefr-a1?word=${entry.sources[0].tokenIndex}`)
+  assert.ok(entry.sources[0].sentence.includes('garden'))
+  assert.deepEqual(JSON.parse(localStorage.getItem('era.v1.vocabulary')), [])
   assert.deepEqual(loadStories(), [])
+  const fixtureState = localStorage.getItem('era.v1.debug-fixtures')
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: false })
+  assert.deepEqual(loadVocabulary(), [])
+  assert.deepEqual(loadVocabulary(), [])
+  assert.equal(localStorage.getItem('era.v1.debug-fixtures'), fixtureState)
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true })
+  assert.deepEqual(loadVocabulary(), [entry])
+  assert.deepEqual(loadStories(), [])
+})
+
+test('shared saved/fixture words remain with saved sources when fixtures are disabled', () => {
+  seed()
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true })
+  updateWordMark('debug-cefr-a1', 'cat', 'unknown')
+  updateWordExplanation('debug-cefr-a1', 'cat', 'Fixture definition.')
+  const cat = loadVocabulary().find((entry) => entry.key === 'cat')
+  assert.equal(cat.sources.length, 3)
+  assert.equal(cat.sources[2].definition, 'Fixture definition.')
+  assert.equal(JSON.parse(localStorage.getItem('era.v1.vocabulary'))[0].sources.length, 2)
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: false })
+  assert.equal(loadVocabulary()[0].sources.length, 2)
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true })
+  assert.equal(loadVocabulary()[0].sources.length, 3)
+})
+
+test('removed saved-story snapshots remain while fixture-only words disappear', () => {
+  seed()
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true })
+  updateWordMark('debug-cefr-a1', 'cat', 'unknown')
+  updateWordMark('debug-cefr-a1', 'garden', 'unknown')
+  loadVocabulary()
+  localStorage.removeItem('era.v1.stories')
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: false })
+  const entries = loadVocabulary()
+  assert.deepEqual(entries.map((entry) => entry.key), ['cat', 'zorblax'])
+  assert.equal(entries[0].sources.length, 2)
+})
+
+test('Vocabulary mark-as-known updates enabled fixtures without recreating their unknown words', () => {
+  seed()
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true })
+  updateWordMark('debug-cefr-a1', 'cat', 'unknown')
+  updateWordMark('debug-cefr-a2', 'garden', 'unknown')
+  markVocabularyKnown('CAT')
+  markVocabularyKnown('garden')
+  assert.deepEqual(loadVocabulary().map((entry) => entry.key), ['zorblax'])
+  assert.equal(getStory('debug-cefr-a1').wordMarks.cat, 'known')
+  assert.equal(getStory('debug-cefr-a2').wordMarks.garden, 'known')
+  assert.ok(loadStories().every((story) => story.wordMarks.cat === 'known'))
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: false })
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true })
+  assert.deepEqual(loadVocabulary().map((entry) => entry.key), ['zorblax'])
+})
+
+test('marking a shared word known with fixtures hidden preserves its hidden fixture mark', () => {
+  seed()
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true })
+  updateWordMark('debug-cefr-a1', 'cat', 'unknown')
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: false })
+  markVocabularyKnown('cat')
+  assert.deepEqual(loadVocabulary().map((entry) => entry.key), ['zorblax'])
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true })
+  const [cat] = loadVocabulary()
+  assert.equal(cat.key, 'cat')
+  assert.deepEqual(cat.sources.map((source) => source.storyId), ['debug-cefr-a1'])
 })
 
 test('invalid vocabulary storage is repaired from saved stories', () => {

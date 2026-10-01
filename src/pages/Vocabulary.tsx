@@ -1,23 +1,26 @@
 import { Badge, Button, Card, Container, Flex, Heading, Text } from '@radix-ui/themes'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { loadStories, loadVocabulary, markVocabularyKnown } from '../lib/storage'
+import { isDebugFixture } from '../lib/debug-fixtures'
+import { loadStories, loadVisibleStories, loadVocabulary, markVocabularyKnown } from '../lib/storage'
 import { vocabularySourcePath } from '../lib/vocabulary'
 
 export function Vocabulary() {
   const [words, setWords] = useState(loadVocabulary)
-  const storyIds = new Set(loadStories().map((story) => story.id))
+  const storyIds = new Set(loadVisibleStories().map((story) => story.id))
+  const savedIds = new Set(loadStories().map((story) => story.id))
 
   return (
     <Container size="2" px="4">
       <Heading size="7" mb="2">Vocabulary</Heading>
       <Text as="p" color="gray" mb="5">
         Words you are learning stay here even if their stories are removed. Mark a word as known
-        to clear it here and in all saved stories.
+        to clear it here and in all visible stories. Debug fixture words appear while fixture
+        articles are enabled in Settings.
       </Text>
       {words.length === 0 ? (
         <Flex direction="column" gap="3" align="start">
-          <Text>No unknown words yet. Look up a word while reading a saved story to add it here.</Text>
+          <Text>No unknown words yet. Look up a word while reading to add it here.</Text>
           <Button asChild><Link to="/stories">Open My Stories</Link></Button>
         </Flex>
       ) : (
@@ -48,11 +51,16 @@ export function Vocabulary() {
                       {source.sentence || 'Source sentence unavailable.'}
                     </Text>
                     {storyIds.has(source.storyId) ? (
-                      <Text asChild size="2">
-                        <Link to={vocabularySourcePath(source)} aria-label={`Find ${entry.word} in ${source.title}`}>
-                          {source.title}
-                        </Link>
-                      </Text>
+                      <Flex align="center" gap="2" wrap="wrap">
+                        <Text asChild size="2">
+                          <Link to={vocabularySourcePath(source)} aria-label={`Find ${entry.word} in ${source.title}`}>
+                            {source.title}
+                          </Link>
+                        </Text>
+                        {isDebugFixture(source.storyId) && !savedIds.has(source.storyId) && (
+                          <Badge color="amber">Debug fixture</Badge>
+                        )}
+                      </Flex>
                     ) : (
                       <Flex align="center" gap="2" wrap="wrap">
                         <Text size="2" color="gray">{source.title}</Text>

@@ -112,21 +112,31 @@ function writeVocabulary(words: VocabularyWord[]): void {
 
 /** Seed legacy saved marks automatically and preserve removed-story snapshots. */
 export function loadVocabulary(): VocabularyWord[] {
-  const words = reconcileVocabulary(readVocabulary(), loadStories())
+  const saved = loadStories()
+  const words = reconcileVocabulary(readVocabulary(), saved)
   writeVocabulary(words)
-  return words
+  // Fixture state persists separately. Overlay enabled fixtures without archiving
+  // their words as removed-story sources when the debugging option is turned off.
+  const savedIds = new Set(saved.map((story) => story.id))
+  const fixtures = loadVisibleStories().filter((story) => !savedIds.has(story.id))
+  return reconcileVocabulary(words, fixtures)
+}
+
+function markStoryWordKnown(story: Story, normalized: string): Story {
+  const wordMarks = { ...story.wordMarks }
+  for (const [word, mark] of Object.entries(wordMarks)) {
+    if (normalizeWord(word) === normalized && mark === 'unknown') wordMarks[word] = 'known'
+  }
+  return { ...story, wordMarks }
 }
 
 export function markVocabularyKnown(key: string): void {
   const normalized = normalizeWord(key)
-  const stories = loadStories().map((story) => {
-    const wordMarks = { ...story.wordMarks }
-    for (const [word, mark] of Object.entries(wordMarks)) {
-      if (normalizeWord(word) === normalized && mark === 'unknown') wordMarks[word] = 'known'
-    }
-    return { ...story, wordMarks }
-  })
-  saveStories(stories)
+  const saved = loadStories()
+  const savedIds = new Set(saved.map((story) => story.id))
+  const fixtures = loadVisibleStories().filter((story) => !savedIds.has(story.id))
+  saveStories(saved.map((story) => markStoryWordKnown(story, normalized)))
+  for (const fixture of fixtures) saveStoryChanges(markStoryWordKnown(fixture, normalized))
   writeVocabulary(readVocabulary().filter((word) => word.key !== normalized))
 }
 

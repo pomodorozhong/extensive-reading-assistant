@@ -26,5 +26,8 @@ location.reload()
    Expect `Cat` to retain both definitions and sentences. **The Window** has a **Story removed** label and no broken source link; **The Rug** still links to its occurrence. Mark `Cat` known only in **The Rug** and reopen Vocabulary: the removed source still keeps `Cat` tracked.
 4. Choose **Mark as known** on `Cat` in Vocabulary. Expect the entry to disappear and all remaining saved stories to mark `cat` known. Reload to confirm it remains cleared. Choose the same action for `zorblax` and expect the explanatory empty state.
 5. Reseed, remove all stories with `localStorage.removeItem('era.v1.stories')`, and reload. Expect both words with their saved context and **Story removed** labels. Clear them in Vocabulary, reload, and expect the empty state.
+6. Reseed and enable **Settings → Debugging → Show CEFR fixture articles in My Stories**. Open **A small garden** in My Stories and look up `garden` and `cat`. Open Vocabulary: expect `garden` with a **Debug fixture** source link and `Cat` with both saved-story and fixture sources. Follow the fixture link to check occurrence focus.
+7. Turn the fixture option off and reopen Vocabulary. Expect `garden` to disappear and `Cat` to keep only its saved-story sources. Reload to confirm. Turn fixtures on again: both fixture sources return with their saved definitions.
+8. With fixtures on, mark `Cat` known in Vocabulary. Expect it to clear from both saved and fixture stories and stay cleared after toggling off/on. A word marked known while fixtures are hidden affects only saved stories; an unknown fixture source reappears when enabled again.
 
 Automated checks: `npm run test:vocabulary`, `npm run test:cefr`, `npm run lint`, and `npm run build`.
