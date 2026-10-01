@@ -29,5 +29,15 @@ location.reload()
 6. Reseed and enable **Settings → Debugging → Show CEFR fixture articles in My Stories**. Open **A small garden** in My Stories and look up `garden` and `cat`. Open Vocabulary: expect `garden` with a **Debug fixture** source link and `Cat` with both saved-story and fixture sources. Follow the fixture link to check occurrence focus.
 7. Turn the fixture option off and reopen Vocabulary. Expect `garden` to disappear and `Cat` to keep only its saved-story sources. Reload to confirm. Turn fixtures on again: both fixture sources return with their saved definitions.
 8. With fixtures on, mark `Cat` known in Vocabulary. Expect it to clear from both saved and fixture stories and stay cleared after toggling off/on. A word marked known while fixtures are hidden affects only saved stories; an unknown fixture source reappears when enabled again.
+9. Reseed, then add a third source with the same definition as **The Window**:
+
+   ```js
+   const duplicateStories = JSON.parse(localStorage.getItem('era.v1.stories'))
+   duplicateStories.push({ ...duplicateStories[0], id: 'vocabulary-cat-door', title: 'The Door', body: 'A cat stood by the door.' })
+   localStorage.setItem('era.v1.stories', JSON.stringify(duplicateStories))
+   location.reload()
+   ```
+
+   Expect **A small animal.** once above the sentences and links for **The Window** and **The Door**. **A pet that purrs.** remains a separate definition with **The Rug** as its source. Follow all three links and confirm their occurrence focus. Missing definitions still show their own unavailable group.
 
 Automated checks: `npm run test:vocabulary`, `npm run test:cefr`, `npm run lint`, and `npm run build`.

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { beforeEach, test } from 'node:test'
 import { readFileSync } from 'node:fs'
-import { reconcileVocabulary, vocabularySourcePath } from '../src/lib/vocabulary.ts'
+import { groupVocabularyDefinitions, reconcileVocabulary, vocabularySourcePath } from '../src/lib/vocabulary.ts'
 import {
   DEFAULT_SETTINGS, getStory, loadStories, loadVocabulary, markVocabularyKnown, saveSettings,
   updateWordExplanation, updateWordMark, upsertStory,
@@ -24,6 +24,34 @@ beforeEach(() => {
 function seed() {
   localStorage.setItem('era.v1.stories', JSON.stringify(fixture))
 }
+
+test('identical definitions display once while retaining every source sentence and occurrence', () => {
+  const sources = [
+    { storyId: 'first', title: 'First', sentence: 'A cat ran.', tokenIndex: 2, definition: 'A pet.' },
+    { storyId: 'second', title: 'Second', sentence: 'The cat slept.', tokenIndex: 2, definition: 'A small animal.' },
+    { storyId: 'third', title: 'Third', sentence: 'Cat sat.', tokenIndex: 0, definition: ' A pet. ' },
+  ]
+  const original = structuredClone(sources)
+  const groups = groupVocabularyDefinitions(sources)
+  assert.deepEqual(groups.map((group) => group.definition), ['A pet.', 'A small animal.'])
+  assert.deepEqual(groups[0].sources.map((source) => source.storyId), ['first', 'third'])
+  assert.deepEqual(groups[0].sources.map((source) => source.sentence), ['A cat ran.', 'Cat sat.'])
+  assert.deepEqual(groups[0].sources.map(vocabularySourcePath), ['/stories/first?word=2', '/stories/third?word=0'])
+  assert.deepEqual(groups[1].sources, [sources[1]])
+  assert.deepEqual(sources, original)
+})
+
+test('missing definitions share an unavailable group without borrowing another source definition', () => {
+  const sources = [
+    { storyId: 'missing', definition: null },
+    { storyId: 'defined', definition: 'A pet.' },
+    { storyId: 'blank', definition: '  ' },
+  ]
+  const groups = groupVocabularyDefinitions(sources)
+  assert.deepEqual(groups.map((group) => group.definition), [null, 'A pet.'])
+  assert.deepEqual(groups[0].sources.map((source) => source.storyId), ['missing', 'blank'])
+  assert.deepEqual(groups[1].sources.map((source) => source.storyId), ['defined'])
+})
 
 test('legacy stories seed separate storage with case-insensitive deduplication and per-source context', () => {
   seed()

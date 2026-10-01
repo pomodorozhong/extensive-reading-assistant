@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { isDebugFixture } from '../lib/debug-fixtures'
 import { loadStories, loadVisibleStories, loadVocabulary, markVocabularyKnown } from '../lib/storage'
-import { vocabularySourcePath } from '../lib/vocabulary'
+import { groupVocabularyDefinitions, vocabularySourcePath } from '../lib/vocabulary'
 
 export function Vocabulary() {
   const [words, setWords] = useState(loadVocabulary)
@@ -42,31 +42,37 @@ export function Vocabulary() {
                 </Button>
               </Flex>
               <Flex direction="column" gap="4">
-                {entry.sources.map((source) => (
-                  <Flex key={source.storyId} direction="column" gap="2" style={{ overflowWrap: 'anywhere' }}>
-                    <Text as="p" size="2" color={source.definition ? undefined : 'gray'}>
-                      {source.definition ?? 'No definition saved.'}
+                {groupVocabularyDefinitions(entry.sources).map((group) => (
+                  <Flex key={group.definition ?? ''} direction="column" gap="3" style={{ overflowWrap: 'anywhere' }}>
+                    <Text as="p" size="2" color={group.definition ? undefined : 'gray'}>
+                      {group.definition ?? 'No definition saved.'}
                     </Text>
-                    <Text as="p" size="2" color="gray">
-                      {source.sentence || 'Source sentence unavailable.'}
-                    </Text>
-                    {storyIds.has(source.storyId) ? (
-                      <Flex align="center" gap="2" wrap="wrap">
-                        <Text asChild size="2">
-                          <Link to={vocabularySourcePath(source)} aria-label={`Find ${entry.word} in ${source.title}`}>
-                            {source.title}
-                          </Link>
-                        </Text>
-                        {isDebugFixture(source.storyId) && !savedIds.has(source.storyId) && (
-                          <Badge color="amber">Debug fixture</Badge>
-                        )}
-                      </Flex>
-                    ) : (
-                      <Flex align="center" gap="2" wrap="wrap">
-                        <Text size="2" color="gray">{source.title}</Text>
-                        <Badge color="gray">Story removed</Badge>
-                      </Flex>
-                    )}
+                    <Flex direction="column" gap="3" pl="3" style={{ borderLeft: '2px solid var(--gray-a5)' }}>
+                      {group.sources.map((source) => (
+                        <Flex key={source.storyId} direction="column" gap="2">
+                          <Text as="p" size="2" color="gray">
+                            {source.sentence || 'Source sentence unavailable.'}
+                          </Text>
+                          {storyIds.has(source.storyId) ? (
+                            <Flex align="center" gap="2" wrap="wrap">
+                              <Text asChild size="2">
+                                <Link to={vocabularySourcePath(source)} aria-label={`Find ${entry.word} in ${source.title}`}>
+                                  {source.title}
+                                </Link>
+                              </Text>
+                              {isDebugFixture(source.storyId) && !savedIds.has(source.storyId) && (
+                                <Badge color="amber">Debug fixture</Badge>
+                              )}
+                            </Flex>
+                          ) : (
+                            <Flex align="center" gap="2" wrap="wrap">
+                              <Text size="2" color="gray">{source.title}</Text>
+                              <Badge color="gray">Story removed</Badge>
+                            </Flex>
+                          )}
+                        </Flex>
+                      ))}
+                    </Flex>
                   </Flex>
                 ))}
               </Flex>

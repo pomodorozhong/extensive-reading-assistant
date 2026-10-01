@@ -15,6 +15,18 @@ export type VocabularyWord = {
   sources: VocabularySource[]
 }
 
+/** Display each distinct saved definition once, with all its source contexts. */
+export function groupVocabularyDefinitions(sources: VocabularySource[]) {
+  const groups = new Map<string | null, VocabularySource[]>()
+  for (const source of sources) {
+    const definition = source.definition?.trim() || null
+    const group = groups.get(definition)
+    if (group) group.push(source)
+    else groups.set(definition, [source])
+  }
+  return [...groups].map(([definition, sources]) => ({ definition, sources }))
+}
+
 /** Keep snapshots from removed stories; refresh marks and context for present stories. */
 export function reconcileVocabulary(saved: VocabularyWord[], stories: Story[]): VocabularyWord[] {
   const storyIds = new Set(stories.map((story) => story.id))
