@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import { beforeEach, test } from 'node:test'
 import { readFileSync } from 'node:fs'
-import { groupVocabularyDefinitions, reconcileVocabulary, vocabularySourcePath } from '../src/lib/vocabulary.ts'
+import { classifyWord } from '../src/lib/cefr.ts'
+import {
+  groupVocabularyByLevel, groupVocabularyDefinitions, reconcileVocabulary, vocabularySourcePath,
+} from '../src/lib/vocabulary.ts'
 import {
   DEFAULT_SETTINGS, getStory, loadStories, loadVocabulary, markVocabularyKnown, saveSettings,
   updateWordExplanation, updateWordMark, upsertStory,
@@ -24,6 +27,35 @@ beforeEach(() => {
 function seed() {
   localStorage.setItem('era.v1.stories', JSON.stringify(fixture))
 }
+
+function vocabularyEntry(word) {
+  return { key: word.toLowerCase(), word, sources: [] }
+}
+
+test('groups words in CEFR order, sorts within sections, and leaves unresolved words unlisted', () => {
+  const sections = groupVocabularyByLevel([
+    vocabularyEntry('zorblax'),
+    vocabularyEntry('concur'),
+    vocabularyEntry('cats'),
+    vocabularyEntry('aberration'),
+    vocabularyEntry('ability'),
+    vocabularyEntry('complexity'),
+    vocabularyEntry('cat'),
+    vocabularyEntry('abandon'),
+  ])
+  assert.deepEqual(sections.map(({ level, words }) => ({ level, words: words.map(({ word }) => word) })), [
+    { level: 'A1', words: ['cat', 'cats'] },
+    { level: 'A2', words: ['ability'] },
+    { level: 'B1', words: ['abandon'] },
+    { level: 'B2', words: ['complexity'] },
+    { level: 'C1', words: ['concur'] },
+    { level: 'C2', words: ['aberration'] },
+    { level: 'Unlisted', words: ['zorblax'] },
+  ])
+  assert.equal(classifyWord('children'), 'A1')
+  assert.equal(classifyWord('understood'), 'A2')
+  assert.equal(classifyWord('won’t'), 'A1')
+})
 
 test('identical definitions display once while retaining every source sentence and occurrence', () => {
   const sources = [
@@ -121,6 +153,15 @@ test('known/unknown marks refresh by source without clearing another unknown sou
   assert.deepEqual(loadVocabulary().map((entry) => entry.key), ['cat', 'zorblax'])
   updateWordMark(fixture[0].id, 'cat', undefined)
   assert.deepEqual(loadVocabulary().map((entry) => entry.key), ['zorblax'])
+})
+
+test('marking words known updates their CEFR sections', () => {
+  seed()
+  assert.deepEqual(groupVocabularyByLevel(loadVocabulary()).map(({ level }) => level), ['A1', 'Unlisted'])
+  markVocabularyKnown('cat')
+  assert.deepEqual(groupVocabularyByLevel(loadVocabulary()).map(({ level }) => level), ['Unlisted'])
+  markVocabularyKnown('zorblax')
+  assert.deepEqual(groupVocabularyByLevel(loadVocabulary()), [])
 })
 
 test('clearing a surviving source leaves an unknown removed-story source tracked', () => {

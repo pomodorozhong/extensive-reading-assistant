@@ -1,3 +1,5 @@
+import { classifyWord } from './cefr.ts'
+import { CEFR_LEVELS, type CefrLevel } from '../types.ts'
 import type { Story } from '../types.ts'
 import { normalizeWord, tokenize } from './tokenize.ts'
 
@@ -13,6 +15,32 @@ export type VocabularyWord = {
   key: string
   word: string
   sources: VocabularySource[]
+}
+
+export type VocabularySectionLevel = CefrLevel | 'Unlisted'
+
+export type VocabularySection = {
+  level: VocabularySectionLevel
+  words: VocabularyWord[]
+}
+
+/** Group unknown words by their approximate bundled CEFR level. */
+export function groupVocabularyByLevel(words: VocabularyWord[]): VocabularySection[] {
+  const levels: VocabularySectionLevel[] = [...CEFR_LEVELS, 'Unlisted']
+  const groups = new Map<VocabularySectionLevel, VocabularyWord[]>(levels.map((level) => [level, []]))
+  for (const word of words) {
+    const level = classifyWord(word.word) ?? 'Unlisted'
+    groups.get(level)?.push(word)
+  }
+
+  return levels.flatMap((level) => {
+    const grouped = groups.get(level) ?? []
+    if (grouped.length === 0) return []
+    const sorted = [...grouped].sort((a, b) =>
+      a.word.localeCompare(b.word, undefined, { sensitivity: 'base' }) || a.key.localeCompare(b.key),
+    )
+    return [{ level, words: sorted }]
+  })
 }
 
 /** Display each distinct saved definition once, with all its source contexts. */

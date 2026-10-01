@@ -40,6 +40,27 @@ function expand(word: string): string[] {
   return [word]
 }
 
+type WordClassification = {
+  level?: CefrLevel
+  lemmas: string[]
+}
+
+function classifyWordDetails(word: string): WordClassification {
+  const normalized = word.toLowerCase().replaceAll('’', "'")
+  const parts = expand(normalized)
+  const lemmas = parts.map(lemma)
+  const resolved = lemmas.filter((value): value is string => value !== undefined)
+  const level = resolved.length === parts.length
+    ? CEFR_LEVELS[Math.max(...resolved.map((value) => CEFR_LEVELS.indexOf(lexicon[value])))]
+    : undefined
+  return { level, lemmas: resolved }
+}
+
+/** Resolve a word against the bundled approximate CEFR vocabulary profiles. */
+export function classifyWord(word: string): CefrLevel | undefined {
+  return classifyWordDetails(word).level
+}
+
 export type VocabularyEntry = {
   word: string
   count: number
@@ -74,13 +95,8 @@ export function analyzeVocabulary(body: string, target: CefrLevel) {
       existing.count++
       continue
     }
-    const parts = expand(word)
-    const lemmas = parts.map(lemma)
-    const resolved = lemmas.filter((value): value is string => value !== undefined)
-    const level = resolved.length === parts.length
-      ? CEFR_LEVELS[Math.max(...resolved.map((value) => CEFR_LEVELS.indexOf(lexicon[value])))]
-      : undefined
-    entries.set(word, { word, count: 1, level, lemmas: resolved })
+    const { level, lemmas } = classifyWordDetails(word)
+    entries.set(word, { word, count: 1, level, lemmas })
   }
   const sorted = [...entries.values()].sort((a, b) => b.count - a.count || a.word.localeCompare(b.word))
   const aboveLevel = sorted.filter((entry) => entry.level && CEFR_LEVELS.indexOf(entry.level) > CEFR_LEVELS.indexOf(target))
