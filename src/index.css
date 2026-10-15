@@ -52,6 +52,58 @@ body {
   display: block;
 }
 
+.nav-menu-link[aria-current='page']:not([data-highlighted]) {
+  color: var(--accent-11);
+  background: var(--accent-a3);
+}
+
+.nav-current-icon {
+  margin-left: auto;
+  opacity: 0;
+}
+
+.nav-menu-link[aria-current='page'] .nav-current-icon {
+  opacity: 1;
+}
+
+.new-story-page {
+  padding-top: clamp(24px, 6vh, 64px);
+}
+
+.new-story-hero {
+  margin-bottom: var(--space-7);
+  text-align: center;
+}
+
+.new-story-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  color: var(--accent-9);
+  background: var(--accent-a3);
+  border-radius: var(--radius-4);
+}
+
+.new-story-heading {
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.new-story-description {
+  max-width: 32rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.new-story-panel {
+  padding: clamp(20px, 4vw, 32px);
+  border: 1px solid var(--gray-a6);
+  border-radius: var(--radius-5);
+  background: var(--color-panel-solid);
+}
+
 .settings-form {
   max-width: 36rem;
 }
