@@ -1,4 +1,4 @@
-import { HamburgerMenuIcon } from '@radix-ui/react-icons'
+import { CheckIcon, HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { Button, DropdownMenu, Flex, IconButton, Text } from '@radix-ui/themes'
 import { useEffect } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
@@ -35,7 +35,7 @@ export function Layout() {
             </Text>
           </Link>
 
-          <div className="nav-desktop">
+          <nav className="nav-desktop" aria-label="Main navigation">
             <Flex gap="2" align="center">
               {NAV.map((item) => (
                 <Button key={item.to} asChild variant={navVariant(pathname, item.to)} size="2">
@@ -43,7 +43,7 @@ export function Layout() {
                 </Button>
               ))}
             </Flex>
-          </div>
+          </nav>
 
           <div className="nav-menu-btn">
             <DropdownMenu.Root>
@@ -52,10 +52,13 @@ export function Layout() {
                   <HamburgerMenuIcon />
                 </IconButton>
               </DropdownMenu.Trigger>
-              <DropdownMenu.Content align="end">
+              <DropdownMenu.Content align="end" aria-label="Main navigation">
                 {NAV.map((item) => (
                   <DropdownMenu.Item key={item.to} asChild>
-                    <NavLink to={item.to}>{item.label}</NavLink>
+                    <NavLink to={item.to} className="nav-menu-link">
+                      {item.label}
+                      <CheckIcon className="nav-current-icon" aria-hidden="true" />
+                    </NavLink>
                   </DropdownMenu.Item>
                 ))}
               </DropdownMenu.Content>

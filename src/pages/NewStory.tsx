@@ -1,4 +1,4 @@
-import { InfoCircledIcon } from '@radix-ui/react-icons'
+import { ArrowRightIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import {
   Badge,
   Button,
@@ -73,53 +73,75 @@ export function NewStory() {
   }
 
   return (
-    <Container size="2" px="4">
-      <Heading size="7" mb="2">
-        New Story
-      </Heading>
-      <Text as="p" color="gray" mb="5">
-        Generate a story at your current level: <Badge color="blue">{settings.cefrLevel}</Badge>
-      </Text>
+    <Container size="2" px="4" className="new-story-page">
+      <Flex direction="column" align="center" gap="4" className="new-story-hero">
+        <div className="new-story-icon" aria-hidden="true">
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 6C9 4 5 4 2 5v14c3-1 7-1 10 1 3-2 7-2 10-1V5c-3-1-7-1-10 1Z" />
+            <path d="M12 6v14" />
+          </svg>
+        </div>
+        <Heading as="h1" size={{ initial: '7', sm: '8' }} className="new-story-heading">
+          Generate a Reading Story
+        </Heading>
+        <Text as="p" color="gray" size={{ initial: '3', sm: '4' }} className="new-story-description">
+          Create short, engaging stories at your level to build reading habit and grow your vocabulary.
+        </Text>
+      </Flex>
 
-      {!hasKey && (
-        <Callout.Root color="amber" mb="4">
-          <Callout.Icon>
-            <InfoCircledIcon />
-          </Callout.Icon>
-          <Callout.Text>
-            Add an API key in <Link to="/settings">Settings</Link> before generating a story.
-          </Callout.Text>
-        </Callout.Root>
-      )}
+      <form onSubmit={onSubmit} className="new-story-panel" aria-label="Story generation">
+        <Text as="p" color="gray" size="2" mb="5">
+          Current vocabulary level: <Badge color="blue">{settings.cefrLevel}</Badge>
+        </Text>
 
-      {!isOnline && (
-        <Callout.Root color="amber" mb="4" role="status">
-          <Callout.Icon>
-            <InfoCircledIcon />
-          </Callout.Icon>
-          <Callout.Text>
-            You’re offline. Saved stories remain available, but Gemini story generation requires an
-            internet connection.
-          </Callout.Text>
-        </Callout.Root>
-      )}
+        {!hasKey && (
+          <Callout.Root color="amber" mb="4">
+            <Callout.Icon>
+              <InfoCircledIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              Add an API key in <Link to="/settings">Settings</Link> before generating a story.
+            </Callout.Text>
+          </Callout.Root>
+        )}
 
-      {error && (
-        <Callout.Root color="red" mb="4">
-          <Callout.Icon>
-            <InfoCircledIcon />
-          </Callout.Icon>
-          <Callout.Text>{error}</Callout.Text>
-        </Callout.Root>
-      )}
+        {!isOnline && (
+          <Callout.Root color="amber" mb="4" role="status">
+            <Callout.Icon>
+              <InfoCircledIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              You’re offline. Saved stories remain available, but Gemini story generation requires an
+              internet connection.
+            </Callout.Text>
+          </Callout.Root>
+        )}
 
-      <form onSubmit={onSubmit}>
+        {error && (
+          <Callout.Root color="red" mb="4">
+            <Callout.Icon>
+              <InfoCircledIcon />
+            </Callout.Icon>
+            <Callout.Text>{error}</Callout.Text>
+          </Callout.Root>
+        )}
+
         <Flex direction="column" gap="4">
           <label>
             <Text as="div" size="2" weight="medium" mb="1">
               Theme <Text color="gray">(optional)</Text>
             </Text>
             <TextField.Root
+              size="3"
               placeholder="A rainy afternoon at a bookshop"
               value={theme}
               onChange={(event) => setTheme(event.target.value)}
@@ -128,7 +150,7 @@ export function NewStory() {
           </label>
 
           <Button type="submit" size="3" disabled={!hasKey || !isOnline} loading={generating}>
-            Generate
+            Generate Story <ArrowRightIcon aria-hidden="true" />
           </Button>
         </Flex>
       </form>
