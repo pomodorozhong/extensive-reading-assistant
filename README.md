@@ -31,6 +31,35 @@ Then open the URL Vite prints (usually `http://localhost:5173`).
 
 Build a production bundle with `npm run build`. Preview it with `npm run preview`.
 
+## Choose a story
+
+New Story offers an optional theme, five theme examples, a CEFR vocabulary level, a reading length, and a supported model selector. An example fills the theme without submitting. The default level is A2 and the initial reading length is 10 minutes. A saved Settings level takes precedence; choices on New Story apply to that story and do not overwrite Settings. The model list currently offers **Gemini 3.1 Flash Lite**; its display label and request identifier are maintained together in `src/lib/generation-options.ts`. A supported saved model is selected initially; other saved model values fall back to the supported default in this form.
+
+The form expands to 1,024 pixels on wide screens and keeps 16-pixel side gutters on phones. Vocabulary level, reading length, and model stack below 768 pixels. From 768 to 1,023 pixels, vocabulary level fills its own row above length and model. At 1,024 pixels and wider, all three share one row, with extra room for the six vocabulary levels.
+
+Reading lengths use these prompt targets:
+
+| Requested reading length | Approximate word target |
+| --- | --- |
+| 5 min | 400–600 words |
+| 10 min | 800–1,200 words |
+| 15 min | 1,200–1,800 words |
+
+These are product targets rather than measured reading speeds. Reading time varies by learner, and generated length is advisory. New stories store the submitted level, optional theme, and requested `readingMinutes`; older stories without this field remain readable. Credentials and API endpoint configuration stay in Settings. Draft persistence across Settings and reload is tracked separately in issue #26.
+
+## Verify generation without a live API
+
+Run `npm run test:generation` for mocked request, parsing, persistence, legacy-story, and credential-exclusion checks. No Google requests are made by these tests.
+
+For a complete browser walkthrough, start these in separate terminals:
+
+```bash
+npm run dev -- --host 127.0.0.1 --port 5174 --strictPort
+npm run dev:gemini-fixture
+```
+
+Use a disposable browser context at `http://127.0.0.1:5174`. In Settings, set the API base URL to `http://127.0.0.1:5175/v1beta` and the API key to the synthetic value `era-local-fixture`. Return to New Story, choose a theme, B1, and 5 min, then select Generate Story. Story View should open **Generation options fixture** at B1, with text confirming the received theme, level, 5-minute request, and 400–600-word target. Reload to verify the saved story, then try other lengths. The loopback fixture accepts only the synthetic key and never forwards requests. It returns a short diagnostic story, not a sample of Gemini quality or requested length.
+
 ## Install and read offline
 
 The published site can be installed as a web app from a supported mobile browser. On iPhone or iPad, open the site in Safari, tap **Share → Add to Home Screen**, keep **Open as Web App** enabled if prompted, then launch it from the new home-screen icon. On Android, use the browser menu’s **Install app** or **Add to Home screen** action.
@@ -45,7 +74,7 @@ When an update is available, choose **Reload** in the update message to load the
 
 In **Settings**:
 
-1. Choose a CEFR band (A1–C2). New stories use this level.
+1. Choose a CEFR band (A1–C2, initially A2). New stories use this level.
 2. Paste a [Gemini API key](https://aistudio.google.com/apikey) from Google AI Studio.
 3. Optionally change the model (default `gemini-3.1-flash-lite`) or API base URL.
 

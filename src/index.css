@@ -23,7 +23,7 @@ body {
 }
 
 .app-header-inner {
-  width: min(960px, calc(100% - 32px));
+  width: min(1024px, calc(100% - 32px));
   margin: 0 auto;
   padding: 12px 0;
 }
@@ -67,6 +67,8 @@ body {
 }
 
 .new-story-page {
+  width: min(1024px, calc(100% - 32px));
+  margin-inline: auto;
   padding-top: clamp(24px, 6vh, 64px);
 }
 
@@ -102,6 +104,73 @@ body {
   border: 1px solid var(--gray-a6);
   border-radius: var(--radius-5);
   background: var(--color-panel-solid);
+}
+
+.new-story-example {
+  max-width: 100%;
+  height: auto;
+  min-height: 32px;
+  padding-block: 6px;
+  white-space: normal;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.new-story-levels,
+.new-story-lengths {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.new-story-levels .rt-SegmentedControlItem,
+.new-story-lengths .rt-SegmentedControlItem {
+  flex: 1;
+  min-width: 0;
+  padding-inline: 0;
+}
+
+.new-story-levels .rt-SegmentedControlItemLabel {
+  padding-inline: clamp(4px, 2vw, 16px);
+}
+
+.new-story-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.new-story-option {
+  min-width: 0;
+}
+
+.new-story-option > label {
+  display: block;
+}
+
+.new-story-model {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .new-story-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .new-story-level-option {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .new-story-options {
+    grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+  }
+
+  .new-story-level-option {
+    grid-column: auto;
+  }
 }
 
 .settings-form {

@@ -6,6 +6,7 @@
   "scripts": {
     "predev": "node scripts/build-dictionary.mjs",
     "dev": "vite",
+    "dev:gemini-fixture": "node scripts/mock-gemini.mjs",
     "prebuild": "node scripts/build-dictionary.mjs",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
@@ -13,7 +14,8 @@
     "generate:pwa-assets": "pwa-assets-generator",
     "build:cefr": "node scripts/build-cefr.mjs",
     "test:cefr": "node --test tests/cefr.test.mjs tests/debug-fixtures.test.mjs",
-    "test:vocabulary": "node --test tests/vocabulary.test.mjs"
+    "test:vocabulary": "node --test tests/vocabulary.test.mjs",
+    "test:generation": "node --test tests/generate.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",

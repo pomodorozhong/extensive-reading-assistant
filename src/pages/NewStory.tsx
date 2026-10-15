@@ -1,30 +1,39 @@
 import { ArrowRightIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import {
-  Badge,
   Button,
   Callout,
-  Container,
   Flex,
   Heading,
+  SegmentedControl,
+  Select,
   Text,
   TextField,
 } from '@radix-ui/themes'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { generateStory } from '../lib/generate'
+import { createGeneratedStory, generateStory } from '../lib/generate'
+import {
+  initialGenerationChoices,
+  READING_LENGTHS,
+  READING_MINUTE_OPTIONS,
+  SUPPORTED_MODELS,
+  THEME_EXAMPLES,
+  type GenerationModel,
+} from '../lib/generation-options'
 import { loadSettings, upsertStory } from '../lib/storage'
-import type { Story } from '../types'
+import { CEFR_LEVELS, type CefrLevel, type ReadingMinutes } from '../types'
 
 export function NewStory() {
   const navigate = useNavigate()
   const settings = loadSettings()
-  const [theme, setTheme] = useState('')
+  const [choices, setChoices] = useState(() => initialGenerationChoices(settings))
   const [error, setError] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
   const [isOnline, setIsOnline] = useState(
     () => typeof navigator === 'undefined' || navigator.onLine,
   )
   const hasKey = Boolean(settings.apiKey.trim())
+  const length = READING_LENGTHS[choices.readingMinutes]
 
   useEffect(() => {
     const updateConnection = () => setIsOnline(navigator.onLine)
@@ -44,9 +53,9 @@ export function NewStory() {
 
     setError(null)
     setGenerating(true)
+    const submitted = { ...choices }
     const result = await generateStory({
-      level: settings.cefrLevel,
-      theme: theme.trim() || undefined,
+      ...submitted,
       settings,
     })
     setGenerating(false)
@@ -56,24 +65,13 @@ export function NewStory() {
       return
     }
 
-    const story: Story = {
-      id: crypto.randomUUID(),
-      title: result.title,
-      body: result.body,
-      level: settings.cefrLevel,
-      createdAt: new Date().toISOString(),
-      wordMarks: {},
-      explanations: {},
-    }
-    if (theme.trim()) {
-      story.theme = theme.trim()
-    }
+    const story = createGeneratedStory(result, submitted)
     upsertStory(story)
     navigate(`/stories/${story.id}`)
   }
 
   return (
-    <Container size="2" px="4" className="new-story-page">
+    <div className="new-story-page">
       <Flex direction="column" align="center" gap="4" className="new-story-hero">
         <div className="new-story-icon" aria-hidden="true">
           <svg
@@ -99,10 +97,6 @@ export function NewStory() {
       </Flex>
 
       <form onSubmit={onSubmit} className="new-story-panel" aria-label="Story generation">
-        <Text as="p" color="gray" size="2" mb="5">
-          Current vocabulary level: <Badge color="blue">{settings.cefrLevel}</Badge>
-        </Text>
-
         {!hasKey && (
           <Callout.Root color="amber" mb="4">
             <Callout.Icon>
@@ -135,25 +129,108 @@ export function NewStory() {
           </Callout.Root>
         )}
 
-        <Flex direction="column" gap="4">
-          <label>
-            <Text as="div" size="2" weight="medium" mb="1">
-              Theme <Text color="gray">(optional)</Text>
-            </Text>
-            <TextField.Root
-              size="3"
-              placeholder="A rainy afternoon at a bookshop"
-              value={theme}
-              onChange={(event) => setTheme(event.target.value)}
-              maxLength={120}
-            />
-          </label>
+        <Flex direction="column" gap="5">
+          <Flex direction="column" gap="3">
+            <label>
+              <Text as="div" size="2" weight="medium" mb="1">
+                Theme <Text color="gray">(optional)</Text>
+              </Text>
+              <TextField.Root
+                size="3"
+                placeholder="A rainy afternoon at a bookshop"
+                value={choices.theme}
+                onChange={(event) => setChoices((current) => ({ ...current, theme: event.target.value }))}
+                maxLength={120}
+                disabled={generating}
+              />
+            </label>
+
+            <div>
+              <Text as="p" color="gray" size="2" mb="2">Try an example</Text>
+              <Flex wrap="wrap" gap="2">
+                {THEME_EXAMPLES.map((example) => (
+                  <Button
+                    key={example}
+                    type="button"
+                    variant="soft"
+                    color={choices.theme === example ? 'blue' : 'gray'}
+                    size="1"
+                    className="new-story-example"
+                    aria-pressed={choices.theme === example}
+                    disabled={generating}
+                    onClick={() => setChoices((current) => ({ ...current, theme: example }))}
+                  >
+                    {example}
+                  </Button>
+                ))}
+              </Flex>
+            </div>
+          </Flex>
+
+          <div className="new-story-options">
+            <div className="new-story-option new-story-level-option">
+              <Text as="div" id="new-story-level-label" size="2" weight="medium" mb="2">
+                Vocabulary level
+              </Text>
+              <SegmentedControl.Root
+                aria-labelledby="new-story-level-label"
+                value={choices.level}
+                onValueChange={(value) => setChoices((current) => ({ ...current, level: value as CefrLevel }))}
+                disabled={generating}
+                size="3"
+                className="new-story-levels"
+              >
+                {CEFR_LEVELS.map((level) => (
+                  <SegmentedControl.Item key={level} value={level}>{level}</SegmentedControl.Item>
+                ))}
+              </SegmentedControl.Root>
+            </div>
+            <div className="new-story-option">
+              <Text as="div" id="new-story-length-label" size="2" weight="medium" mb="2">
+                Reading length
+              </Text>
+              <SegmentedControl.Root
+                aria-labelledby="new-story-length-label"
+                aria-describedby="new-story-length-help"
+                value={String(choices.readingMinutes)}
+                onValueChange={(value) => setChoices((current) => ({ ...current, readingMinutes: Number(value) as ReadingMinutes }))}
+                disabled={generating}
+                size="3"
+                className="new-story-lengths"
+              >
+                {READING_MINUTE_OPTIONS.map((minutes) => (
+                  <SegmentedControl.Item key={minutes} value={String(minutes)}>{minutes} min</SegmentedControl.Item>
+                ))}
+              </SegmentedControl.Root>
+              <Text as="p" id="new-story-length-help" size="1" color="gray" mt="2">
+                About {length.minWords.toLocaleString('en-US')}–{length.maxWords.toLocaleString('en-US')} words. Reading time varies.
+              </Text>
+            </div>
+            <div className="new-story-option">
+              <Text as="label" htmlFor="new-story-model" size="2" weight="medium" mb="2">
+                Model
+              </Text>
+              <Select.Root
+                value={choices.model}
+                onValueChange={(value) => setChoices((current) => ({ ...current, model: value as GenerationModel }))}
+                disabled={generating}
+                size="3"
+              >
+                <Select.Trigger id="new-story-model" className="new-story-model" />
+                <Select.Content>
+                  {SUPPORTED_MODELS.map((model) => (
+                    <Select.Item key={model.id} value={model.id}>{model.label}</Select.Item>
+                  ))}
+                </Select.Content>
+              </Select.Root>
+            </div>
+          </div>
 
           <Button type="submit" size="3" disabled={!hasKey || !isOnline} loading={generating}>
             Generate Story <ArrowRightIcon aria-hidden="true" />
           </Button>
         </Flex>
       </form>
-    </Container>
+    </div>
   )
 }

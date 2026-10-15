@@ -1,4 +1,5 @@
-import type { CefrLevel, Settings } from '../types'
+import type { CefrLevel, ReadingMinutes, Settings, Story } from '../types.ts'
+import { READING_LENGTHS, type GenerationChoices, type GenerationModel } from './generation-options.ts'
 
 const CEFR_GUIDE: Record<CefrLevel, string> = {
   A1: 'very simple words and short sentences; present tense; everyday topics',
@@ -28,9 +29,10 @@ type GeminiTextResult = { ok: true; text: string } | { ok: false; message: strin
 
 async function callGemini(
   settings: Settings,
-  options: { system: string; user: string; temperature: number },
+  options: { system: string; user: string; temperature: number; model: GenerationModel },
 ): Promise<GeminiTextResult> {
-  const url = generateUrl(settings)
+  const base = settings.apiBaseUrl.replace(/\/$/, '')
+  const url = `${base}/models/${encodeURIComponent(options.model)}:generateContent`
 
   let response: Response
   try {
@@ -126,22 +128,15 @@ export function parseGeneratedStory(raw: string): { title: string; body: string 
   return { title: 'Untitled story', body: text }
 }
 
-function modelPath(model: string): string {
-  const trimmed = model.trim().replace(/^models\//, '')
-  return trimmed || 'gemini-3.1-flash-lite'
-}
-
-function generateUrl(settings: Settings): string {
-  const base = settings.apiBaseUrl.replace(/\/$/, '')
-  return `${base}/models/${encodeURIComponent(modelPath(settings.model))}:generateContent`
-}
-
 export async function generateStory(options: {
   level: CefrLevel
   theme?: string
+  readingMinutes: ReadingMinutes
+  model: GenerationModel
   settings: Settings
 }): Promise<GenerateResult> {
-  const { level, theme, settings } = options
+  const { level, theme, readingMinutes, model, settings } = options
+  const length = READING_LENGTHS[readingMinutes]
 
   const themeLine = theme?.trim()
     ? `Theme or topic: ${theme.trim()}`
@@ -150,6 +145,7 @@ export async function generateStory(options: {
   const userPrompt = [
     `Write a complete story at CEFR ${level} (${CEFR_GUIDE[level]}).`,
     themeLine,
+    `Aim for ${length.minWords}-${length.maxWords} words, approximately ${readingMinutes} minutes of reading. Reading time varies by learner.`,
     'Stay within that vocabulary level so a learner can read for pleasure without looking many words up.',
     'Include a title on the first line.',
     'Fill the story with as much dialogue as possible.',
@@ -162,11 +158,35 @@ export async function generateStory(options: {
       'You generate level-appropriate stories for extensive reading. Output only the title and the story.',
     user: userPrompt,
     temperature: 0.7,
+    model,
   })
 
   if (!result.ok) {
-    return result
+    // Provider error text can echo a credential. Keep it out of displayed errors.
+    let message = result.message
+    for (const key of [settings.apiKey, settings.apiKey.trim()]) {
+      if (key) message = message.split(key).join('[redacted]')
+    }
+    return { ok: false, message }
   }
 
   return { ok: true, ...parseGeneratedStory(result.text) }
+}
+
+export function createGeneratedStory(
+  result: { title: string; body: string },
+  choices: GenerationChoices,
+): Story {
+  const story: Story = {
+    id: crypto.randomUUID(),
+    title: result.title,
+    body: result.body,
+    level: choices.level,
+    readingMinutes: choices.readingMinutes,
+    createdAt: new Date().toISOString(),
+    wordMarks: {},
+    explanations: {},
+  }
+  if (choices.theme.trim()) story.theme = choices.theme.trim()
+  return story
 }
