@@ -104,6 +104,48 @@ body {
   background: var(--color-panel-solid);
 }
 
+.new-story-example {
+  max-width: 100%;
+  height: auto;
+  min-height: 32px;
+  padding-block: 6px;
+  white-space: normal;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.new-story-levels,
+.new-story-lengths {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.new-story-levels .rt-SegmentedControlItem,
+.new-story-lengths .rt-SegmentedControlItem {
+  flex: 1;
+  min-width: 0;
+  padding-inline: 0;
+}
+
+.new-story-levels .rt-SegmentedControlItemLabel {
+  padding-inline: clamp(4px, 2vw, 16px);
+}
+
+.new-story-option {
+  flex: 1;
+  min-width: 0;
+}
+
+.new-story-option > label {
+  display: block;
+}
+
+.new-story-model {
+  width: 100%;
+}
+
 .settings-form {
   max-width: 36rem;
 }

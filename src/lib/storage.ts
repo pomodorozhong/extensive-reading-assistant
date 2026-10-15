@@ -1,5 +1,6 @@
 import { CEFR_LEVELS, type CefrLevel, type Settings, type Story, type WordMark } from '../types.ts'
 import { DEBUG_FIXTURES, isDebugFixture } from './debug-fixtures.ts'
+import { DEFAULT_MODEL } from './generation-options.ts'
 import { normalizeWord } from './tokenize.ts'
 import { reconcileVocabulary, type VocabularyWord } from './vocabulary.ts'
 
@@ -12,7 +13,7 @@ export const DEFAULT_SETTINGS: Settings = {
   cefrLevel: 'A1',
   apiKey: '',
   apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-  model: 'gemini-3.1-flash-lite',
+  model: DEFAULT_MODEL,
   showDebugFixtures: false,
   showVocabularyReport: false,
 }

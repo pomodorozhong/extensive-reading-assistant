@@ -25,10 +25,12 @@ Generate level-appropriate stories and let learners mark words as known or unkno
 
 | Feature | Where | Behavior |
 | --- | --- | --- |
-| Vocabulary level | Settings | Choose one CEFR band (A1–C2). This is the source of truth for generation. |
-| New story | New Story | Generate a story constrained to the current level. |
+| Vocabulary level | Settings and New Story | Settings supplies the initial CEFR band (A1–C2); the New Story selection applies to that story. |
+| New story | New Story | Generate with the selected level, optional theme, reading length, and supported model. Theme examples fill the form without submitting. |
 | Word marking | Story View | Mark any word as known or unknown. Marks persist on that story. |
 | Story library | My Stories | List saved stories and open one in Story View. |
+
+Reading length is an advisory 5, 10, or 15 minutes, initially 10 minutes, with prompt targets of 400–600, 800–1,200, and 1,200–1,800 words respectively. Reading time varies by learner. New stories record their requested reading minutes; older stories remain readable without this optional metadata. Form choices apply per story and do not overwrite Settings defaults.
 
 ## Sitemap
 

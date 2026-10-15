@@ -75,7 +75,7 @@ export function SettingsPage() {
         Settings
       </Heading>
       <Text as="p" color="gray" mb="5">
-        Your CEFR level is used whenever you generate a story. The API key stays in this browser
+        Your CEFR level is the initial default for New Story. The API key stays in this browser
         only.
       </Text>
 
