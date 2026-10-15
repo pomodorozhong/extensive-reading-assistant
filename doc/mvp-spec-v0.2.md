@@ -25,7 +25,7 @@ Generate level-appropriate stories and let learners mark words as known or unkno
 
 | Feature | Where | Behavior |
 | --- | --- | --- |
-| Vocabulary level | Settings and New Story | Settings supplies the initial CEFR band (A1–C2); the New Story selection applies to that story. |
+| Vocabulary level | Settings and New Story | A2 by default. A saved Settings preference supplies the initial CEFR band (A1–C2); the New Story selection applies to that story. |
 | New story | New Story | Generate with the selected level, optional theme, reading length, and supported model. Theme examples fill the form without submitting. |
 | Word marking | Story View | Mark any word as known or unknown. Marks persist on that story. |
 | Story library | My Stories | List saved stories and open one in Story View. |

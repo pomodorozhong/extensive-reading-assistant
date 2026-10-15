@@ -2,7 +2,6 @@ import { ArrowRightIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import {
   Button,
   Callout,
-  Container,
   Flex,
   Heading,
   SegmentedControl,
@@ -72,7 +71,7 @@ export function NewStory() {
   }
 
   return (
-    <Container size="2" px="4" className="new-story-page">
+    <div className="new-story-page">
       <Flex direction="column" align="center" gap="4" className="new-story-hero">
         <div className="new-story-icon" aria-hidden="true">
           <svg
@@ -168,25 +167,24 @@ export function NewStory() {
             </div>
           </Flex>
 
-          <div>
-            <Text as="div" id="new-story-level-label" size="2" weight="medium" mb="2">
-              Vocabulary level
-            </Text>
-            <SegmentedControl.Root
-              aria-labelledby="new-story-level-label"
-              value={choices.level}
-              onValueChange={(value) => setChoices((current) => ({ ...current, level: value as CefrLevel }))}
-              disabled={generating}
-              size="3"
-              className="new-story-levels"
-            >
-              {CEFR_LEVELS.map((level) => (
-                <SegmentedControl.Item key={level} value={level}>{level}</SegmentedControl.Item>
-              ))}
-            </SegmentedControl.Root>
-          </div>
-
-          <Flex direction={{ initial: 'column', sm: 'row' }} gap="5">
+          <div className="new-story-options">
+            <div className="new-story-option new-story-level-option">
+              <Text as="div" id="new-story-level-label" size="2" weight="medium" mb="2">
+                Vocabulary level
+              </Text>
+              <SegmentedControl.Root
+                aria-labelledby="new-story-level-label"
+                value={choices.level}
+                onValueChange={(value) => setChoices((current) => ({ ...current, level: value as CefrLevel }))}
+                disabled={generating}
+                size="3"
+                className="new-story-levels"
+              >
+                {CEFR_LEVELS.map((level) => (
+                  <SegmentedControl.Item key={level} value={level}>{level}</SegmentedControl.Item>
+                ))}
+              </SegmentedControl.Root>
+            </div>
             <div className="new-story-option">
               <Text as="div" id="new-story-length-label" size="2" weight="medium" mb="2">
                 Reading length
@@ -226,13 +224,13 @@ export function NewStory() {
                 </Select.Content>
               </Select.Root>
             </div>
-          </Flex>
+          </div>
 
           <Button type="submit" size="3" disabled={!hasKey || !isOnline} loading={generating}>
             Generate Story <ArrowRightIcon aria-hidden="true" />
           </Button>
         </Flex>
       </form>
-    </Container>
+    </div>
   )
 }

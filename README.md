@@ -33,7 +33,9 @@ Build a production bundle with `npm run build`. Preview it with `npm run preview
 
 ## Choose a story
 
-New Story offers an optional theme, five theme examples, a CEFR vocabulary level, a reading length, and a supported model selector. An example fills the theme without submitting. The saved Settings level is the initial default; choices on New Story apply to that story and do not overwrite Settings. The initial reading length is 10 minutes. The model list currently offers **Gemini 3.1 Flash Lite**; its display label and request identifier are maintained together in `src/lib/generation-options.ts`. A supported saved model is selected initially; other saved model values fall back to the supported default in this form.
+New Story offers an optional theme, five theme examples, a CEFR vocabulary level, a reading length, and a supported model selector. An example fills the theme without submitting. The default level is A2 and the initial reading length is 10 minutes. A saved Settings level takes precedence; choices on New Story apply to that story and do not overwrite Settings. The model list currently offers **Gemini 3.1 Flash Lite**; its display label and request identifier are maintained together in `src/lib/generation-options.ts`. A supported saved model is selected initially; other saved model values fall back to the supported default in this form.
+
+The form expands to 1,024 pixels on wide screens and keeps 16-pixel side gutters on phones. Vocabulary level, reading length, and model stack below 768 pixels. From 768 to 1,023 pixels, vocabulary level fills its own row above length and model. At 1,024 pixels and wider, all three share one row, with extra room for the six vocabulary levels.
 
 Reading lengths use these prompt targets:
 
@@ -72,7 +74,7 @@ When an update is available, choose **Reload** in the update message to load the
 
 In **Settings**:
 
-1. Choose a CEFR band (A1–C2). New stories use this level.
+1. Choose a CEFR band (A1–C2, initially A2). New stories use this level.
 2. Paste a [Gemini API key](https://aistudio.google.com/apikey) from Google AI Studio.
 3. Optionally change the model (default `gemini-3.1-flash-lite`) or API base URL.
 

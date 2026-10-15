@@ -14,6 +14,7 @@ export const SUPPORTED_MODELS = [
 
 export type GenerationModel = (typeof SUPPORTED_MODELS)[number]['id']
 export const DEFAULT_MODEL = SUPPORTED_MODELS[0].id
+export const DEFAULT_GENERATION_LEVEL: CefrLevel = 'A2'
 export const DEFAULT_READING_MINUTES: ReadingMinutes = 10
 
 // Product targets for a reading session, not measured or guaranteed reading times.

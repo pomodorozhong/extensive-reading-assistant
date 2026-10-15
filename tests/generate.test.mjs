@@ -32,7 +32,11 @@ function mockGemini(t, data = { candidates: [{ content: { parts: [{ text: respon
   return requests
 }
 
-test('initial choices use saved level, ten minutes, and a supported model without copying credentials', () => {
+test('initial choices default to A2 and ten minutes while preserving a saved level and excluding credentials', () => {
+  assert.equal(initialGenerationChoices(loadSettings()).level, 'A2')
+  assert.equal(initialGenerationChoices(loadSettings()).readingMinutes, 10)
+  localStorage.setItem('era.v1.settings', JSON.stringify({ cefrLevel: 'invalid' }))
+  assert.equal(initialGenerationChoices(loadSettings()).level, 'A2')
   const original = structuredClone(settings)
   const initial = initialGenerationChoices(settings)
   assert.equal(initial.level, 'C2')

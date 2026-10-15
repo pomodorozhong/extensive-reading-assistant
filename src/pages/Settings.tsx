@@ -75,8 +75,7 @@ export function SettingsPage() {
         Settings
       </Heading>
       <Text as="p" color="gray" mb="5">
-        Your CEFR level is the initial default for New Story. The API key stays in this browser
-        only.
+        Your CEFR level defaults to A2 for New Story. The API key stays in this browser only.
       </Text>
 
       <Flex direction="column" gap="5" className="settings-form">
