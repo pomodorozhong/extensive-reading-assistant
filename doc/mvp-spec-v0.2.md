@@ -36,15 +36,17 @@ Reading length is an advisory 5, 10, or 15 minutes, initially 10 minutes, with p
 
 ```mermaid
 treeView-beta
-Home/
-    New Story
+App/
+    New Story/
         Story View
     My Stories/
-    Settings
+    Vocabulary/
+    Settings/
 ```
 
-- **Home** — entry to New Story, My Stories, and Settings
-- **New Story** — generate a story, then open it in Story View
+- **Landing route (`/`)** — redirects to the canonical New Story route (`/new`)
+- **New Story** — choose a level, optional theme, reading length, and supported model, then generate and open a story in Story View
 - **Story View** — read the story and mark words
 - **My Stories** — saved stories; each item opens Story View
-- **Settings** — vocabulary level
+- **Vocabulary** — review unknown words and return to their source stories
+- **Settings** — saved vocabulary-level preference, Gemini access, app installation, and debugging options

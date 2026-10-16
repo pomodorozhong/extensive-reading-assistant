@@ -51,6 +51,8 @@ These are product targets rather than measured reading speeds. Reading time vari
 
 Run `npm run test:generation` for mocked request, parsing, persistence, legacy-story, and credential-exclusion checks. No Google requests are made by these tests.
 
+The generation tests give each test a fresh in-memory `localStorage` Map and replace `fetch` with a controlled response. Reuse this pattern for draft and recovery checks so tests stay isolated and cannot send a real provider request.
+
 For a complete browser walkthrough, start these in separate terminals:
 
 ```bash
@@ -93,3 +95,5 @@ To override the asset base path, set `VITE_BASE` (for example `/` for a custom d
 ## Product spec
 
 See [doc/mvp-spec-v0.2.md](doc/mvp-spec-v0.2.md).
+
+The [documentation index](doc/README.md) also links implementation notes, verification guides, and the current session handoff.
