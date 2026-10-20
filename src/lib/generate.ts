@@ -1,4 +1,5 @@
 import type { CefrLevel, ReadingMinutes, Settings, Story } from '../types.ts'
+import { allowsLoopbackEndpoint, checkGeminiEndpoint } from './gemini-endpoint.ts'
 import { READING_LENGTHS, type GenerationChoices, type GenerationModel } from './generation-options.ts'
 
 const CEFR_GUIDE: Record<CefrLevel, string> = {
@@ -31,13 +32,17 @@ async function callGemini(
   settings: Settings,
   options: { system: string; user: string; temperature: number; model: GenerationModel },
 ): Promise<GeminiTextResult> {
-  const base = settings.apiBaseUrl.replace(/\/$/, '')
-  const url = `${base}/models/${encodeURIComponent(options.model)}:generateContent`
+  // Check the destination before the key is attached to any request.
+  const endpoint = checkGeminiEndpoint(settings.apiBaseUrl, allowsLoopbackEndpoint())
+  if (!endpoint.ok) return { ok: false, message: `${endpoint.message} Update the API base URL in Settings.` }
+  const url = `${endpoint.base}/models/${encodeURIComponent(options.model)}:generateContent`
 
   let response: Response
   try {
     response = await fetch(url, {
       method: 'POST',
+      // A redirect could forward the key elsewhere, so treat it as a failure.
+      redirect: 'error',
       headers: {
         'Content-Type': 'application/json',
         'x-goog-api-key': settings.apiKey,

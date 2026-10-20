@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { beforeEach, test } from 'node:test'
+import { checkGeminiEndpoint, GEMINI_API_BASE_URL } from '../src/lib/gemini-endpoint.ts'
 import { readFileSync } from 'node:fs'
 import { createGeneratedStory, generateStory, parseGeneratedStory } from '../src/lib/generate.ts'
 import { DEFAULT_MODEL, initialGenerationChoices } from '../src/lib/generation-options.ts'
@@ -148,4 +149,36 @@ test('title and body parsing retain existing supported response formats', () => 
     assert.deepEqual(parseGeneratedStory(raw), { title: 'A Day', body: 'A cat sits.' })
   }
   assert.deepEqual(parseGeneratedStory('A cat sits.'), { title: 'Untitled story', body: 'A cat sits.' })
+})
+
+test('the key is sent only to Google’s HTTPS endpoint, never to other or redirected destinations', async (t) => {
+  const requests = mockGemini(t)
+  for (const apiBaseUrl of [
+    'https://example.com/v1beta',
+    'http://generativelanguage.googleapis.com/v1beta',
+    'https://generativelanguage.googleapis.com.evil.test/v1beta',
+    'https://generativelanguage.googleapis.com/v1beta?next=https://evil.test',
+    'https://user:pass@generativelanguage.googleapis.com/v1beta',
+    'http://127.0.0.1:5175/v1beta',
+    'javascript:alert(1)',
+    '',
+  ]) {
+    const result = await generateStory({ ...choices, settings: { ...settings, apiBaseUrl } })
+    assert.equal(result.ok, false, apiBaseUrl)
+    assert.match(result.message, /sent only to https:\/\/generativelanguage\.googleapis\.com\/v1beta/)
+  }
+  assert.equal(requests.length, 0)
+  assert.equal((await generateStory({ ...choices, settings: { ...settings, apiBaseUrl: ` ${GEMINI_API_BASE_URL}/ ` } })).ok, true)
+  assert.equal(requests.length, 1)
+  assert.equal(requests[0].redirect, 'error')
+})
+
+test('loopback fixture endpoints are allowed only when development builds opt in', () => {
+  for (const base of ['http://127.0.0.1:5175/v1beta', 'http://localhost:5175/v1beta', 'http://[::1]:5175/v1beta']) {
+    assert.deepEqual(checkGeminiEndpoint(base, true), { ok: true, base })
+    assert.equal(checkGeminiEndpoint(base, false).ok, false)
+  }
+  for (const base of ['http://127.0.0.2/v1beta', 'ftp://127.0.0.1/v1beta', 'http://a:b@127.0.0.1/v1beta', 'http://localhost.evil.test/v1beta']) {
+    assert.equal(checkGeminiEndpoint(base, true).ok, false, base)
+  }
 })
