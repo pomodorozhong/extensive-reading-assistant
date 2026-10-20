@@ -31,6 +31,8 @@ Then open the URL Vite prints (usually `http://localhost:5173`).
 
 Build a production bundle with `npm run build`. Preview it with `npm run preview`.
 
+Run `npm run test:dictionary` to check that inflected words such as *met*, *children*, and *happier* find their base-form definitions. It rebuilds the bundled WordNet files first.
+
 ## Choose a story
 
 New Story offers an optional theme, five theme examples, a CEFR vocabulary level, a reading length, and a supported model selector. An example fills the theme without submitting. The default level is A2 and the initial reading length is 10 minutes. A saved Settings level takes precedence; choices on New Story apply to that story and do not overwrite Settings. The model list currently offers **Gemini 3.1 Flash Lite**; its display label and request identifier are maintained together in `src/lib/generation-options.ts`. A supported saved model is selected initially; other saved model values fall back to the supported default in this form.
