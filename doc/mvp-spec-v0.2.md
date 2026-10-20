@@ -11,7 +11,7 @@ Generate level-appropriate stories and let learners mark words as known or unkno
 ## Out of scope
 
 - In-app test to determine vocabulary level
-- Flashcards or other review of marked words
+- Flashcards or review scheduling for marked words
 
 ## User stories
 
@@ -29,6 +29,7 @@ Generate level-appropriate stories and let learners mark words as known or unkno
 | New story | New Story | Generate with the selected level, optional theme, reading length, and supported model. Theme examples fill the form without submitting. |
 | Word marking | Story View | Mark any word as known or unknown. Marks persist on that story. |
 | Story library | My Stories | List saved stories and open one in Story View. |
+| Unknown-word collection | Vocabulary | Collect unknown words across stories, grouped by approximate CEFR level, with saved definitions, sentences, and links back to each occurrence. |
 
 Reading length is an advisory 5, 10, or 15 minutes, initially 10 minutes, with prompt targets of 400–600, 800–1,200, and 1,200–1,800 words respectively. Reading time varies by learner. New stories record their requested reading minutes; older stories remain readable without this optional metadata. Form choices apply per story and do not overwrite Settings defaults.
 

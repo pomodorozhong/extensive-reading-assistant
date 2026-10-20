@@ -6,7 +6,7 @@ The main entry point is [`analyzeVocabulary(body, target)`](../src/lib/cefr.ts).
 
 ## 1. Where the story's target level comes from
 
-[`NewStory.tsx`](../src/pages/NewStory.tsx) reads the Settings level and passes it to the story-generation request. After generation succeeds, it records that same level in `Story.level`, saves the story, and navigates to Story View. Generation still requires the configured provider and API key; vocabulary analysis does not.
+[`NewStory.tsx`](../src/pages/NewStory.tsx) passes the level selected in its form to the story-generation request. The form starts from the saved Settings preference, or A2 when none is saved, and changing it does not overwrite Settings (see [`generation-options.ts`](../src/lib/generation-options.ts)). After generation succeeds, it records that same level in `Story.level`, saves the story, and navigates to Story View. Generation still requires the configured provider and API key; vocabulary analysis does not.
 
 [`storage.ts`](../src/lib/storage.ts) stores stories and settings in browser `localStorage`. [`StoryView.tsx`](../src/pages/StoryView.tsx) loads the saved story and, when `showVocabularyReport` is enabled, renders [`VocabularyReport`](../src/components/VocabularyReport.tsx) with `story.body` and `story.level`. This path handles both a newly generated story and a story reopened later.
 
@@ -307,6 +307,7 @@ The validator does not inspect grammatical complexity, idioms, word senses, read
 | [`src/components/VocabularyReport.tsx`](../src/components/VocabularyReport.tsx) | Report display and memoization. |
 | [`src/pages/StoryView.tsx`](../src/pages/StoryView.tsx) | Saved story loading and report placement. |
 | [`src/pages/NewStory.tsx`](../src/pages/NewStory.tsx) | Capture the generation level in the saved story. |
+| [`src/lib/vocabulary.ts`](../src/lib/vocabulary.ts) | Groups the Vocabulary screen's unknown words by level with the exported `classifyWord`, which shares the analyzer's normalization and lookup. |
 | [`src/lib/storage.ts`](../src/lib/storage.ts) | Browser-local story persistence. |
 | [`scripts/build-cefr.mjs`](../scripts/build-cefr.mjs) | Reproducible conversion from source CSVs to runtime JSON. |
 | [`src/data/cefr.json`](../src/data/cefr.json) | Bundled vocabulary map. |

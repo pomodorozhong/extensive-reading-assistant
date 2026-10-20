@@ -12,7 +12,7 @@ location.hash = '#/vocabulary'
 location.reload()
 ```
 
-1. Open Vocabulary from Home and navigation at desktop and mobile widths. Expect `Cat` under **A1** with a count of one word and `zorblax` under **Unlisted** with a count of one word. Empty sections do not appear. Each word is sorted alphabetically within its section. The explanatory copy identifies CEFR levels as approximate and independent of story and Settings levels.
+1. Open Vocabulary from the desktop navigation and the mobile menu. Expect `Cat` under **A1** with a count of one word and `zorblax` under **Unlisted** with a count of one word. Empty sections do not appear. Each word is sorted alphabetically within its section. The explanatory copy identifies CEFR levels as approximate and independent of story and Settings levels.
 2. Follow each `Cat` source link. Expect the correct story and the first occurrence of that word to receive focus and scroll into view. Click it to see its saved definition. Mark `Cat` known only in **The Window** and reopen Vocabulary: **The Rug** keeps the entry. Clear the remaining source and expect `Cat` to disappear. Looking up `Cat` again adds it back.
 3. Reseed using the console block above. Simulate removal of **The Window** in the disposable profile (the app currently has no story deletion control):
 
