@@ -3,6 +3,7 @@ import { beforeEach, test } from 'node:test'
 import { readFileSync } from 'node:fs'
 import { createGeneratedStory, generateStory, parseGeneratedStory } from '../src/lib/generate.ts'
 import { DEFAULT_MODEL, initialGenerationChoices } from '../src/lib/generation-options.ts'
+import { clearNewStoryDraft, loadNewStoryDraft, saveNewStoryDraft } from '../src/lib/new-story-draft.ts'
 import { DEFAULT_SETTINGS, getStory, loadSettings, loadStories, saveSettings, upsertStory } from '../src/lib/storage.ts'
 
 const apiKey = 'synthetic-generation-test-key-do-not-send'
@@ -141,6 +142,46 @@ test('empty credentials do not corrupt an ordinary provider error', async (t) =>
   assert.deepEqual(await generateStory({ ...choices, settings: { ...settings, apiKey: '' } }), {
     ok: false, message: 'Generation failed: Provider unavailable',
   })
+})
+
+test('an unfinished draft survives a reload and keeps only the four non-secret choices', () => {
+  saveSettings(settings)
+  const fresh = initialGenerationChoices(loadSettings())
+  assert.deepEqual(loadNewStoryDraft(fresh), fresh)
+  saveNewStoryDraft({ ...choices, level: 'B2', readingMinutes: 15, apiKey, apiBaseUrl: settings.apiBaseUrl })
+  const raw = localStorage.getItem('era.v1.new-story-draft')
+  assert.ok(!raw.includes(apiKey))
+  assert.ok(!raw.includes('googleapis'))
+  assert.deepEqual(Object.keys(JSON.parse(raw)).sort(), ['level', 'model', 'readingMinutes', 'theme'])
+  assert.deepEqual(loadNewStoryDraft(fresh), { level: 'B2', theme: '  A weekend in Tokyo  ', readingMinutes: 15, model: DEFAULT_MODEL })
+  assert.equal(loadSettings().apiKey, apiKey)
+  assert.equal(loadSettings().cefrLevel, 'C2')
+})
+
+test('invalid or legacy draft fields fall back individually, and clearing restores fresh choices', () => {
+  const fresh = initialGenerationChoices(loadSettings())
+  localStorage.setItem('era.v1.new-story-draft', JSON.stringify({ theme: 'Rain', level: 'Z9', readingMinutes: 7, model: 'gpt-4' }))
+  assert.deepEqual(loadNewStoryDraft(fresh), { ...fresh, theme: 'Rain' })
+  for (const raw of ['not json', '[]', '"text"', 'null']) {
+    localStorage.setItem('era.v1.new-story-draft', raw)
+    assert.deepEqual(loadNewStoryDraft(fresh), fresh)
+  }
+  saveNewStoryDraft({ ...choices, level: 'C1' })
+  clearNewStoryDraft()
+  assert.deepEqual(loadNewStoryDraft(fresh), fresh)
+  assert.deepEqual(loadStories(), [])
+})
+
+test('draft storage failures do not throw', () => {
+  const failing = () => { throw new Error('QuotaExceededError') }
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: { getItem: failing, setItem: failing, removeItem: failing },
+  })
+  const fresh = initialGenerationChoices(DEFAULT_SETTINGS)
+  assert.doesNotThrow(() => saveNewStoryDraft(choices))
+  assert.doesNotThrow(() => clearNewStoryDraft())
+  assert.deepEqual(loadNewStoryDraft(fresh), fresh)
 })
 
 test('title and body parsing retain existing supported response formats', () => {

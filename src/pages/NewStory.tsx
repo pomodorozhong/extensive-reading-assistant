@@ -18,15 +18,17 @@ import {
   READING_MINUTE_OPTIONS,
   SUPPORTED_MODELS,
   THEME_EXAMPLES,
+  type GenerationChoices,
   type GenerationModel,
 } from '../lib/generation-options'
+import { clearNewStoryDraft, loadNewStoryDraft, saveNewStoryDraft } from '../lib/new-story-draft'
 import { loadSettings, upsertStory } from '../lib/storage'
 import { CEFR_LEVELS, type CefrLevel, type ReadingMinutes } from '../types'
 
 export function NewStory() {
   const navigate = useNavigate()
   const settings = loadSettings()
-  const [choices, setChoices] = useState(() => initialGenerationChoices(settings))
+  const [choices, setChoices] = useState(() => loadNewStoryDraft(initialGenerationChoices(settings)))
   const [error, setError] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
   const [isOnline, setIsOnline] = useState(
@@ -44,6 +46,15 @@ export function NewStory() {
       window.removeEventListener('offline', updateConnection)
     }
   }, [])
+
+  // Save only learner edits, so an untouched form keeps following Settings defaults.
+  function updateChoices(update: Partial<GenerationChoices>) {
+    setChoices((current) => {
+      const next = { ...current, ...update }
+      saveNewStoryDraft(next)
+      return next
+    })
+  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -67,6 +78,7 @@ export function NewStory() {
 
     const story = createGeneratedStory(result, submitted)
     upsertStory(story)
+    clearNewStoryDraft()
     navigate(`/stories/${story.id}`)
   }
 
@@ -103,7 +115,8 @@ export function NewStory() {
               <InfoCircledIcon />
             </Callout.Icon>
             <Callout.Text>
-              Add an API key in <Link to="/settings">Settings</Link> before generating a story.
+              Add an API key in <Link to="/settings?from=new-story">Settings</Link> before generating
+              a story. Your choices here are kept.
             </Callout.Text>
           </Callout.Root>
         )}
@@ -139,7 +152,7 @@ export function NewStory() {
                 size="3"
                 placeholder="A rainy afternoon at a bookshop"
                 value={choices.theme}
-                onChange={(event) => setChoices((current) => ({ ...current, theme: event.target.value }))}
+                onChange={(event) => updateChoices({ theme: event.target.value })}
                 maxLength={120}
                 disabled={generating}
               />
@@ -158,7 +171,7 @@ export function NewStory() {
                     className="new-story-example"
                     aria-pressed={choices.theme === example}
                     disabled={generating}
-                    onClick={() => setChoices((current) => ({ ...current, theme: example }))}
+                    onClick={() => updateChoices({ theme: example })}
                   >
                     {example}
                   </Button>
@@ -175,7 +188,7 @@ export function NewStory() {
               <SegmentedControl.Root
                 aria-labelledby="new-story-level-label"
                 value={choices.level}
-                onValueChange={(value) => setChoices((current) => ({ ...current, level: value as CefrLevel }))}
+                onValueChange={(value) => updateChoices({ level: value as CefrLevel })}
                 disabled={generating}
                 size="3"
                 className="new-story-levels"
@@ -193,7 +206,7 @@ export function NewStory() {
                 aria-labelledby="new-story-length-label"
                 aria-describedby="new-story-length-help"
                 value={String(choices.readingMinutes)}
-                onValueChange={(value) => setChoices((current) => ({ ...current, readingMinutes: Number(value) as ReadingMinutes }))}
+                onValueChange={(value) => updateChoices({ readingMinutes: Number(value) as ReadingMinutes })}
                 disabled={generating}
                 size="3"
                 className="new-story-lengths"
@@ -212,7 +225,7 @@ export function NewStory() {
               </Text>
               <Select.Root
                 value={choices.model}
-                onValueChange={(value) => setChoices((current) => ({ ...current, model: value as GenerationModel }))}
+                onValueChange={(value) => updateChoices({ model: value as GenerationModel })}
                 disabled={generating}
                 size="3"
               >
