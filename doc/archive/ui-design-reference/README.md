@@ -1,6 +1,6 @@
 # UI Design Reference
 
-This directory contains UI design reference materials for the project.
+Archived: these early mockups are superseded and do not reflect the current app.
 
 ## Mac UI Mockups 2025-03-02
 
