@@ -23,13 +23,15 @@ type GeminiResponse = {
 
 export type GenerateResult =
   | { ok: true; title: string; body: string }
-  | { ok: false; message: string }
+  | { ok: false; message: string; canceled?: true }
 
-type GeminiTextResult = { ok: true; text: string } | { ok: false; message: string }
+type GeminiTextResult = { ok: true; text: string } | { ok: false; message: string; canceled?: true }
+
+const CANCELED: GeminiTextResult = { ok: false, message: 'Story generation was canceled.', canceled: true }
 
 async function callGemini(
   settings: Settings,
-  options: { system: string; user: string; temperature: number; model: GenerationModel },
+  options: { system: string; user: string; temperature: number; model: GenerationModel; signal?: AbortSignal },
 ): Promise<GeminiTextResult> {
   const base = settings.apiBaseUrl.replace(/\/$/, '')
   const url = `${base}/models/${encodeURIComponent(options.model)}:generateContent`
@@ -49,8 +51,10 @@ async function callGemini(
         contents: [{ role: 'user', parts: [{ text: options.user }] }],
         generationConfig: { temperature: options.temperature },
       }),
+      signal: options.signal,
     })
   } catch {
+    if (options.signal?.aborted) return CANCELED
     return {
       ok: false,
       message:
@@ -65,10 +69,21 @@ async function callGemini(
     }
   }
 
+  if (response.status === 429) {
+    return {
+      ok: false,
+      message: 'Gemini is receiving too many requests for this key (rate limit). Wait a minute, then try again.',
+    }
+  }
+
   let data: GeminiResponse
   try {
     data = (await response.json()) as GeminiResponse
   } catch {
+    if (options.signal?.aborted) return CANCELED
+    return { ok: false, message: 'Gemini returned a response that could not be read.' }
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
     return { ok: false, message: 'Gemini returned a response that could not be read.' }
   }
 
@@ -84,16 +99,20 @@ async function callGemini(
     }
   }
 
-  const content = data.candidates?.[0]?.content?.parts
-    ?.map((part) => part.text ?? '')
-    .join('')
-    .trim()
+  const parts = data.candidates?.[0]?.content?.parts
+  const content = Array.isArray(parts)
+    ? parts.map((part) => (typeof part?.text === 'string' ? part.text : '')).join('').trim()
+    : ''
+  const reason = data.candidates?.[0]?.finishReason
+
+  // A story cut off before the model finished is incomplete, so it is never saved.
+  if (reason && reason !== 'STOP') {
+    return content
+      ? { ok: false, message: `Gemini stopped before the story was finished (${reason}). Try again.` }
+      : { ok: false, message: `Gemini stopped early (${reason}). Try again.` }
+  }
 
   if (!content) {
-    const reason = data.candidates?.[0]?.finishReason
-    if (reason && reason !== 'STOP') {
-      return { ok: false, message: `Gemini stopped early (${reason}). Try again.` }
-    }
     return { ok: false, message: 'Gemini returned an empty response. Try again.' }
   }
 
@@ -134,8 +153,9 @@ export async function generateStory(options: {
   readingMinutes: ReadingMinutes
   model: GenerationModel
   settings: Settings
+  signal?: AbortSignal
 }): Promise<GenerateResult> {
-  const { level, theme, readingMinutes, model, settings } = options
+  const { level, theme, readingMinutes, model, settings, signal } = options
   const length = READING_LENGTHS[readingMinutes]
 
   const themeLine = theme?.trim()
@@ -159,8 +179,10 @@ export async function generateStory(options: {
     user: userPrompt,
     temperature: 0.7,
     model,
+    signal,
   })
 
+  if (!result.ok && result.canceled) return result
   if (!result.ok) {
     // Provider error text can echo a credential. Keep it out of displayed errors.
     let message = result.message

@@ -173,6 +173,28 @@ body {
   }
 }
 
+.new-story-unsaved {
+  margin-bottom: var(--space-5);
+}
+
+.new-story-unsaved-text {
+  max-height: 16rem;
+  overflow-y: auto;
+  padding: var(--space-3);
+  border: 1px solid var(--gray-a6);
+  border-radius: var(--radius-3);
+  overflow-wrap: anywhere;
+}
+
+.new-story-unsaved-text:focus-visible {
+  outline: 2px solid var(--accent-9);
+  outline-offset: 2px;
+}
+
+.new-story-unsaved-body {
+  white-space: pre-wrap;
+}
+
 .settings-form {
   max-width: 36rem;
 }

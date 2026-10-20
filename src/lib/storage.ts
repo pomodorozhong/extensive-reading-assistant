@@ -188,6 +188,16 @@ export function upsertStory(story: Story): void {
   saveStories(stories)
 }
 
+/** Save a newly generated story, reporting a failed browser-storage write instead of throwing. */
+export function trySaveNewStory(story: Story): boolean {
+  try {
+    upsertStory(story)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function updateWordMark(id: string, key: string, mark: WordMark | undefined): Story | undefined {
   const current = getStory(id)
   if (!current) {
