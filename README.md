@@ -37,6 +37,8 @@ Run `npm run test:dictionary` to check that inflected words such as *met*, *chil
 
 New Story offers an optional theme, five theme examples, a CEFR vocabulary level, a reading length, and a supported model selector. An example fills the theme without submitting. The default level is A2 and the initial reading length is 10 minutes. A saved Settings level takes precedence; choices on New Story apply to that story and do not overwrite Settings. The model list currently offers **Gemini 3.1 Flash Lite**; its display label and request identifier are maintained together in `src/lib/generation-options.ts`. A supported saved model is selected initially; other saved model values fall back to the supported default in this form.
 
+An "i" button after **Vocabulary level**, on New Story and in Settings, opens a dialog that describes each level A1–C2 in plain language, suggests choosing the level where reading feels easy, and links to Cambridge English's free online level test in a new tab.
+
 The form expands to 1,024 pixels on wide screens and keeps 16-pixel side gutters on phones. Vocabulary level, reading length, and model stack below 768 pixels. From 768 to 1,023 pixels, vocabulary level fills its own row above length and model. At 1,024 pixels and wider, all three share one row, with extra room for the six vocabulary levels.
 
 Reading lengths use these prompt targets:
