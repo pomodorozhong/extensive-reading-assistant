@@ -1,6 +1,6 @@
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 
 function pagesBase(): string {
   if (process.env.VITE_BASE) {
@@ -21,9 +21,40 @@ function pagesBase(): string {
 
 const base = pagesBase()
 
+// Limits what the published page can run and where it can send data, including the Gemini key.
+// Radix Themes and React set inline style attributes, so styles need 'unsafe-inline'.
+// The dev server injects inline scripts for hot reload, so the policy applies to builds only.
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "connect-src 'self' https://generativelanguage.googleapis.com",
+  "img-src 'self' data:",
+  "worker-src 'self'",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join('; ')
+
+function contentSecurityPolicy(): Plugin {
+  return {
+    name: 'content-security-policy',
+    apply: 'build',
+    transformIndexHtml: () => [
+      {
+        tag: 'meta',
+        attrs: { 'http-equiv': 'Content-Security-Policy', content: CONTENT_SECURITY_POLICY },
+        injectTo: 'head-prepend',
+      },
+    ],
+  }
+}
+
 export default defineConfig({
   plugins: [
     react(),
+    contentSecurityPolicy(),
     VitePWA({
       registerType: 'prompt',
       scope: base,
