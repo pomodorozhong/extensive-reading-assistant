@@ -9,7 +9,7 @@ import {
   Text,
   TextField,
 } from '@radix-ui/themes'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { createGeneratedStory, generateStory } from '../lib/generate'
 import {
@@ -22,8 +22,11 @@ import {
   type GenerationModel,
 } from '../lib/generation-options'
 import { clearNewStoryDraft, loadNewStoryDraft, saveNewStoryDraft } from '../lib/new-story-draft'
-import { loadSettings, upsertStory } from '../lib/storage'
-import { CEFR_LEVELS, type CefrLevel, type ReadingMinutes } from '../types'
+import { loadSettings, trySaveNewStory } from '../lib/storage'
+import { CEFR_LEVELS, type CefrLevel, type ReadingMinutes, type Story } from '../types'
+
+const SAVE_FAILED_MESSAGE =
+  'Your story was generated, but this browser could not save it. Free up browser storage, then try saving again, or copy the text so it is not lost.'
 
 export function NewStory() {
   const navigate = useNavigate()
@@ -31,6 +34,9 @@ export function NewStory() {
   const [choices, setChoices] = useState(() => loadNewStoryDraft(initialGenerationChoices(settings)))
   const [error, setError] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
+  const [unsavedStory, setUnsavedStory] = useState<Story | null>(null)
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null)
+  const request = useRef<AbortController | null>(null)
   const [isOnline, setIsOnline] = useState(
     () => typeof navigator === 'undefined' || navigator.onLine,
   )
@@ -47,6 +53,9 @@ export function NewStory() {
     }
   }, [])
 
+  // Leaving the page cancels an in-flight request so it cannot save or navigate later.
+  useEffect(() => () => request.current?.abort(), [])
+
   // Save only learner edits, so an untouched form keeps following Settings defaults.
   function updateChoices(update: Partial<GenerationChoices>) {
     setChoices((current) => {
@@ -58,17 +67,27 @@ export function NewStory() {
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!hasKey || !isOnline || generating) {
+    // The ref blocks a second submit before the generating state re-renders.
+    if (!hasKey || !isOnline || request.current) {
       return
     }
 
+    const controller = new AbortController()
+    request.current = controller
     setError(null)
+    setUnsavedStory(null)
+    setCopyFeedback(null)
     setGenerating(true)
     const submitted = { ...choices }
     const result = await generateStory({
       ...submitted,
       settings,
+      signal: controller.signal,
     })
+    if (controller.signal.aborted) {
+      return
+    }
+    request.current = null
     setGenerating(false)
 
     if (!result.ok) {
@@ -76,10 +95,26 @@ export function NewStory() {
       return
     }
 
-    const story = createGeneratedStory(result, submitted)
-    upsertStory(story)
+    saveAndOpen(createGeneratedStory(result, submitted))
+  }
+
+  function saveAndOpen(story: Story) {
+    if (!trySaveNewStory(story)) {
+      setUnsavedStory(story)
+      setError(null)
+      return
+    }
     clearNewStoryDraft()
     navigate(`/stories/${story.id}`)
+  }
+
+  async function copyUnsavedStory(story: Story) {
+    try {
+      await navigator.clipboard.writeText(`${story.title}\n\n${story.body}`)
+      setCopyFeedback('Story text copied.')
+    } catch {
+      setCopyFeedback('Copying is blocked in this browser. Select the text below and copy it instead.')
+    }
   }
 
   return (
@@ -134,12 +169,40 @@ export function NewStory() {
         )}
 
         {error && (
-          <Callout.Root color="red" mb="4">
+          <Callout.Root color="red" mb="4" role="alert">
             <Callout.Icon>
               <InfoCircledIcon />
             </Callout.Icon>
-            <Callout.Text>{error}</Callout.Text>
+            <Callout.Text>{error} Your choices are kept, so you can try again.</Callout.Text>
           </Callout.Root>
+        )}
+
+        {unsavedStory && (
+          <div className="new-story-unsaved" role="alert">
+            <Callout.Root color="red" mb="3">
+              <Callout.Icon>
+                <InfoCircledIcon />
+              </Callout.Icon>
+              <Callout.Text>{SAVE_FAILED_MESSAGE}</Callout.Text>
+            </Callout.Root>
+            <Flex wrap="wrap" gap="2" mb="3">
+              <Button type="button" onClick={() => saveAndOpen(unsavedStory)}>
+                Try saving again
+              </Button>
+              <Button type="button" variant="soft" onClick={() => copyUnsavedStory(unsavedStory)}>
+                Copy story text
+              </Button>
+            </Flex>
+            {copyFeedback && (
+              <Text as="p" size="2" color="gray" mb="3" role="status">
+                {copyFeedback}
+              </Text>
+            )}
+            <div className="new-story-unsaved-text" tabIndex={0} aria-label="Unsaved story text">
+              <Text as="p" weight="bold" mb="2">{unsavedStory.title}</Text>
+              <Text as="p" size="2" className="new-story-unsaved-body">{unsavedStory.body}</Text>
+            </div>
+          </div>
         )}
 
         <Flex direction="column" gap="5">
@@ -242,6 +305,11 @@ export function NewStory() {
           <Button type="submit" size="3" disabled={!hasKey || !isOnline} loading={generating}>
             Generate Story <ArrowRightIcon aria-hidden="true" />
           </Button>
+          {generating && (
+            <Text as="p" size="2" color="gray" align="center" role="status" mt="-3">
+              Writing your story… This can take up to a minute.
+            </Text>
+          )}
         </Flex>
       </form>
     </div>

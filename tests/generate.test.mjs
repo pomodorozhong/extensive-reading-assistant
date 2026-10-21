@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs'
 import { createGeneratedStory, generateStory, parseGeneratedStory } from '../src/lib/generate.ts'
 import { DEFAULT_MODEL, initialGenerationChoices } from '../src/lib/generation-options.ts'
 import { clearNewStoryDraft, loadNewStoryDraft, saveNewStoryDraft } from '../src/lib/new-story-draft.ts'
-import { DEFAULT_SETTINGS, getStory, loadSettings, loadStories, saveSettings, upsertStory } from '../src/lib/storage.ts'
+import { DEFAULT_SETTINGS, getStory, loadSettings, loadStories, loadVocabulary, saveSettings, trySaveNewStory, upsertStory } from '../src/lib/storage.ts'
 
 const apiKey = 'synthetic-generation-test-key-do-not-send'
 const settings = { ...DEFAULT_SETTINGS, cefrLevel: 'C2', model: 'saved-custom-model', apiKey }
@@ -143,6 +143,68 @@ test('empty credentials do not corrupt an ordinary provider error', async (t) =>
   assert.deepEqual(await generateStory({ ...choices, settings: { ...settings, apiKey: '' } }), {
     ok: false, message: 'Generation failed: Provider unavailable',
   })
+})
+
+test('each provider failure produces its own inline message and saves nothing', async (t) => {
+  const cases = [
+    [{ error: { message: 'bad key' } }, 401, /rejected the key/],
+    [{ error: { message: 'Quota exceeded' } }, 429, /too many requests.*rate limit/],
+    [{ error: { message: 'Backend error' } }, 503, /Generation failed: Backend error/],
+    [{ promptFeedback: { blockReason: 'SAFETY' } }, 200, /blocked the prompt \(SAFETY\)/],
+    [{ candidates: [{ content: { parts: [] }, finishReason: 'STOP' }] }, 200, /empty response/],
+    [{ candidates: [{ content: { parts: [{ text: 'Title: Half\n\nThe story began' }] }, finishReason: 'MAX_TOKENS' }] }, 200, /stopped before the story was finished \(MAX_TOKENS\)/],
+    [{ candidates: [{ content: { parts: 'not-a-list' } }] }, 200, /empty response/],
+    [null, 200, /could not be read/],
+    [[1, 2], 200, /could not be read/],
+  ]
+  for (const [data, status, pattern] of cases) {
+    mockGemini(t, data, status)
+    const result = await generateStory({ ...choices, settings })
+    assert.equal(result.ok, false)
+    assert.match(result.message, pattern)
+    assert.ok(!result.canceled)
+  }
+  t.mock.method(globalThis, 'fetch', async () => new Response('<html>oops</html>', { status: 200 }))
+  assert.match((await generateStory({ ...choices, settings })).message, /could not be read/)
+  t.mock.method(globalThis, 'fetch', async () => { throw new TypeError('Failed to fetch') })
+  assert.match((await generateStory({ ...choices, settings })).message, /Could not reach Gemini/)
+  assert.deepEqual(loadStories(), [])
+})
+
+test('aborting a slow request reports a cancellation instead of a failure', async (t) => {
+  t.mock.method(globalThis, 'fetch', (_url, init) => new Promise((_resolve, reject) => {
+    init.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))
+  }))
+  const controller = new AbortController()
+  const pending = generateStory({ ...choices, settings, signal: controller.signal })
+  controller.abort()
+  assert.deepEqual(await pending, { ok: false, message: 'Story generation was canceled.', canceled: true })
+  assert.deepEqual(loadStories(), [])
+})
+
+test('a failed save reports false and leaves saved stories and vocabulary unchanged', () => {
+  const existing = createGeneratedStory({ title: 'Kept', body: 'A cat sits.' }, choices)
+  existing.wordMarks = { cat: 'unknown' }
+  upsertStory(existing)
+  const vocabularyBefore = JSON.stringify(loadVocabulary())
+  const storage = globalThis.localStorage
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: {
+      ...storage,
+      setItem: (key, value) => {
+        if (key === 'era.v1.stories') throw new Error('QuotaExceededError')
+        storage.setItem(key, value)
+      },
+    },
+  })
+  const story = createGeneratedStory({ title: 'New', body: 'A dog runs.' }, choices)
+  assert.equal(trySaveNewStory(story), false)
+  assert.deepEqual(loadStories().map((item) => item.id), [existing.id])
+  assert.equal(JSON.stringify(loadVocabulary()), vocabularyBefore)
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: storage })
+  assert.equal(trySaveNewStory(story), true)
+  assert.deepEqual(loadStories().map((item) => item.id), [story.id, existing.id])
 })
 
 test('an unfinished draft survives a reload and keeps only the four non-secret choices', () => {
