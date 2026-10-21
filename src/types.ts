@@ -9,6 +9,8 @@ export type WordMark = 'known' | 'unknown'
 export type Settings = {
   cefrLevel: CefrLevel
   apiKey: string
+  /** Keep the key in browser storage across reloads; when false it lives only in memory. */
+  rememberApiKey: boolean
   apiBaseUrl: string
   model: string
   showDebugFixtures: boolean
