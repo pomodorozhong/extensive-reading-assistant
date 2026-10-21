@@ -37,11 +37,25 @@ export function NewStory() {
   const [unsavedStory, setUnsavedStory] = useState<Story | null>(null)
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null)
   const request = useRef<AbortController | null>(null)
+  // Failure messages sit above the form, off screen on phones; focusing them shows and announces them.
+  const errorMessage = useRef<HTMLDivElement>(null)
+  const saveFailedMessage = useRef<HTMLDivElement>(null)
   const [isOnline, setIsOnline] = useState(
     () => typeof navigator === 'undefined' || navigator.onLine,
   )
   const hasKey = Boolean(settings.apiKey.trim())
   const length = READING_LENGTHS[choices.readingMinutes]
+  const blockedReasons = [!hasKey && 'new-story-key-required', !isOnline && 'new-story-offline']
+    .filter(Boolean)
+    .join(' ')
+
+  useEffect(() => {
+    if (error) errorMessage.current?.focus()
+  }, [error])
+
+  useEffect(() => {
+    if (unsavedStory) saveFailedMessage.current?.focus()
+  }, [unsavedStory])
 
   useEffect(() => {
     const updateConnection = () => setIsOnline(navigator.onLine)
@@ -145,7 +159,7 @@ export function NewStory() {
 
       <form onSubmit={onSubmit} className="new-story-panel" aria-label="Story generation">
         {!hasKey && (
-          <Callout.Root color="amber" mb="4">
+          <Callout.Root color="amber" mb="4" id="new-story-key-required">
             <Callout.Icon>
               <InfoCircledIcon />
             </Callout.Icon>
@@ -156,35 +170,42 @@ export function NewStory() {
           </Callout.Root>
         )}
 
-        {!isOnline && (
-          <Callout.Root color="amber" mb="4" role="status">
-            <Callout.Icon>
-              <InfoCircledIcon />
-            </Callout.Icon>
-            <Callout.Text>
-              You’re offline. Saved stories remain available, but Gemini story generation requires an
-              internet connection.
-            </Callout.Text>
-          </Callout.Root>
-        )}
-
-        {error && (
-          <Callout.Root color="red" mb="4" role="alert">
-            <Callout.Icon>
-              <InfoCircledIcon />
-            </Callout.Icon>
-            <Callout.Text>{error} Your choices are kept, so you can try again.</Callout.Text>
-          </Callout.Root>
-        )}
-
-        {unsavedStory && (
-          <div className="new-story-unsaved" role="alert">
-            <Callout.Root color="red" mb="3">
+        {/* Live regions stay mounted so screen readers announce content added to them. */}
+        <div role="status">
+          {!isOnline && (
+            <Callout.Root color="amber" mb="4" id="new-story-offline">
               <Callout.Icon>
                 <InfoCircledIcon />
               </Callout.Icon>
-              <Callout.Text>{SAVE_FAILED_MESSAGE}</Callout.Text>
+              <Callout.Text>
+                You’re offline. Saved stories remain available, but Gemini story generation requires
+                an internet connection.
+              </Callout.Text>
             </Callout.Root>
+          )}
+        </div>
+
+        {error && (
+          <div ref={errorMessage} tabIndex={-1} className="new-story-message">
+            <Callout.Root color="red" mb="4">
+              <Callout.Icon>
+                <InfoCircledIcon />
+              </Callout.Icon>
+              <Callout.Text>{error} Your choices are kept, so you can try again.</Callout.Text>
+            </Callout.Root>
+          </div>
+        )}
+
+        {unsavedStory && (
+          <div className="new-story-unsaved">
+            <div ref={saveFailedMessage} tabIndex={-1} className="new-story-message">
+              <Callout.Root color="red" mb="3">
+                <Callout.Icon>
+                  <InfoCircledIcon />
+                </Callout.Icon>
+                <Callout.Text>{SAVE_FAILED_MESSAGE}</Callout.Text>
+              </Callout.Root>
+            </div>
             <Flex wrap="wrap" gap="2" mb="3">
               <Button type="button" onClick={() => saveAndOpen(unsavedStory)}>
                 Try saving again
@@ -193,11 +214,13 @@ export function NewStory() {
                 Copy story text
               </Button>
             </Flex>
-            {copyFeedback && (
-              <Text as="p" size="2" color="gray" mb="3" role="status">
-                {copyFeedback}
-              </Text>
-            )}
+            <div role="status">
+              {copyFeedback && (
+                <Text as="p" size="2" color="gray" mb="3">
+                  {copyFeedback}
+                </Text>
+              )}
+            </div>
             <div className="new-story-unsaved-text" tabIndex={0} aria-label="Unsaved story text">
               <Text as="p" weight="bold" mb="2">{unsavedStory.title}</Text>
               <Text as="p" size="2" className="new-story-unsaved-body">{unsavedStory.body}</Text>
@@ -302,15 +325,28 @@ export function NewStory() {
             </div>
           </div>
 
-          <Button type="submit" size="3" disabled={!hasKey || !isOnline} loading={generating}>
+          {/* aria-disabled keeps the button focusable so keyboard and screen-reader users reach the
+              reason it is unavailable; onSubmit ignores it. disabled={false} stops loading from
+              disabling it, which would drop focus during generation. */}
+          <Button
+            type="submit"
+            size="3"
+            disabled={false}
+            aria-disabled={Boolean(blockedReasons) || undefined}
+            data-disabled={Boolean(blockedReasons) || undefined}
+            aria-describedby={blockedReasons || undefined}
+            loading={generating}
+          >
             Generate Story <ArrowRightIcon aria-hidden="true" />
           </Button>
+        </Flex>
+        <div role="status">
           {generating && (
-            <Text as="p" size="2" color="gray" align="center" role="status" mt="-3">
+            <Text as="p" size="2" color="gray" align="center" mt="2">
               Writing your story… This can take up to a minute.
             </Text>
           )}
-        </Flex>
+        </div>
       </form>
     </div>
   )
