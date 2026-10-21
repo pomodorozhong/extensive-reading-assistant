@@ -23,3 +23,4 @@ jobs:
       - run: npm run test:cefr
       - run: npm run test:vocabulary
       - run: npm run test:dictionary
+      - run: npm run test:level-check

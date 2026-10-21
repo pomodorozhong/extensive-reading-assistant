@@ -52,3 +52,8 @@ export function clearNewStoryDraft(): void {
     // See saveNewStoryDraft.
   }
 }
+
+/** Change only the level of the New Story draft, keeping the reader's other choices. */
+export function setNewStoryDraftLevel(level: CefrLevel, fallback: GenerationChoices): void {
+  saveNewStoryDraft({ ...loadNewStoryDraft(fallback), level })
+}

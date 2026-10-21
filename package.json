@@ -16,6 +16,8 @@
     "test:cefr": "node --test tests/cefr.test.mjs tests/debug-fixtures.test.mjs",
     "test:vocabulary": "node --test tests/vocabulary.test.mjs",
     "test:generation": "node --test tests/generate.test.mjs tests/gemini-key.test.mjs",
+    "pretest:level-check": "node scripts/build-dictionary.mjs",
+    "test:level-check": "node --test tests/level-check.test.mjs",
     "pretest:dictionary": "node scripts/build-dictionary.mjs",
     "test:dictionary": "node --test tests/dictionary.test.mjs"
   },
