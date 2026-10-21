@@ -11,6 +11,7 @@ import {
   Text,
   TextField,
 } from '@radix-ui/themes'
+import { GEMINI_KEY_DESTINATION, GEMINI_KEY_STUDIO_URL, GeminiKeyField } from '../components/GeminiKeyField'
 import { useRef, useState, useSyncExternalStore } from 'react'
 import { Link as RouterLink, useSearchParams } from 'react-router-dom'
 import {
@@ -153,41 +154,18 @@ export function SettingsPage() {
         </div>
 
         <div>
-          <Text as="label" htmlFor="gemini-api-key" size="2" weight="medium" mb="1" className="settings-field-label">
-            Gemini API key
-          </Text>
-          {/* The storage choice sits beside the key so readers decide both together; it wraps on phones. */}
-          <Flex align="center" gap="3" wrap="wrap">
-            <TextField.Root
-              id="gemini-api-key"
-              type="password"
-              autoComplete="off"
-              placeholder="AIza…"
-              aria-describedby="gemini-api-key-storage gemini-api-key-guidance"
-              ref={keyInput}
-              value={settings.apiKey}
-              onChange={(event) => {
-                setKeyFeedback(null)
-                patch({ apiKey: event.target.value })
-              }}
-              className="settings-key-input"
-            />
-            <Text as="label" size="2">
-              <Flex align="center" gap="2">
-                <Switch
-                  checked={settings.rememberApiKey}
-                  aria-describedby="gemini-api-key-storage"
-                  onCheckedChange={(checked) => patch({ rememberApiKey: checked })}
-                />
-                Remember key on this device
-              </Flex>
-            </Text>
-          </Flex>
-          <Text as="p" id="gemini-api-key-storage" size="2" color="gray" mt="2">
-            {settings.rememberApiKey
-              ? 'Saved in this browser’s storage until you forget it. Anyone using this browser profile, and any code running on this site, can read it.'
-              : 'Kept only in memory. Reloading, updating the app, or closing this tab forgets it, and you paste it again next time.'}
-          </Text>
+          <GeminiKeyField
+            id="gemini-api-key"
+            value={settings.apiKey}
+            onChange={(apiKey) => {
+              setKeyFeedback(null)
+              patch({ apiKey })
+            }}
+            remember={settings.rememberApiKey}
+            onRememberChange={(rememberApiKey) => patch({ rememberApiKey })}
+            inputRef={keyInput}
+            describedBy="gemini-api-key-guidance"
+          />
           {settings.apiKey && (
             <Button
               type="button"
@@ -218,11 +196,10 @@ export function SettingsPage() {
             </Callout.Icon>
             <Callout.Text>
               Create a key just for this app in{' '}
-              <Link href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
+              <Link href={GEMINI_KEY_STUDIO_URL} target="_blank" rel="noreferrer">
                 Google AI Studio
               </Link>
-              , ideally in its own Google Cloud project. It is never sent to a server of ours, only
-              to Google’s Gemini API when you generate a story. In Google Cloud, restrict the key to
+              , ideally in its own Google Cloud project. {GEMINI_KEY_DESTINATION} In Google Cloud, restrict the key to
               the Gemini API and to this site’s address, and set a billing alert or spending limit;
               these reduce misuse but are not guarantees. If you think the key was exposed, delete it
               in Google AI Studio and create a new one.
