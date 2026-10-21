@@ -8,10 +8,15 @@ const SETTINGS_KEY = 'era.v1.settings'
 const STORIES_KEY = 'era.v1.stories'
 const FIXTURE_STATE_KEY = 'era.v1.debug-fixtures'
 const VOCABULARY_KEY = 'era.v1.vocabulary'
+const API_KEY_KEY = 'era.v1.gemini-key'
+
+// A key the reader chose not to remember lives only here, so a reload or closed tab forgets it.
+let sessionApiKey = ''
 
 export const DEFAULT_SETTINGS: Settings = {
   cefrLevel: DEFAULT_GENERATION_LEVEL,
   apiKey: '',
+  rememberApiKey: true,
   apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
   model: DEFAULT_MODEL,
   showDebugFixtures: false,
@@ -34,10 +39,26 @@ export function loadSettings(): Settings {
       parsed.apiBaseUrl?.includes('api.openai.com') ||
       (typeof parsed.model === 'string' && parsed.model.startsWith('gpt-'))
     const useDefaultModel = legacyOpenAi || previousDefaultModel
+    const rememberApiKey = parsed.rememberApiKey !== false
+
+    const legacyKey = typeof parsed.apiKey === 'string' ? parsed.apiKey : null
+
+    // Keys saved inside the settings object before the separate entry existed move there once.
+    // A failed write keeps the legacy copy, which is still read below.
+    if (legacyKey !== null) {
+      try {
+        if (legacyKey && localStorage.getItem(API_KEY_KEY) === null) localStorage.setItem(API_KEY_KEY, legacyKey)
+        const { apiKey: _moved, ...rest } = parsed
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(rest))
+      } catch {
+        // Keep reading the legacy key until a later save succeeds.
+      }
+    }
 
     return {
       cefrLevel: isCefrLevel(parsed.cefrLevel) ? parsed.cefrLevel : DEFAULT_SETTINGS.cefrLevel,
-      apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : DEFAULT_SETTINGS.apiKey,
+      apiKey: rememberApiKey ? (localStorage.getItem(API_KEY_KEY) ?? legacyKey ?? '') : sessionApiKey,
+      rememberApiKey,
       showDebugFixtures: parsed.showDebugFixtures === true,
       showVocabularyReport: parsed.showVocabularyReport === true,
       apiBaseUrl:
@@ -54,8 +75,16 @@ export function loadSettings(): Settings {
   }
 }
 
+/** Save settings; the key goes to its own storage entry only when the reader chose to remember it. */
 export function saveSettings(settings: Settings): void {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
+  const { apiKey, ...rest } = settings
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(rest))
+  if (settings.rememberApiKey && apiKey) {
+    localStorage.setItem(API_KEY_KEY, apiKey)
+  } else {
+    localStorage.removeItem(API_KEY_KEY)
+  }
+  sessionApiKey = settings.rememberApiKey ? '' : apiKey
 }
 
 export function loadStories(): Story[] {
