@@ -84,6 +84,12 @@ In **Settings**:
 
 By default the key is remembered in this browser's `localStorage`, in its own entry separate from other settings (keys saved by earlier versions move there automatically). Turn off **Remember key on this device** to keep it in memory only: reloading, updating the app, or closing the tab then forgets it. **Forget key** removes it from both places and keeps your other settings and stories. The key is sent only to Google's Gemini API at `https://generativelanguage.googleapis.com/v1beta` when you generate a story. Any other API base URL is refused before the key is attached, and redirects are treated as failures. Development builds (`npm run dev`) also accept loopback addresses such as `http://127.0.0.1:5175/v1beta` for the local fixture. Use a key dedicated to this app, restrict it to the Gemini API and, if you host the app publicly, to your site's HTTP referrer, and set a billing alert or spending limit in Google Cloud. These reduce misuse but are not guarantees; delete the key in Google AI Studio if it may have been exposed.
 
+## Content Security Policy
+
+Production builds (`npm run build`) add a Content Security Policy `<meta>` tag defined in `vite.config.ts`. It allows scripts only from the app itself, blocks inline scripts, and lets the page connect only to its own origin and Google's Gemini API, so injected code cannot send a stored key elsewhere. Styles allow inline attributes because Radix Themes and React use them. The development server has no policy because Vite injects inline scripts for hot reload. A `<meta>` policy cannot set `frame-ancestors`; that needs a response header, which GitHub Pages does not allow.
+
+To check it, run `npm run build && npm run preview` and watch the browser console for Content Security Policy errors while reading a story, looking up a word, and opening each page.
+
 ## GitHub Pages
 
 This repo deploys the production build with GitHub Actions. Hash-based routes (`#/stories`, `#/settings`) work on Pages without extra rewrite rules. The Vite `base` path is set automatically from the repository name.
