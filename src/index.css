@@ -186,6 +186,10 @@ body {
   overflow-wrap: anywhere;
 }
 
+.new-story-message:focus {
+  outline: none;
+}
+
 .new-story-unsaved-text:focus-visible {
   outline: 2px solid var(--accent-9);
   outline-offset: 2px;
@@ -213,6 +217,9 @@ body {
 }
 
 .story-word {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: inherit;
   cursor: pointer;
   border-radius: 4px;
   padding: 0.05em 0.12em;
