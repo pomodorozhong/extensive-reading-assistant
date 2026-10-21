@@ -18,6 +18,7 @@ import {
   promptPwaInstall,
   subscribePwaInstall,
 } from '../lib/pwa-install'
+import { allowsLoopbackEndpoint, checkGeminiEndpoint, GEMINI_API_BASE_URL } from '../lib/gemini-endpoint'
 import { loadSettings, saveSettings } from '../lib/storage'
 import { CEFR_LEVELS, type CefrLevel, type Settings } from '../types'
 
@@ -30,6 +31,7 @@ export function SettingsPage() {
     getPwaInstallSnapshot,
     getPwaInstallSnapshot,
   )
+  const endpoint = checkGeminiEndpoint(settings.apiBaseUrl, allowsLoopbackEndpoint())
   const [showInstallInstructions, setShowInstallInstructions] = useState(false)
   const [installFeedback, setInstallFeedback] = useState<string | null>(null)
 
@@ -85,7 +87,7 @@ export function SettingsPage() {
         Settings
       </Heading>
       <Text as="p" color="gray" mb="5">
-        Your CEFR level defaults to A2 for New Story. The API key stays in this browser only.
+        Your CEFR level defaults to A2 for New Story.
       </Text>
 
       <Flex direction="column" gap="5" className="settings-form">
@@ -171,21 +173,52 @@ export function SettingsPage() {
               <Link href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
                 Google AI Studio
               </Link>
-              . Restrict the key by HTTP referrer if you host this app on the public web.
+              . The key is saved in this browser’s local storage, not on a server, and is sent only
+              to Google’s Gemini API when you generate a story. Restrict the key by HTTP referrer if
+              you host this app on the public web.
             </Callout.Text>
           </Callout.Root>
         </div>
 
-        <label>
-          <Text as="div" size="2" weight="medium" mb="1">
-            API base URL
+        <div>
+          <label>
+            <Text as="div" size="2" weight="medium" mb="1">
+              API base URL
+            </Text>
+            <TextField.Root
+              type="url"
+              value={settings.apiBaseUrl}
+              aria-invalid={!endpoint.ok}
+              aria-describedby="api-base-url-help"
+              onChange={(event) => patch({ apiBaseUrl: event.target.value })}
+            />
+          </label>
+          <Text
+            as="p"
+            id="api-base-url-help"
+            size="2"
+            color={endpoint.ok ? 'gray' : 'red'}
+            mt="2"
+            role={endpoint.ok ? undefined : 'alert'}
+          >
+            {!endpoint.ok
+              ? endpoint.message
+              : endpoint.base === GEMINI_API_BASE_URL
+                ? 'Your key is sent only to Google’s Gemini API.'
+                : 'Development build: requests go to this local test server.'}
           </Text>
-          <TextField.Root
-            type="url"
-            value={settings.apiBaseUrl}
-            onChange={(event) => patch({ apiBaseUrl: event.target.value })}
-          />
-        </label>
+          {!endpoint.ok && (
+            <Button
+              type="button"
+              variant="soft"
+              size="1"
+              mt="2"
+              onClick={() => patch({ apiBaseUrl: GEMINI_API_BASE_URL })}
+            >
+              Use Google’s endpoint
+            </Button>
+          )}
+        </div>
 
         <label>
           <Text as="div" size="2" weight="medium" mb="1">
