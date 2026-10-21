@@ -199,6 +199,15 @@ body {
   max-width: 36rem;
 }
 
+.settings-field-label {
+  display: block;
+}
+
+.settings-key-input {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
 .cefr-scroll {
   overflow-x: auto;
   padding-bottom: 4px;

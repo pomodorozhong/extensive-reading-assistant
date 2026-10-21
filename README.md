@@ -82,7 +82,7 @@ In **Settings**:
 2. Paste a [Gemini API key](https://aistudio.google.com/apikey) from Google AI Studio.
 3. Optionally change the model (default `gemini-3.1-flash-lite`).
 
-The key is saved in this browser's `localStorage` and sent only to Google's Gemini API at `https://generativelanguage.googleapis.com/v1beta` when you generate a story. Any other API base URL is refused before the key is attached, and redirects are treated as failures. Development builds (`npm run dev`) also accept loopback addresses such as `http://127.0.0.1:5175/v1beta` for the local fixture. If you host the app publicly, restrict the key by HTTP referrer in Google AI Studio.
+By default the key is remembered in this browser's `localStorage`, in its own entry separate from other settings (keys saved by earlier versions move there automatically). Turn off **Remember key on this device** to keep it in memory only: reloading, updating the app, or closing the tab then forgets it. **Forget key** removes it from both places and keeps your other settings and stories. The key is sent only to Google's Gemini API at `https://generativelanguage.googleapis.com/v1beta` when you generate a story. Any other API base URL is refused before the key is attached, and redirects are treated as failures. Development builds (`npm run dev`) also accept loopback addresses such as `http://127.0.0.1:5175/v1beta` for the local fixture. Use a key dedicated to this app, restrict it to the Gemini API and, if you host the app publicly, to your site's HTTP referrer, and set a billing alert or spending limit in Google Cloud. These reduce misuse but are not guarantees; delete the key in Google AI Studio if it may have been exposed.
 
 ## GitHub Pages
 
