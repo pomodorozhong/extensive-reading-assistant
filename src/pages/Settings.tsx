@@ -199,7 +199,8 @@ export function SettingsPage() {
               <Link href={GEMINI_KEY_STUDIO_URL} target="_blank" rel="noreferrer">
                 Google AI Studio
               </Link>
-              , ideally in its own Google Cloud project. {GEMINI_KEY_DESTINATION} In Google Cloud, restrict the key to
+              , ideally in its own Google Cloud project. {GEMINI_KEY_DESTINATION} A remembered key can be read by anyone
+              using this browser profile and by any code running on this site. In Google Cloud, restrict the key to
               the Gemini API and to this site’s address, and set a billing alert or spending limit;
               these reduce misuse but are not guarantees. If you think the key was exposed, delete it
               in Google AI Studio and create a new one.

@@ -10,7 +10,8 @@ import {
   TextField,
 } from '@radix-ui/themes'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { GeminiKeyDialog } from '../components/GeminiKeyDialog'
 import { createGeneratedStory, generateStory } from '../lib/generate'
 import {
   initialGenerationChoices,
@@ -36,6 +37,8 @@ export function NewStory() {
   const [generating, setGenerating] = useState(false)
   const [unsavedStory, setUnsavedStory] = useState<Story | null>(null)
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null)
+  const [keyDialogOpen, setKeyDialogOpen] = useState(false)
+  const generateButton = useRef<HTMLButtonElement>(null)
   const request = useRef<AbortController | null>(null)
   // Failure messages sit above the form, off screen on phones; focusing them shows and announces them.
   const errorMessage = useRef<HTMLDivElement>(null)
@@ -45,9 +48,8 @@ export function NewStory() {
   )
   const hasKey = Boolean(settings.apiKey.trim())
   const length = READING_LENGTHS[choices.readingMinutes]
-  const blockedReasons = [!hasKey && 'new-story-key-required', !isOnline && 'new-story-offline']
-    .filter(Boolean)
-    .join(' ')
+  // Without a key, Generate Story opens the key dialog, so only being offline blocks it.
+  const blocked = hasKey && !isOnline
 
   useEffect(() => {
     if (error) errorMessage.current?.focus()
@@ -79,10 +81,18 @@ export function NewStory() {
     })
   }
 
-  async function onSubmit(event: FormEvent) {
+  function onSubmit(event: FormEvent) {
     event.preventDefault()
+    if (!hasKey) {
+      setKeyDialogOpen(true)
+      return
+    }
+    void startGeneration()
+  }
+
+  async function startGeneration() {
     // The ref blocks a second submit before the generating state re-renders.
-    if (!hasKey || !isOnline || request.current) {
+    if (!navigator.onLine || request.current) {
       return
     }
 
@@ -95,7 +105,8 @@ export function NewStory() {
     const submitted = { ...choices }
     const result = await generateStory({
       ...submitted,
-      settings,
+      // Read settings now: a key saved in the dialog is not in this render's copy.
+      settings: loadSettings(),
       signal: controller.signal,
     })
     if (controller.signal.aborted) {
@@ -158,18 +169,6 @@ export function NewStory() {
       </Flex>
 
       <form onSubmit={onSubmit} className="new-story-panel" aria-label="Story generation">
-        {!hasKey && (
-          <Callout.Root color="amber" mb="4" id="new-story-key-required">
-            <Callout.Icon>
-              <InfoCircledIcon />
-            </Callout.Icon>
-            <Callout.Text>
-              Add an API key in <Link to="/settings?from=new-story">Settings</Link> before generating
-              a story. Your choices here are kept.
-            </Callout.Text>
-          </Callout.Root>
-        )}
-
         {/* Live regions stay mounted so screen readers announce content added to them. */}
         <div role="status">
           {!isOnline && (
@@ -329,12 +328,13 @@ export function NewStory() {
               reason it is unavailable; onSubmit ignores it. disabled={false} stops loading from
               disabling it, which would drop focus during generation. */}
           <Button
+            ref={generateButton}
             type="submit"
             size="3"
             disabled={false}
-            aria-disabled={Boolean(blockedReasons) || undefined}
-            data-disabled={Boolean(blockedReasons) || undefined}
-            aria-describedby={blockedReasons || undefined}
+            aria-disabled={blocked || undefined}
+            data-disabled={blocked || undefined}
+            aria-describedby={isOnline ? undefined : 'new-story-offline'}
             loading={generating}
           >
             Generate Story <ArrowRightIcon aria-hidden="true" />
@@ -348,6 +348,15 @@ export function NewStory() {
           )}
         </div>
       </form>
+
+      {/* Outside the form: the dialog's own form would otherwise submit this one through the React tree. */}
+      <GeminiKeyDialog
+        open={keyDialogOpen}
+        onOpenChange={setKeyDialogOpen}
+        onSaved={() => void startGeneration()}
+        isOnline={isOnline}
+        returnFocusTo={generateButton}
+      />
     </div>
   )
 }

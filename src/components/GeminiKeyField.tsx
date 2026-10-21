@@ -3,12 +3,13 @@ import type { Ref } from 'react'
 
 /** Where the key goes, shared by Settings and the New Story key dialog so both say the same thing. */
 export const GEMINI_KEY_DESTINATION =
-  'It is never sent to a server of ours, only to Google’s Gemini API when you generate a story.'
+  'Your key stays in your browser and is sent only to Google, when you create a story.'
 
 export const GEMINI_KEY_STUDIO_URL = 'https://aistudio.google.com/apikey'
 
 type GeminiKeyFieldProps = {
   id: string
+  label?: string
   value: string
   onChange: (value: string) => void
   remember: boolean
@@ -22,6 +23,7 @@ type GeminiKeyFieldProps = {
 /** The key field with its storage choice beside it, so readers decide both together. */
 export function GeminiKeyField({
   id,
+  label = 'Gemini API key',
   value,
   onChange,
   remember,
@@ -35,7 +37,7 @@ export function GeminiKeyField({
   return (
     <>
       <Text as="label" htmlFor={id} size="2" weight="medium" mb="1" className="settings-field-label">
-        Gemini API key
+        {label}
       </Text>
       {/* The switch wraps below the field on phones. */}
       <Flex align="center" gap="3" wrap="wrap">
@@ -64,8 +66,8 @@ export function GeminiKeyField({
       </Flex>
       <Text as="p" id={storageId} size="2" color="gray" mt="2">
         {remember
-          ? 'Saved in this browser’s storage until you forget it. Anyone using this browser profile, and any code running on this site, can read it.'
-          : 'Kept only in memory. Reloading, updating the app, or closing this tab forgets it, and you paste it again next time.'}
+          ? 'You won’t need to paste it again on this device. Turn this off on a shared computer.'
+          : 'Used for this visit only. You’ll paste it again after closing or reloading the page.'}
       </Text>
     </>
   )
