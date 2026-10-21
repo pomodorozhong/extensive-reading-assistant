@@ -1,4 +1,4 @@
-import { InfoCircledIcon } from '@radix-ui/react-icons'
+import { ArrowLeftIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import {
   Button,
   Callout,
@@ -12,6 +12,7 @@ import {
   TextField,
 } from '@radix-ui/themes'
 import { useState, useSyncExternalStore } from 'react'
+import { Link as RouterLink, useSearchParams } from 'react-router-dom'
 import {
   getPwaInstallSnapshot,
   promptPwaInstall,
@@ -22,6 +23,8 @@ import { CEFR_LEVELS, type CefrLevel, type Settings } from '../types'
 
 export function SettingsPage() {
   const [settings, setSettings] = useState<Settings>(() => loadSettings())
+  const [searchParams] = useSearchParams()
+  const fromNewStory = searchParams.get('from') === 'new-story'
   const installState = useSyncExternalStore(
     subscribePwaInstall,
     getPwaInstallSnapshot,
@@ -71,6 +74,13 @@ export function SettingsPage() {
 
   return (
     <Container size="2" px="4">
+      {fromNewStory && (
+        <Button asChild variant="soft" mb="4">
+          <RouterLink to="/new">
+            <ArrowLeftIcon aria-hidden="true" /> Back to New Story
+          </RouterLink>
+        </Button>
+      )}
       <Heading size="7" mb="2">
         Settings
       </Heading>
