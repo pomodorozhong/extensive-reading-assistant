@@ -1,3 +1,5 @@
+import lemmatize from 'wink-lemmatizer'
+
 const FUNCTION_WORDS: Record<string, string> = {
   a: 'The indefinite article; one, any, or each.',
   an: 'The indefinite article, used before a vowel sound.',
@@ -109,6 +111,10 @@ export function dictionaryForms(word: string): string[] {
       forms.push(stem.slice(0, -1))
     }
   }
+
+  // Lemmatizer forms come last so every lookup that already succeeded keeps its definition.
+  const base = normalized.endsWith("'s") ? normalized.slice(0, -2) : normalized
+  forms.push(lemmatize.verb(base), lemmatize.noun(base), lemmatize.adjective(base))
 
   return unique(forms.filter(Boolean))
 }
