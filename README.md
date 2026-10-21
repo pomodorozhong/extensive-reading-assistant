@@ -31,6 +31,8 @@ Then open the URL Vite prints (usually `http://localhost:5173`).
 
 Build a production bundle with `npm run build`. Preview it with `npm run preview`.
 
+Run `npm run test:dictionary` to check that inflected words such as *met*, *children*, and *happier* find their base-form definitions. It rebuilds the bundled WordNet files first.
+
 ## Choose a story
 
 New Story offers an optional theme, five theme examples, a CEFR vocabulary level, a reading length, and a supported model selector. An example fills the theme without submitting. The default level is A2 and the initial reading length is 10 minutes. A saved Settings level takes precedence; choices on New Story apply to that story and do not overwrite Settings. The model list currently offers **Gemini 3.1 Flash Lite**; its display label and request identifier are maintained together in `src/lib/generation-options.ts`. A supported saved model is selected initially; other saved model values fall back to the supported default in this form.
@@ -78,9 +80,9 @@ In **Settings**:
 
 1. Choose a CEFR band (A1–C2, initially A2). New stories use this level.
 2. Paste a [Gemini API key](https://aistudio.google.com/apikey) from Google AI Studio.
-3. Optionally change the model (default `gemini-3.1-flash-lite`) or API base URL.
+3. Optionally change the model (default `gemini-3.1-flash-lite`).
 
-The key never leaves this browser except when the app calls Gemini. If you host the app publicly, restrict the key by HTTP referrer in Google AI Studio.
+The key is saved in this browser's `localStorage` and sent only to Google's Gemini API at `https://generativelanguage.googleapis.com/v1beta` when you generate a story. Any other API base URL is refused before the key is attached, and redirects are treated as failures. Development builds (`npm run dev`) also accept loopback addresses such as `http://127.0.0.1:5175/v1beta` for the local fixture. If you host the app publicly, restrict the key by HTTP referrer in Google AI Studio.
 
 ## GitHub Pages
 
