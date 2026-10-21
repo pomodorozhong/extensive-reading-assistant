@@ -12,6 +12,7 @@ import {
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GeminiKeyDialog } from '../components/GeminiKeyDialog'
+import { VocabularyLevelInfo } from '../components/VocabularyLevelInfo'
 import { createGeneratedStory, generateStory } from '../lib/generate'
 import {
   initialGenerationChoices,
@@ -267,9 +268,12 @@ export function NewStory() {
 
           <div className="new-story-options">
             <div className="new-story-option new-story-level-option">
-              <Text as="div" id="new-story-level-label" size="2" weight="medium" mb="2">
-                Vocabulary level
-              </Text>
+              <Flex align="center" gap="2" mb="2">
+                <Text as="div" id="new-story-level-label" size="2" weight="medium">
+                  Vocabulary level
+                </Text>
+                <VocabularyLevelInfo />
+              </Flex>
               <SegmentedControl.Root
                 aria-labelledby="new-story-level-label"
                 value={choices.level}

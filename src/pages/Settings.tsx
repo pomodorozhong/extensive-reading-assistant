@@ -12,6 +12,7 @@ import {
   TextField,
 } from '@radix-ui/themes'
 import { GEMINI_KEY_DESTINATION, GEMINI_KEY_STUDIO_URL, GeminiKeyField } from '../components/GeminiKeyField'
+import { VocabularyLevelInfo } from '../components/VocabularyLevelInfo'
 import { useRef, useState, useSyncExternalStore } from 'react'
 import { Link as RouterLink, useSearchParams } from 'react-router-dom'
 import {
@@ -136,11 +137,15 @@ export function SettingsPage() {
         </div>
 
         <div>
-          <Text as="div" size="2" weight="medium" mb="2">
-            Vocabulary level
-          </Text>
+          <Flex align="center" gap="2" mb="2">
+            <Text as="div" id="settings-level-label" size="2" weight="medium">
+              Vocabulary level
+            </Text>
+            <VocabularyLevelInfo />
+          </Flex>
           <div className="cefr-scroll">
             <SegmentedControl.Root
+              aria-labelledby="settings-level-label"
               value={settings.cefrLevel}
               onValueChange={(value) => patch({ cefrLevel: value as CefrLevel })}
             >
