@@ -11,6 +11,11 @@ import type { Story } from '../types'
 
 export function StoryView() {
   const { id } = useParams()
+  // A new key starts the page fresh, so lookups and the open note never carry over between stories.
+  return <StoryReader key={id} id={id} />
+}
+
+function StoryReader({ id }: { id: string | undefined }) {
   const [searchParams] = useSearchParams()
   const [story, setStory] = useState<Story | undefined>(() => (id ? getStory(id) : undefined))
   const [showVocabularyReport] = useState(() => loadSettings().showVocabularyReport)
