@@ -2,7 +2,9 @@ import { CheckIcon, HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { Button, DropdownMenu, Flex, IconButton, Text } from '@radix-ui/themes'
 import { useEffect } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { setOnboardingOpen, shouldOfferOnboarding } from '../lib/onboarding'
 import { loadVocabulary } from '../lib/storage'
+import { Onboarding } from './Onboarding'
 import { PwaStatus } from './PwaStatus'
 
 const NAV = [
@@ -23,6 +25,7 @@ export function Layout() {
   const { pathname } = useLocation()
   useEffect(() => {
     loadVocabulary()
+    if (shouldOfferOnboarding()) setOnboardingOpen(true)
   }, [])
 
   return (
@@ -71,6 +74,7 @@ export function Layout() {
         <Outlet />
       </main>
       <PwaStatus />
+      <Onboarding />
     </div>
   )
 }
