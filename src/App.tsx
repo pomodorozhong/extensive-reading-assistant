@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
+import { LevelCheck } from './pages/LevelCheck'
 import { MyStories } from './pages/MyStories'
 import { NewStory } from './pages/NewStory'
 import { SettingsPage } from './pages/Settings'
@@ -12,6 +13,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<Navigate to="/new" replace />} />
         <Route path="/new" element={<NewStory />} />
+        <Route path="/level-check" element={<LevelCheck />} />
         <Route path="/stories" element={<MyStories />} />
         <Route path="/stories/:id" element={<StoryView />} />
         <Route path="/vocabulary" element={<Vocabulary />} />

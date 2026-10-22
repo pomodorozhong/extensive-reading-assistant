@@ -1,8 +1,7 @@
-import { ExternalLinkIcon, InfoCircledIcon } from '@radix-ui/react-icons'
-import { Button, Dialog, Flex, IconButton, Link, Text, VisuallyHidden } from '@radix-ui/themes'
+import { InfoCircledIcon } from '@radix-ui/react-icons'
+import { Button, Dialog, Flex, IconButton, Link, Text } from '@radix-ui/themes'
+import { Link as RouterLink } from 'react-router-dom'
 import { CEFR_LEVELS, type CefrLevel } from '../types'
-
-const LEVEL_TEST_URL = 'https://www.cambridgeenglish.org/test-your-english/'
 
 const LEVEL_DESCRIPTIONS: Record<CefrLevel, string> = {
   A1: 'Very short, simple sentences about familiar things like family, food, and home.',
@@ -54,12 +53,10 @@ export function VocabularyLevelInfo() {
         </Text>
         <Text as="p" size="2" mt="3">
           Not sure where to start?{' '}
-          <Link href={LEVEL_TEST_URL} target="_blank" rel="noreferrer">
-            Take a free level test from Cambridge English
-            <ExternalLinkIcon aria-hidden="true" className="level-guide-external" />
-            <VisuallyHidden> (opens in a new tab)</VisuallyHidden>
+          <Link asChild>
+            <RouterLink to="/level-check">Take the one-minute reading level check</RouterLink>
           </Link>
-          . Its result is an estimate; the easiest-feeling level is still the best guide.
+          . It suggests a level from the words you know; the easiest-feeling level is still the best guide.
         </Text>
 
         <Flex justify="end" mt="5">
