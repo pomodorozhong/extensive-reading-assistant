@@ -1,10 +1,10 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { VocabularyReport } from '../components/VocabularyReport'
 import { isDebugFixture } from '../lib/debug-fixtures'
-import { lookupDefinition } from '../lib/dictionary'
+import { lookupDefinition, preloadShards } from '../lib/dictionary'
 import { getStory, loadSettings, updateWordExplanation, updateWordMark } from '../lib/storage'
 import { tokenize } from '../lib/tokenize'
 import type { Story } from '../types'
@@ -58,6 +58,14 @@ function StoryReader({ id }: { id: string | undefined }) {
     word?.scrollIntoView({ block: 'center' })
     word?.focus({ preventScroll: true })
   }, [searchParams, tokens])
+
+  useEffect(() => {
+    const keys = new Set<string>()
+    tokens.forEach((token) => {
+      if (token.type === 'word') keys.add(token.key)
+    })
+    return preloadShards(keys)
+  }, [tokens])
 
   useLayoutEffect(() => {
     if (activeIndex === null) return

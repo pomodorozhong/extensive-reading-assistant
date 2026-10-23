@@ -153,7 +153,10 @@ export type DictionaryResult =
   | { ok: true; text: string }
   | { ok: false; message: string }
 
-export async function lookupDefinition(word: string): Promise<DictionaryResult> {
+export async function lookupDefinition(
+  word: string,
+  load: (name: string) => Promise<Record<string, string>> = loadShard,
+): Promise<DictionaryResult> {
   const forms = dictionaryForms(word)
 
   for (const form of forms) {
@@ -162,9 +165,22 @@ export async function lookupDefinition(word: string): Promise<DictionaryResult> 
     }
   }
 
+  // Start every shard the forms need at once, then read them in form order so the
+  // first form with an entry still wins.
+  const shards = new Map<string, Promise<Record<string, string>>>()
+  for (const form of forms) {
+    const name = shardName(form)
+    if (!shards.has(name)) {
+      const request = load(name)
+      // A shard after the winning form may fail without ever being awaited.
+      request.catch(() => {})
+      shards.set(name, request)
+    }
+  }
+
   try {
     for (const form of forms) {
-      const shard = await loadShard(shardName(form))
+      const shard = await shards.get(shardName(form))!
       const gloss = shard[form]
       if (gloss) {
         return { ok: true, text: gloss }
@@ -176,4 +192,43 @@ export async function lookupDefinition(word: string): Promise<DictionaryResult> 
   }
 
   return { ok: false, message: 'No dictionary entry for this word.' }
+}
+
+function whenIdle(): Promise<void> {
+  return new Promise((resolve) => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => resolve(), { timeout: 2000 })
+    } else {
+      setTimeout(resolve, 200)
+    }
+  })
+}
+
+// Loads the shards a story's words may need during idle time, one at a time, so the
+// first lookup does not wait on the network. Returns a function that stops it.
+export function preloadShards(words: Iterable<string>): () => void {
+  const names = new Set<string>()
+  for (const word of words) {
+    const forms = dictionaryForms(word)
+    if (!forms.some((form) => FUNCTION_WORDS[form])) {
+      forms.forEach((form) => names.add(shardName(form)))
+    }
+  }
+
+  let stopped = false
+  void (async () => {
+    for (const name of names) {
+      await whenIdle()
+      if (stopped) return
+      try {
+        await loadShard(name)
+      } catch {
+        // A failed preload is retried by the lookup that needs the shard.
+      }
+    }
+  })()
+
+  return () => {
+    stopped = true
+  }
 }
