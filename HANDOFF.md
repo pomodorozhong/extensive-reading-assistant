@@ -16,15 +16,22 @@ Last verified: 2026-10-23 (Asia/Taipei).
 
 ### perf/dictionary-lookup
 
-- Task: [#52](https://github.com/pomodorozhong/extensive-reading-assistant/issues/52), make the first dictionary lookup in Story View instant. The owner asked on 2026-10-23 to do it after #53 merged.
-- PR: none. The branch is linked to #52 (owner approved P-11 on 2026-10-23) and pushed to `origin`.
-- Code checkpoint: `origin/main` `9318f6c` (#53 merged); no code commits yet, only this handoff.
-- State: not started. Cause found so far, not yet measured: `lookupDefinition` in `src/lib/dictionary.ts` fetches and parses a whole first-letter shard from `public/dictionary/` on that letter's first lookup per page load (27 shards, about 10 MB; `s.json` 1.17 MB), and awaits candidate forms one at a time. The service worker precaches the shards, but each one is still read and parsed again after every reload.
-- Next action: measure fetch and parse time per shard, cold and warm, in `npm run dev` and in `npm run build && npm run preview`. Then show an `open-pr` plan before building.
+- Task: [#52](https://github.com/pomodorozhong/extensive-reading-assistant/issues/52), make the first dictionary lookup in Story View instant, and stop the lookup note from moving the story text.
+- PR: none. The branch is linked to #52 and pushed to `origin`.
+- Code checkpoint: `origin/main` `9318f6c`; no code commits yet, only `docs:` handoff commits.
+- State: measured, plan written, no code. The measurements, the layout-shift cause, and the plan are in the [#52 handoff note](https://github.com/pomodorozhong/extensive-reading-assistant/issues/52#issuecomment-6356125708). In short: on localhost a lookup takes 1–9 ms, so only the spinner flash is visible; on GitHub Pages without a service worker a large shard takes 380–854 ms to fetch; parsing is at most 22 ms.
+- Layout shift: the owner reported that the spinner pushes the layout around, and any spinner that stays must not do that. Likely cause, from the code but not yet reproduced: the spacer under the tapped word (`useLayoutEffect` in `src/pages/StoryView.tsx`) follows the note's height, so the text moves when "Looking up…" appears, again when the taller definition replaces it, and again if "Retry" wraps.
+- Plan (**P-12**, awaiting approval):
+  1. When Story View opens, preload the shards its words' candidate forms need during idle time, one at a time.
+  2. In `lookupDefinition`, fetch candidate forms' shards in parallel, keeping form order so results are unchanged.
+  3. Keep the note closed until the definition is ready or about 150 ms pass. If the spinner shows, give the note a minimum height of about two lines and keep the action row's layout identical while loading. Apply the same delay to the "Unknown words" list.
+  - Checks: first reproduce the jump in the browser pane; then `npm run lint`, `npm run build`, every `test:*` suite, the timing reruns, a check that a fast lookup moves the text at most once, the slow path with an artificial delay, and offline use with the service worker. Hosted before/after timings are a reviewer follow-up after deploy.
+- Next action: ask the owner to approve P-12, then build it and show the `open-pr` publish approval.
+- Pending **P-12**: approve the plan above. Blocks: building.
 
 ## Ranked work
 
-1. [#52 — Make the first dictionary lookup in Story View instant](https://github.com/pomodorozhong/extensive-reading-assistant/issues/52) — in progress on `perf/dictionary-lookup`; measure shard fetch and parse time first.
+1. [#52 — Make the first dictionary lookup in Story View instant](https://github.com/pomodorozhong/extensive-reading-assistant/issues/52) — in progress on `perf/dictionary-lookup`; measured, plan awaiting approval (P-12).
 2. [#24](https://github.com/pomodorozhong/extensive-reading-assistant/issues/24) — last Milestone 1 issue: confirm whether the screen-reader and mockup checks still need doing. #50's 200% zoom, screen-reader, and touch checks were not done before merge.
 3. [#18 — Improve Gemini BYOK security for hosted users](https://github.com/pomodorozhong/extensive-reading-assistant/issues/18) — #37, #39, and #40 merged; left: a dedicated hostname or documented origin-sharing risk (`pomodorozhong.github.io` serves about 20 of the owner's Pages sites; a docs PR for this was proposed and dropped on 2026-10-21), and a `main` ruleset requiring the Checks status (owner setting).
 4. [#27 — Offer curated starter stories without requiring a Gemini API key](https://github.com/pomodorozhong/extensive-reading-assistant/issues/27) — needs reviewed starter content chosen by the owner.
