@@ -19,9 +19,11 @@ function StoryReader({ id }: { id: string | undefined }) {
   const [searchParams] = useSearchParams()
   const [story, setStory] = useState<Story | undefined>(() => (id ? getStory(id) : undefined))
   const [showVocabularyReport] = useState(() => loadSettings().showVocabularyReport)
-  const [loadingKeys, setLoadingKeys] = useState<Record<string, boolean>>({})
+  // A lookup is 'pending' for its first moments and 'slow' once it is worth a spinner.
+  const [loadingKeys, setLoadingKeys] = useState<Record<string, 'pending' | 'slow'>>({})
   const [lookupErrors, setLookupErrors] = useState<Record<string, string>>({})
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  const [tallNoteIndex, setTallNoteIndex] = useState<number | null>(null)
   const pendingLookups = useRef(new Set<string>())
   const storyRef = useRef(story)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -32,7 +34,15 @@ function StoryReader({ id }: { id: string | undefined }) {
   const activeKey = activeToken?.type === 'word' ? activeToken.key : undefined
   const explanation = activeKey ? story?.explanations[activeKey] : undefined
   const error = activeKey ? lookupErrors[activeKey] : undefined
-  const loading = activeKey ? Boolean(loadingKeys[activeKey]) : false
+  const loading = activeKey ? loadingKeys[activeKey] : undefined
+  // The note stays closed while a lookup is pending, so a fast lookup opens it once,
+  // with the definition already in place.
+  const noteOpen = loading !== 'pending'
+  // Once a note has shown the spinner, it keeps a two-line minimum so a short
+  // definition replacing the spinner does not move the text again.
+  if (loading === 'slow' && tallNoteIndex !== activeIndex) {
+    setTallNoteIndex(activeIndex)
+  }
 
   const unknownEntries = useMemo(() => {
     if (!story) {
@@ -68,7 +78,7 @@ function StoryReader({ id }: { id: string | undefined }) {
   }, [tokens])
 
   useLayoutEffect(() => {
-    if (activeIndex === null) return
+    if (activeIndex === null || !noteOpen) return
     const body = bodyRef.current
     const note = noteRef.current
     const space = noteSpaceRef.current
@@ -100,7 +110,7 @@ function StoryReader({ id }: { id: string | undefined }) {
       observer.disconnect()
       cancelAnimationFrame(frame)
     }
-  }, [activeIndex])
+  }, [activeIndex, noteOpen])
 
   if (!story) {
     return (
@@ -118,13 +128,16 @@ function StoryReader({ id }: { id: string | undefined }) {
     )
   }
 
-  async function lookupWord(key: string, currentStory: Story) {
+  async function lookupWord(key: string, currentStory: Story, showSpinnerNow = false) {
     if (currentStory.explanations[key] || pendingLookups.current.has(key)) {
       return
     }
 
     pendingLookups.current.add(key)
-    setLoadingKeys((keys) => ({ ...keys, [key]: true }))
+    setLoadingKeys((keys) => ({ ...keys, [key]: showSpinnerNow ? 'slow' : 'pending' }))
+    const spinnerTimer = window.setTimeout(() => {
+      setLoadingKeys((keys) => (keys[key] === 'pending' ? { ...keys, [key]: 'slow' } : keys))
+    }, 150)
     setLookupErrors((errors) => {
       const next = { ...errors }
       delete next[key]
@@ -133,6 +146,7 @@ function StoryReader({ id }: { id: string | undefined }) {
 
     const result = await lookupDefinition(key)
 
+    window.clearTimeout(spinnerTimer)
     pendingLookups.current.delete(key)
     setLoadingKeys((keys) => {
       const next = { ...keys }
@@ -223,7 +237,8 @@ function StoryReader({ id }: { id: string | undefined }) {
 
             const mark = story.wordMarks[token.key]
             const className = mark === 'unknown' ? 'story-word unknown' : 'story-word'
-            const showGloss = activeIndex === index
+            const isActive = activeIndex === index
+            const showGloss = isActive && noteOpen
 
             return (
               <span key={`word-${index}`}>
@@ -232,14 +247,14 @@ function StoryReader({ id }: { id: string | undefined }) {
                   id={`word-${index}`}
                   className={className}
                   onClick={() => {
-                    if (showGloss) {
+                    if (isActive) {
                       closeNote()
                     } else {
                       openWord(token.key, index)
                     }
                   }}
                   onKeyDown={(event) => {
-                    if (event.key === 'Escape' && showGloss) {
+                    if (event.key === 'Escape' && isActive) {
                       event.preventDefault()
                       closeNote()
                     }
@@ -255,7 +270,7 @@ function StoryReader({ id }: { id: string | undefined }) {
                 )}
                 {showGloss && (
                   <span
-                    className="inline-gloss"
+                    className={tallNoteIndex === index ? 'inline-gloss inline-gloss-tall' : 'inline-gloss'}
                     ref={noteRef}
                     id={`gloss-${activeIndex}`}
                     role="note"
@@ -276,14 +291,19 @@ function StoryReader({ id }: { id: string | undefined }) {
                       )}
                     </span>
                     <span className="inline-gloss-actions">
-                      {!loading && error && (
+                      {loading ? (
+                        // Holds Retry's place so the row wraps the same way if the lookup fails.
+                        <span className="gloss-action gloss-action-placeholder" aria-hidden="true">
+                          Retry
+                        </span>
+                      ) : error && (
                         <button
                           type="button"
                           className="gloss-action"
                           onClick={() => {
                             const latest = storyRef.current
                             if (latest) {
-                              void lookupWord(token.key, latest)
+                              void lookupWord(token.key, latest, true)
                             }
                           }}
                         >
@@ -333,7 +353,9 @@ function StoryReader({ id }: { id: string | undefined }) {
                       {entry.sample}
                     </Text>
                     <span className="glossary-definition">
-                      {loadingKeys[entry.key] ? (
+                      {loadingKeys[entry.key] === 'pending' ? (
+                        '\u00a0'
+                      ) : loadingKeys[entry.key] === 'slow' ? (
                         <><Spinner size="1" /> Looking up…</>
                       ) : (
                         lookupErrors[entry.key] ?? story.explanations[entry.key] ??

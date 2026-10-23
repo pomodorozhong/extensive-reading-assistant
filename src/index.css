@@ -265,6 +265,18 @@ body {
   overflow-wrap: anywhere;
 }
 
+/* Two lines of note text; see tallNoteIndex in StoryView. */
+.inline-gloss-tall {
+  min-height: 2.9em;
+}
+
+/* Radix spinners are blocks, which would push "Looking up…" onto lines of its own. */
+.inline-gloss-body .rt-Spinner,
+.glossary-definition .rt-Spinner {
+  display: inline-block;
+  vertical-align: -0.1em;
+}
+
 .story-note-space {
   display: inline-block;
   width: 0;
@@ -293,6 +305,10 @@ body {
   text-decoration: underline;
   text-underline-offset: 0.15em;
   cursor: pointer;
+}
+
+.gloss-action-placeholder {
+  visibility: hidden;
 }
 
 .gloss-action:hover {
