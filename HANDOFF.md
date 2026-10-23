@@ -17,11 +17,10 @@ Last verified: 2026-10-23 (Asia/Taipei).
 ### perf/dictionary-lookup
 
 - Task: [#52](https://github.com/pomodorozhong/extensive-reading-assistant/issues/52), make the first dictionary lookup in Story View instant. The owner asked on 2026-10-23 to do it after #53 merged.
-- PR: none. The branch is local and not linked to #52; linking with `gh issue develop` creates it on GitHub, which needs push approval.
+- PR: none. The branch is linked to #52 (owner approved P-11 on 2026-10-23) and pushed to `origin`.
 - Code checkpoint: `origin/main` `9318f6c` (#53 merged); no code commits yet, only this handoff.
 - State: not started. Cause found so far, not yet measured: `lookupDefinition` in `src/lib/dictionary.ts` fetches and parses a whole first-letter shard from `public/dictionary/` on that letter's first lookup per page load (27 shards, about 10 MB; `s.json` 1.17 MB), and awaits candidate forms one at a time. The service worker precaches the shards, but each one is still read and parsed again after every reload.
 - Next action: measure fetch and parse time per shard, cold and warm, in `npm run dev` and in `npm run build && npm run preview`. Then show an `open-pr` plan before building.
-- Pending **P-11**: link this branch to #52 with `gh issue develop` and push it with this handoff commit. Why: that creates the branch on GitHub. Blocks: retrieving this `HANDOFF.md` from another computer.
 
 ## Ranked work
 
