@@ -33,6 +33,12 @@ Build a production bundle with `npm run build`. Preview it with `npm run preview
 
 Run `npm run test:dictionary` to check that inflected words such as *met*, *children*, and *happier* find their base-form definitions. It rebuilds the bundled WordNet files first.
 
+## Introduction
+
+On first use, a six-step introduction explains extensive reading and the app's workflow: pick a level and generate a story, read for the story, tap an unfamiliar word for its meaning, review words in Vocabulary, and where the Gemini key goes, that generation needs internet, and that data stays in this browser. Each step has a short CSS animation; with the system's reduced-motion setting on, every step shows its finished frame instead. Back, Next, and Skip are always available, the arrow keys also change steps, and the last step offers **Choose a level and start** (New Story) and **Check my level** (the level check). Viewing it needs no key.
+
+It opens automatically only when no outcome is recorded and no stories are saved, so existing readers are not interrupted. Finishing or skipping (including Esc) saves `completed` or `skipped` in the `era.v1.onboarding` localStorage entry and changes nothing else. **Settings → Introduction → Show the introduction again** reopens it. `npm run test:onboarding` covers the stored outcome and the first-use rule.
+
 ## Choose a story
 
 New Story offers an optional theme, five theme examples, a CEFR vocabulary level, a reading length, and a supported model selector. An example fills the theme without submitting. The default level is A2 and the initial reading length is 10 minutes. A saved Settings level takes precedence; choices on New Story apply to that story and do not overwrite Settings. The model list currently offers **Gemini 3.1 Flash Lite**; its display label and request identifier are maintained together in `src/lib/generation-options.ts`. A supported saved model is selected initially; other saved model values fall back to the supported default in this form.

@@ -21,6 +21,7 @@ import {
   subscribePwaInstall,
 } from '../lib/pwa-install'
 import { allowsLoopbackEndpoint, checkGeminiEndpoint, GEMINI_API_BASE_URL } from '../lib/gemini-endpoint'
+import { setOnboardingOpen } from '../lib/onboarding'
 import { loadSettings, saveSettings } from '../lib/storage'
 import { CEFR_LEVELS, type CefrLevel, type Settings } from '../types'
 
@@ -262,6 +263,18 @@ export function SettingsPage() {
             onChange={(event) => patch({ model: event.target.value })}
           />
         </label>
+
+        <div>
+          <Text as="div" size="2" weight="medium" mb="1">
+            Introduction
+          </Text>
+          <Text as="p" size="2" color="gray" mb="3">
+            A short tour of how extensive reading works in this app.
+          </Text>
+          <Button type="button" variant="soft" onClick={() => setOnboardingOpen(true)}>
+            Show the introduction again
+          </Button>
+        </div>
 
         <div>
           <Text as="div" size="2" weight="medium" mb="2">Debugging</Text>
