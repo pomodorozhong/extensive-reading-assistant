@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { dictionaryForms } from '../src/lib/dictionary.ts'
+import { dictionaryForms, lookupDefinition } from '../src/lib/dictionary.ts'
 
 // The npm script rebuilds these shards from the bundled WordNet data before the tests run.
 const shards = new Map()
@@ -52,4 +52,35 @@ test('existing candidates keep their order ahead of lemmatizer candidates', () =
   assert.equal(dictionaryForms('met')[0], 'met')
   assert.ok(dictionaryForms('met').includes('meet'))
   assert.ok(dictionaryForms('knives').indexOf('knife') > dictionaryForms('knives').indexOf('knive'))
+})
+
+test('lookups request every needed shard at once and keep form order', async () => {
+  const requested = []
+  const resolvers = new Map()
+  const load = (name) => {
+    requested.push(name)
+    return new Promise((resolve) => resolvers.set(name, resolve))
+  }
+
+  // "went" needs the g shard (for "go") and the w shard (for "went").
+  const result = lookupDefinition('went', load)
+  await Promise.resolve()
+  assert.deepEqual(requested.sort(), ['g', 'w'])
+
+  // The w shard answering first must not beat "go", which comes first in form order.
+  resolvers.get('w')({ went: 'wrong entry' })
+  resolvers.get('g')({ go: 'move or travel' })
+  assert.deepEqual(await result, { ok: true, text: 'move or travel' })
+})
+
+test('a failed shard after the winning form does not fail the lookup', async () => {
+  const load = (name) =>
+    name === 'g' ? Promise.resolve({ go: 'move or travel' }) : Promise.reject(new Error('offline'))
+  assert.deepEqual(await lookupDefinition('went', load), { ok: true, text: 'move or travel' })
+})
+
+test('a failed shard before any entry is found reports the error', async () => {
+  const load = (name) =>
+    name === 'g' ? Promise.reject(new Error('offline')) : Promise.resolve({ went: 'wrong entry' })
+  assert.deepEqual(await lookupDefinition('went', load), { ok: false, message: 'offline' })
 })
