@@ -10,7 +10,6 @@ Generate level-appropriate stories and let learners mark words as known or unkno
 
 ## Out of scope
 
-- In-app test to determine vocabulary level
 - Flashcards or review scheduling for marked words
 
 ## User stories
@@ -29,6 +28,8 @@ Generate level-appropriate stories and let learners mark words as known or unkno
 | New story | New Story | Generate with the selected level, optional theme, reading length, and supported model. Theme examples fill the form without submitting. |
 | Word marking | Story View | Mark any word as known or unknown. Marks persist on that story. |
 | Story library | My Stories | List saved stories and open one in Story View. |
+| Reading level check | Level check | An approximate, offline word-recognition check that suggests a CEFR level for New Story and, optionally, Settings. It is an estimate, not a certified result. |
+| Introduction | First use and Settings | A six-step introduction to the reading workflow, shown once to new readers and available again from Settings. |
 | Unknown-word collection | Vocabulary | Collect unknown words across stories, grouped by approximate CEFR level, with saved definitions, sentences, and links back to each occurrence. |
 
 Reading length is an advisory 5, 10, or 15 minutes, initially 10 minutes, with prompt targets of 400–600, 800–1,200, and 1,200–1,800 words respectively. Reading time varies by learner. New stories record their requested reading minutes; older stories remain readable without this optional metadata. Form choices apply per story and do not overwrite Settings defaults.
@@ -40,6 +41,7 @@ treeView-beta
 App/
     New Story/
         Story View
+    Level check/
     My Stories/
     Vocabulary/
     Settings/
@@ -47,6 +49,7 @@ App/
 
 - **Landing route (`/`)** — redirects to the canonical New Story route (`/new`)
 - **New Story** — choose a level, optional theme, reading length, and supported model, then generate and open a story in Story View
+- **Level check (`/level-check`)** — estimate a reading level from word recognition, then apply it to New Story
 - **Story View** — read the story and mark words
 - **My Stories** — saved stories; each item opens Story View
 - **Vocabulary** — review unknown words and return to their source stories
