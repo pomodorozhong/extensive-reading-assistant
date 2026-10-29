@@ -61,7 +61,7 @@ Reading lengths use these prompt targets:
 | 10 min | 800–1,200 words |
 | 15 min | 1,200–1,800 words |
 
-These are product targets rather than measured reading speeds. Reading time varies by learner, and generated length is advisory. New stories store the submitted level, optional theme, and requested `readingMinutes`; older stories without this field remain readable. Credentials and API endpoint configuration stay in Settings. Draft persistence across Settings and reload is tracked separately in issue #26.
+These are product targets rather than measured reading speeds. Reading time varies by learner, and generated length is advisory. New stories store the submitted level, optional theme, and requested `readingMinutes`; older stories without this field remain readable. Credentials and API endpoint configuration stay in Settings. The New Story draft (theme, level, length, and model) is kept across visits to Settings and reloads.
 
 ## Verify generation without a live API
 
@@ -114,7 +114,7 @@ This repo deploys the production build with GitHub Actions. Hash-based routes (`
 2. In the GitHub repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 3. After the workflow succeeds, the site is at `https://<user>.github.io/<repo>/`.
 
-Every pull request runs the **Checks** workflow: `npm run lint`, `npm run build`, and the four `test:*` suites. A deploy runs the same checks first and stops if any fail. Third-party actions are pinned to full commit hashes, and Dependabot proposes updates to them weekly. To block merging until the checks pass, require the **Checks** status in a branch ruleset for `main` (a repository setting, not part of this code).
+Every pull request runs the **Checks** workflow: `npm run lint`, `npm run build`, and the six `test:*` suites. A deploy runs the same checks first and stops if any fail. Third-party actions are pinned to full commit hashes, and Dependabot proposes updates to them weekly. To block merging until the checks pass, require the **Checks** status in a branch ruleset for `main` (a repository setting, not part of this code).
 
 To override the asset base path, set `VITE_BASE` (for example `/` for a custom domain at the site root).
 
