@@ -7,17 +7,16 @@ Last verified: 2026-10-29 (Asia/Taipei).
 ### fix/prefer-common-entry-over-name
 
 - Task: [#65](https://github.com/pomodorozhong/extensive-reading-assistant/issues/65) — tapping *banks, fields, laws* showed a name. The branch is linked to #65 and fully resolves it.
-- PR: none yet.
+- PR: [#66](https://github.com/pomodorozhong/extensive-reading-assistant/pull/66), opened 2026-10-29.
 - Code checkpoint: `61e4e1e` on `main` `c589d8f`.
-- State: pushed; the PR draft awaits the owner's approval.
+- State: awaiting review and merge.
 - Verification: 2026-10-29, `npm run lint`, `npm run build`, and all six `test:*` suites passed (90 tests). In the dev preview, a test story showed *bank, field, law, gate* for the lowercase words and James Stuart and the planet for *James* and *Mars*, with no console errors.
 - Behavior to know: explanations are stored per lowercase word, so a story that writes both *Gates* and *gates* shows the ordinary word for both. The `-es` reorder also changes *bites, notes, games, cones* from *bit, not, gam, con* to their real bases.
-- Next action: open the PR once the owner approves **P-22**.
-- Pending **P-22**: open the PR "fix(dictionary): prefer the base word over a name for words met in lowercase" from this branch to `main`, closing #65. Why: opening a PR needs approval. Blocks: review and merge of #65.
+- Next action: merge #66 once the owner approves; then remove this subsection and the #65 line from `Ranked work`.
 
 ## Ranked work
 
-1. [#65 — Prefer the base form when a regular plural or past form has only a proper-noun entry](https://github.com/pomodorozhong/extensive-reading-assistant/issues/65) — fixed on `fix/prefer-common-entry-over-name`; the PR awaits approval (P-22).
+1. [#65 — Prefer the base form when a regular plural or past form has only a proper-noun entry](https://github.com/pomodorozhong/extensive-reading-assistant/issues/65) — fixed on `fix/prefer-common-entry-over-name`; [PR #66](https://github.com/pomodorozhong/extensive-reading-assistant/pull/66) awaiting merge.
 2. [#27 — Offer curated starter stories without requiring a Gemini API key](https://github.com/pomodorozhong/extensive-reading-assistant/issues/27) — lets a new reader try the app without a key; needs starter content the owner reviews (Claude can draft one story per level).
 3. [#56 — Add browser-local backup and restore with clear device and offline status](https://github.com/pomodorozhong/extensive-reading-assistant/issues/56) — all data lives only in `localStorage`; unblocks story deletion (#28) and the storage move (#60).
 4. [#57 — Resume unfinished stories and offer an explicit completion flow](https://github.com/pomodorozhong/extensive-reading-assistant/issues/57) — reading position and finished state; blocks #28's status filters.
