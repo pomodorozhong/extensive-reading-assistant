@@ -3,13 +3,14 @@ import { beforeEach, test } from 'node:test'
 import { checkGeminiEndpoint, GEMINI_API_BASE_URL } from '../src/lib/gemini-endpoint.ts'
 import { readFileSync } from 'node:fs'
 import { createGeneratedStory, generateStory, parseGeneratedStory } from '../src/lib/generate.ts'
-import { DEFAULT_MODEL, initialGenerationChoices } from '../src/lib/generation-options.ts'
+import { cleanTextType, DEFAULT_MODEL, generationNotes, initialGenerationChoices, lockedTextTypes, TEXT_TYPE_INFO, textTypeLevelRange, textTypesForLevel, TOPIC_EXAMPLES, topicExamples } from '../src/lib/generation-options.ts'
+import { CEFR_LEVELS, TEXT_MODES, TEXT_TYPES } from '../src/types.ts'
 import { clearNewStoryDraft, loadNewStoryDraft, saveNewStoryDraft } from '../src/lib/new-story-draft.ts'
 import { DEFAULT_SETTINGS, getStory, loadSettings, loadStories, loadVocabulary, saveSettings, trySaveNewStory, upsertStory } from '../src/lib/storage.ts'
 
 const apiKey = 'synthetic-generation-test-key-do-not-send'
 const settings = { ...DEFAULT_SETTINGS, cefrLevel: 'C2', model: 'saved-custom-model', apiKey }
-const choices = { level: 'B1', theme: '  A weekend in Tokyo  ', readingMinutes: 5, model: DEFAULT_MODEL }
+const choices = { level: 'B1', topic: '  A weekend in Tokyo  ', textType: null, tone: null, pointOfView: null, readingMinutes: 5, model: DEFAULT_MODEL }
 const responseText = 'Title: "A Weekend"\n\nA friend visits a garden.\n\nTHE END.'
 
 beforeEach((t) => {
@@ -44,7 +45,10 @@ test('initial choices default to A2 and ten minutes while preserving a saved lev
   assert.equal(initial.level, 'C2')
   assert.equal(initial.readingMinutes, 10)
   assert.equal(initial.model, 'gemini-3.1-flash-lite')
-  assert.equal(initial.theme, '')
+  assert.equal(initial.topic, '')
+  assert.equal(initial.textType, null)
+  assert.equal(initial.tone, null)
+  assert.equal(initial.pointOfView, null)
   assert.ok(!JSON.stringify(initial).includes(apiKey))
   assert.deepEqual(settings, original)
   assert.equal(initialGenerationChoices({ ...settings, model: 'models/gemini-3.1-flash-lite' }).model, DEFAULT_MODEL)
@@ -61,7 +65,7 @@ test('each reading length sends its agreed word band and selected level and mode
     const prompt = request.json.contents[0].parts[0].text
     assert.match(prompt, /CEFR B1/)
     assert.ok(!prompt.includes('CEFR C2'))
-    assert.match(prompt, /Theme or topic: A weekend in Tokyo\n/)
+    assert.match(prompt, /\nTopic: A weekend in Tokyo\n/)
     assert.ok(prompt.includes(`${min}-${max} words, approximately ${readingMinutes} minutes`))
     assert.ok(!request.body.includes(apiKey))
     assert.ok(!request.url.includes(apiKey))
@@ -78,14 +82,128 @@ test('all six selected CEFR levels reach the prompt', async (t) => {
   }
 })
 
-test('omitted and whitespace-only themes use the original-theme instruction', async (t) => {
+test('omitted and whitespace-only topics use the original-topic instruction', async (t) => {
   const requests = mockGemini(t)
-  for (const theme of [undefined, '', '   ']) {
-    await generateStory({ ...choices, theme, settings })
+  for (const topic of [undefined, '', '   ']) {
+    await generateStory({ ...choices, topic, settings })
     const prompt = requests.at(-1).json.contents[0].parts[0].text
-    assert.match(prompt, /Choose a pleasant, original theme/)
-    assert.ok(!prompt.includes('Theme or topic:'))
+    assert.match(prompt, /Choose a pleasant, original topic/)
+    assert.ok(!prompt.includes('Topic:'))
   }
+})
+
+test('without text type, tone, or point of view the prompt leaves them to the model', async (t) => {
+  const requests = mockGemini(t)
+  await generateStory({ ...choices, settings })
+  const prompt = requests.at(-1).json.contents[0].parts[0].text
+  assert.match(prompt, /^Write a complete story at CEFR B1 /)
+  for (const line of ['Text type:', 'Tone:', 'Tell it in the', 'Do not invent words', 'Keep facts accurate']) {
+    assert.ok(!prompt.includes(line), line)
+  }
+  assert.match(prompt, /Fill the story with as much dialogue as possible/)
+})
+
+test('a text type, tone, and point of view each reach the prompt', async (t) => {
+  const requests = mockGemini(t)
+  await generateStory({ ...choices, textType: 'fable', tone: 'cozy', pointOfView: 'first', settings })
+  const prompt = requests.at(-1).json.contents[0].parts[0].text
+  assert.match(prompt, /^Write a complete fable at CEFR B1 /)
+  assert.match(prompt, /\nText type: Fable — animals or simple characters, a short plot, and a clear lesson stated at the end\.\n/)
+  assert.match(prompt, /\nTone: cozy\.\n/)
+  assert.match(prompt, /\nTell it in the first person, as "I"\.\n/)
+  await generateStory({ ...choices, pointOfView: 'third', settings })
+  assert.match(requests.at(-1).json.contents[0].parts[0].text, /\nTell it in the third person\.\n/)
+})
+
+test('a form with its own point of view overrides the reader choice, in the prompt and the saved story', async (t) => {
+  const requests = mockGemini(t)
+  for (const textType of ['diary', 'instructions']) {
+    await generateStory({ ...choices, textType, pointOfView: 'third', settings })
+    assert.ok(!requests.at(-1).json.contents[0].parts[0].text.includes('Tell it in the'), textType)
+    const story = createGeneratedStory({ title: 'T', body: 'B' }, { ...choices, textType, pointOfView: 'third' })
+    assert.ok(!('pointOfView' in story), textType)
+  }
+})
+
+test('each text type sets its own dialogue line, and a play script relies on its guide', async (t) => {
+  const requests = mockGemini(t)
+  for (const [textType, expected] of [
+    ['short-story', 'Fill the story with as much dialogue as possible.'],
+    ['letter', 'Use dialogue only where it fits naturally.'],
+    ['play-script', null],
+  ]) {
+    await generateStory({ ...choices, textType, settings })
+    const prompt = requests.at(-1).json.contents[0].parts[0].text
+    assert.equal(prompt.includes('as much dialogue as possible'), expected?.startsWith('Fill') ?? false, textType)
+    assert.equal(prompt.includes('only where it fits naturally'), expected?.startsWith('Use') ?? false, textType)
+  }
+  assert.match(requests.at(-1).json.contents[0].parts[0].text, /speaker's name and a colon/)
+})
+
+test('stories avoid made-up words at A1 and A2, while real-life and practical forms do not need the rule', async (t) => {
+  const requests = mockGemini(t)
+  for (const [level, textType, expected] of [
+    ['A2', null, true], ['A1', 'fairy-tale', true], ['A2', 'myth', true], ['B1', 'short-story', false], ['A2', 'letter', false],
+  ]) {
+    await generateStory({ ...choices, level, textType, settings })
+    const prompt = requests.at(-1).json.contents[0].parts[0].text
+    assert.equal(prompt.includes('Do not invent words'), expected, `${level} ${textType}`)
+  }
+})
+
+test('factual forms ask for accurate facts and explained topic words', async (t) => {
+  const requests = mockGemini(t)
+  for (const [textType, expected] of [['expository', true], ['biography', true], ['news-report', false]]) {
+    await generateStory({ ...choices, textType, settings })
+    assert.equal(requests.at(-1).json.contents[0].parts[0].text.includes('do not invent statistics, dates, or quotes'), expected, textType)
+  }
+})
+
+test('topic examples follow the chosen text type and notes explain how choices shape the text', () => {
+  assert.deepEqual(topicExamples(null), TOPIC_EXAMPLES)
+  assert.deepEqual(topicExamples('letter'), TEXT_TYPE_INFO.letter.examples)
+  assert.deepEqual(generationNotes({ level: 'B1', textType: null, pointOfView: null }), [])
+  assert.deepEqual(generationNotes({ level: 'A2', textType: null, pointOfView: null }), [])
+  assert.deepEqual(generationNotes({ level: 'A2', textType: 'myth', pointOfView: null }), [
+    'At A2, made-up words are left out, so every word can still be looked up.',
+  ])
+  assert.deepEqual(generationNotes({ level: 'B1', textType: 'expository', pointOfView: null }), [
+    'Topic words are explained in the text the first time they appear.',
+  ])
+  assert.deepEqual(generationNotes({ level: 'A1', textType: null, pointOfView: 'third' }), ['First person is often easier to follow at A1.'])
+  assert.deepEqual(generationNotes({ level: 'A1', textType: 'diary', pointOfView: 'third' }), [])
+})
+
+test('every mode offers a form at every level, and each level offers only the forms whose range includes it', () => {
+  assert.equal(TEXT_TYPES.length, 16)
+  for (const textType of TEXT_TYPES) {
+    const [lowest, highest] = TEXT_TYPE_INFO[textType].levels
+    assert.ok(CEFR_LEVELS.indexOf(lowest) <= CEFR_LEVELS.indexOf(highest), textType)
+    assert.equal(TEXT_TYPE_INFO[textType].examples.length, 3, textType)
+  }
+  for (const level of CEFR_LEVELS) {
+    for (const mode of TEXT_MODES) assert.ok(textTypesForLevel(mode, level).length > 0, `${mode} ${level}`)
+  }
+  assert.ok(textTypesForLevel('stories', 'A1').includes('fairy-tale'))
+  assert.ok(!textTypesForLevel('stories', 'C1').includes('fairy-tale'))
+  assert.ok(!textTypesForLevel('ideas', 'A2').includes('argumentative'))
+  assert.ok(textTypesForLevel('ideas', 'B1').includes('argumentative'))
+  assert.deepEqual(lockedTextTypes('real-life', 'A2'), ['biography'])
+  assert.deepEqual(lockedTextTypes('real-life', 'B1'), [])
+  assert.equal(textTypeLevelRange('reflective'), 'B1–C2')
+  assert.equal(cleanTextType('argumentative', 'A2'), null)
+  assert.equal(cleanTextType('argumentative', 'B2'), 'argumentative')
+  assert.equal(cleanTextType('mystery', 'B2'), null)
+})
+
+test('a text type outside the level never reaches the prompt or the saved story', async (t) => {
+  const requests = mockGemini(t)
+  await generateStory({ ...choices, level: 'A1', textType: 'argumentative', settings })
+  const prompt = requests.at(-1).json.contents[0].parts[0].text
+  assert.match(prompt, /^Write a complete story at CEFR A1 /)
+  assert.ok(!prompt.includes('Text type:'))
+  const story = createGeneratedStory({ title: 'T', body: 'B' }, { ...choices, level: 'C2', textType: 'fairy-tale' })
+  assert.ok(!('textType' in story))
 })
 
 test('generated stories persist submitted choices without changing global defaults or copying provider settings', async (t) => {
@@ -100,7 +218,14 @@ test('generated stories persist submitted choices without changing global defaul
   const restored = getStory(story.id)
   assert.equal(restored.level, 'B1')
   assert.equal(restored.readingMinutes, 5)
-  assert.equal(restored.theme, 'A weekend in Tokyo')
+  assert.equal(restored.topic, 'A weekend in Tokyo')
+  assert.ok(!('textType' in restored || 'tone' in restored || 'pointOfView' in restored))
+  const styled = createGeneratedStory(result, { ...submitted, textType: 'fable', tone: 'funny', pointOfView: 'third' })
+  upsertStory(styled)
+  const restoredStyled = getStory(styled.id)
+  assert.equal(restoredStyled.textType, 'fable')
+  assert.equal(restoredStyled.tone, 'funny')
+  assert.equal(restoredStyled.pointOfView, 'third')
   assert.equal(restored.body, result.body)
   assert.deepEqual(restored.wordMarks, {})
   assert.deepEqual(restored.explanations, {})
@@ -114,13 +239,25 @@ test('legacy stories still load unchanged alongside new duration metadata', () =
   const legacy = JSON.parse(readFileSync(new URL('./fixtures/cefr-stories.json', import.meta.url), 'utf8')).stories[0]
   localStorage.setItem('era.v1.stories', JSON.stringify([legacy]))
   assert.deepEqual(getStory(legacy.id), legacy)
-  const next = createGeneratedStory({ title: 'New story', body: 'A cat sits.' }, { ...choices, theme: '   ', readingMinutes: 15 })
+  const next = createGeneratedStory({ title: 'New story', body: 'A cat sits.' }, { ...choices, topic: '   ', readingMinutes: 15 })
   upsertStory(next)
   assert.deepEqual(getStory(legacy.id), legacy)
   assert.equal(getStory(legacy.id).readingMinutes, undefined)
   assert.equal(getStory(next.id).readingMinutes, 15)
-  assert.ok(!('theme' in getStory(next.id)))
+  assert.ok(!('topic' in getStory(next.id)))
   assert.equal(loadStories().length, 2)
+})
+
+test('stories saved with a theme load it as their topic', () => {
+  localStorage.setItem('era.v1.stories', JSON.stringify([
+    { id: 'old', title: 'Old', body: 'A cat sits.', level: 'A2', theme: 'Rain', createdAt: '2026-01-01T00:00:00.000Z', wordMarks: {}, explanations: {} },
+    { id: 'both', title: 'Both', body: 'A dog runs.', level: 'A2', theme: 'Old name', topic: 'New name', createdAt: '2026-01-01T00:00:00.000Z' },
+  ]))
+  const [old, both] = loadStories()
+  assert.equal(old.topic, 'Rain')
+  assert.ok(!('theme' in old))
+  assert.equal(both.topic, 'New name')
+  assert.ok(!('theme' in both))
 })
 
 test('provider failures redact echoed keys from every displayed provider detail', async (t) => {
@@ -207,16 +344,21 @@ test('a failed save reports false and leaves saved stories and vocabulary unchan
   assert.deepEqual(loadStories().map((item) => item.id), [story.id, existing.id])
 })
 
-test('an unfinished draft survives a reload and keeps only the four non-secret choices', () => {
+test('an unfinished draft survives a reload and keeps only the non-secret choices', () => {
   saveSettings(settings)
   const fresh = initialGenerationChoices(loadSettings())
   assert.deepEqual(loadNewStoryDraft(fresh), fresh)
-  saveNewStoryDraft({ ...choices, level: 'B2', readingMinutes: 15, apiKey, apiBaseUrl: settings.apiBaseUrl })
+  saveNewStoryDraft({ ...choices, level: 'B2', readingMinutes: 15, textType: 'fable', tone: 'thoughtful', pointOfView: 'first', apiKey, apiBaseUrl: settings.apiBaseUrl })
   const raw = localStorage.getItem('era.v1.new-story-draft')
   assert.ok(!raw.includes(apiKey))
   assert.ok(!raw.includes('googleapis'))
-  assert.deepEqual(Object.keys(JSON.parse(raw)).sort(), ['level', 'model', 'readingMinutes', 'theme'])
-  assert.deepEqual(loadNewStoryDraft(fresh), { level: 'B2', theme: '  A weekend in Tokyo  ', readingMinutes: 15, model: DEFAULT_MODEL })
+  assert.deepEqual(Object.keys(JSON.parse(raw)).sort(), ['level', 'model', 'pointOfView', 'readingMinutes', 'textType', 'tone', 'topic'])
+  assert.deepEqual(loadNewStoryDraft(fresh), {
+    level: 'B2', topic: '  A weekend in Tokyo  ', textType: 'fable', tone: 'thoughtful', pointOfView: 'first', readingMinutes: 15, model: DEFAULT_MODEL,
+  })
+  saveNewStoryDraft({ ...choices, tone: 'cozy' })
+  saveNewStoryDraft({ ...choices, tone: null })
+  assert.equal(loadNewStoryDraft({ ...fresh, tone: 'tense' }).tone, null)
   assert.equal(loadSettings().apiKey, apiKey)
   assert.equal(loadSettings().cefrLevel, 'C2')
 })
@@ -224,7 +366,13 @@ test('an unfinished draft survives a reload and keeps only the four non-secret c
 test('invalid or legacy draft fields fall back individually, and clearing restores fresh choices', () => {
   const fresh = initialGenerationChoices(loadSettings())
   localStorage.setItem('era.v1.new-story-draft', JSON.stringify({ theme: 'Rain', level: 'Z9', readingMinutes: 7, model: 'gpt-4' }))
-  assert.deepEqual(loadNewStoryDraft(fresh), { ...fresh, theme: 'Rain' })
+  assert.deepEqual(loadNewStoryDraft(fresh), { ...fresh, topic: 'Rain' })
+  localStorage.setItem('era.v1.new-story-draft', JSON.stringify({ topic: 'Snow', theme: 'Rain', textType: 'letter', tone: 'grim', pointOfView: 'second' }))
+  assert.deepEqual(loadNewStoryDraft(fresh), { ...fresh, topic: 'Snow', textType: 'letter' })
+  localStorage.setItem('era.v1.new-story-draft', JSON.stringify({ textType: 'mystery', genres: ['fable'], topic: 7 }))
+  assert.deepEqual(loadNewStoryDraft(fresh), fresh)
+  localStorage.setItem('era.v1.new-story-draft', JSON.stringify({ level: 'A1', textType: 'argumentative' }))
+  assert.equal(loadNewStoryDraft(fresh).textType, null)
   for (const raw of ['not json', '[]', '"text"', 'null']) {
     localStorage.setItem('era.v1.new-story-draft', raw)
     assert.deepEqual(loadNewStoryDraft(fresh), fresh)

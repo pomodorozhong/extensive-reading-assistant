@@ -93,14 +93,16 @@ export function loadStories(): Story[] {
     if (!raw) {
       return []
     }
-    const parsed = JSON.parse(raw) as Story[]
+    // Stories saved before the rename hold the topic as `theme`.
+    const parsed = JSON.parse(raw) as Array<Story & { theme?: string }>
     if (!Array.isArray(parsed)) {
       return []
     }
     return parsed
       .filter((story) => story && typeof story.id === 'string' && typeof story.body === 'string')
-      .map((story) => ({
+      .map(({ theme, ...story }) => ({
         ...story,
+        ...(typeof theme === 'string' && story.topic === undefined ? { topic: theme } : {}),
         wordMarks: story.wordMarks ?? {},
         explanations: story.explanations ?? {},
       }))

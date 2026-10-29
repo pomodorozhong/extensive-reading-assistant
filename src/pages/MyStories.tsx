@@ -1,6 +1,7 @@
 import { Badge, Button, Card, Container, Flex, Heading, Text } from '@radix-ui/themes'
 import { Link } from 'react-router-dom'
 import { isDebugFixture } from '../lib/debug-fixtures'
+import { TEXT_TYPE_INFO } from '../lib/generation-options'
 import { loadVisibleStories } from '../lib/storage'
 
 function formatDate(iso: string): string {
@@ -43,7 +44,8 @@ export function MyStories() {
                     </Heading>
                     <Text as="p" size="2" color="gray">
                       {formatDate(story.createdAt)}
-                      {story.theme ? ` · ${story.theme}` : ''}
+                      {story.textType ? ` · ${TEXT_TYPE_INFO[story.textType].label}` : ''}
+                      {story.topic ? ` · ${story.topic}` : ''}
                     </Text>
                   </div>
                   <Badge color="blue">{story.level}</Badge>

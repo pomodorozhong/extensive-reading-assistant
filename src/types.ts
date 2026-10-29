@@ -4,6 +4,39 @@ export type CefrLevel = (typeof CEFR_LEVELS)[number]
 
 export type ReadingMinutes = 5 | 10 | 15
 
+export const TEXT_MODES = ['stories', 'real-life', 'ideas', 'practical'] as const
+
+export type TextMode = (typeof TEXT_MODES)[number]
+
+export const TEXT_TYPES = [
+  'short-story',
+  'fairy-tale',
+  'fable',
+  'myth',
+  'play-script',
+  'personal-narrative',
+  'diary',
+  'news-report',
+  'biography',
+  'descriptive',
+  'expository',
+  'reflective',
+  'argumentative',
+  'letter',
+  'notice',
+  'instructions',
+] as const
+
+export type TextType = (typeof TEXT_TYPES)[number]
+
+export const TONES = ['cozy', 'tense', 'funny', 'thoughtful'] as const
+
+export type Tone = (typeof TONES)[number]
+
+export const POINTS_OF_VIEW = ['first', 'third'] as const
+
+export type PointOfView = (typeof POINTS_OF_VIEW)[number]
+
 export type WordMark = 'known' | 'unknown'
 
 export type Settings = {
@@ -22,7 +55,10 @@ export type Story = {
   title: string
   body: string
   level: CefrLevel
-  theme?: string
+  topic?: string
+  textType?: TextType
+  tone?: Tone
+  pointOfView?: PointOfView
   readingMinutes?: ReadingMinutes
   createdAt: string
   wordMarks: Record<string, WordMark>
