@@ -17,12 +17,11 @@ Last verified: 2026-10-29 (Asia/Taipei).
 ### docs/roadmap-issues-and-stale-docs
 
 - Task: land this session's documentation fixes on `main`: README and MVP spec lines made stale by merged work (#26's draft persistence, six `test:*` suites in CI, the in-app level check and introduction), and the `AGENTS.md` handoff block synced with the current skill template. Renamed locally from `chore/verify-new-story-m1` after [#24](https://github.com/pomodorozhong/extensive-reading-assistant/issues/24) closed; not linked to any issue.
-- PR: none.
+- PR: [#62](https://github.com/pomodorozhong/extensive-reading-assistant/pull/62), opened 2026-10-29.
 - Code checkpoint: `origin/main` `3a13b21`; this branch adds only `docs:` commits.
-- State: committed and pushed; awaiting a PR.
+- State: awaiting review and merge.
 - Verification: documentation-only changes; `main` passed lint, build, and all six `test:*` suites (84 tests) on 2026-10-29.
-- Next action: open a PR with the `open-pr` skill once **P-18** is approved.
-- Pending **P-18**: open a PR from this branch to `main`. Why: opening a PR needs the owner's approval. Blocks: the README and spec fixes reaching `main`.
+- Next action: merge #62 once its Checks pass and the owner approves; then delete this branch.
 
 ## Ranked work
 
@@ -38,11 +37,10 @@ Last verified: 2026-10-29 (Asia/Taipei).
 10. [#1 — Add an in-browser mini LLM alternative](https://github.com/pomodorozhong/extensive-reading-assistant/issues/1) — revisit after #27.
 11. [#10 — Expose reading features through WebMCP](https://github.com/pomodorozhong/extensive-reading-assistant/issues/10) — most speculative; the spec is young.
 
-[#18](https://github.com/pomodorozhong/extensive-reading-assistant/issues/18) is labeled `ideas` and is no longer planned.
+[#18](https://github.com/pomodorozhong/extensive-reading-assistant/issues/18) and [#61](https://github.com/pomodorozhong/extensive-reading-assistant/issues/61) (difficulty feedback after reading, filed from roadmap draft D9) are labeled `ideas` and are not planned.
 
 ## Pending
 
-- **P-17** — close Milestone 1 ("New Story landing page"); it has no open issues since #24 closed. Why: closing a milestone needs the owner's approval. Blocks: nothing.
-- **P-19** — decide whether to file the two roadmap drafts not yet published, D7 (reading-size controls and keyboard navigation) and D9 (learner difficulty feedback after reading), from `doc/roadmap-issue-drafts.md` on `codex/docs/user-flow-roadmap`. D1–D6, D8, and D10 are now published or superseded (#23, #26, #27, #28, #56–#59). Why: filing needs the owner's approval. Blocks: retiring that branch.
+- **P-19** — decide whether to file the last unpublished roadmap draft, D7 (persisted reading-size controls, a skip past the story's word buttons for keyboard users, focus return after definitions, and a phone/zoom/screen-reader check), from `doc/roadmap-issue-drafts.md` on `codex/docs/user-flow-roadmap`. D1–D6 and D8–D10 are published or superseded (#23, #26, #27, #28, #56–#59, #61). Why: filing needs the owner's approval. Blocks: retiring that branch.
 
 Keep the untracked `.claude/launch.json`: it holds the preview configs used for browser checks.
