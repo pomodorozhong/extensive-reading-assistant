@@ -43,5 +43,6 @@ Last verified: 2026-10-29 (Asia/Taipei).
 
 ## Pending
 
+None.
 
 Keep the untracked `.claude/launch.json`: it holds the preview configs used for browser checks.
