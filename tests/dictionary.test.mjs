@@ -32,6 +32,22 @@ test('irregular verbs, plural nouns, and comparative adjectives resolve to their
   }
 })
 
+// These surface forms have only a proper-noun or acronym entry (Ate the goddess, LED,
+// the Sung dynasty), so the base verb must come first.
+test('irregular past forms prefer the base verb over a proper-noun entry', () => {
+  for (const [word, base] of [
+    ['ate', 'eat'],
+    ['bade', 'bid'],
+    ['drew', 'draw'],
+    ['fed', 'feed'],
+    ['led', 'lead'],
+    ['lent', 'lend'],
+    ['sung', 'sing'],
+  ]) {
+    assert.equal(resolvedForm(word), base, word)
+  }
+})
+
 test('lookups that already succeeded keep the same entry', () => {
   for (const [word, form] of [
     ['saw', 'see'],
