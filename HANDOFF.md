@@ -1,6 +1,6 @@
 # Handoff
 
-Last verified: 2026-10-23 (Asia/Taipei).
+Last verified: 2026-10-29 (Asia/Taipei).
 
 ## In progress
 
@@ -14,16 +14,17 @@ Last verified: 2026-10-23 (Asia/Taipei).
 - Next action: compare the two archive documents with current GitHub issues before deciding whether to publish or retire the branch. Preserve the local branch until that review is complete.
 - Avoid: copying its superseded `AGENTS.md` or `.agents` continuity instructions into the current workflow. The current handoff guidance is the marked section in root `AGENTS.md`.
 
-### perf/dictionary-lookup
+### fix/prefer-base-form-for-irregular-verbs
 
-- Task: [#52](https://github.com/pomodorozhong/extensive-reading-assistant/issues/52), make the first dictionary lookup in Story View instant, and stop the lookup note from moving the story text.
-- PR: none yet. The branch is linked to #52 and pushed to `origin` up to the earlier `docs:` commits only.
-- Code checkpoint: `5af2a84` on top of `origin/main` `9318f6c`; the code commits are local and unpushed.
-- State: plan P-12 approved by the owner on 2026-10-23 and built in two commits: `0e7aa58` (preload the story's shards in idle time; fetch candidate shards in parallel, keeping form order) and `5af2a84` (keep the note closed until the definition is ready or 150 ms pass; inline spinner; two-line minimum once the spinner shows; hidden Retry placeholder; same 150 ms delay for the Unknown words list). Building it also found that Radix's `Spinner` is `display: block`, which spread "Looking up…" over three lines.
-- Verification (2026-10-23): `npx oxlint`, `tsc -b`, `npm run build`, and all six `test:*` suites pass (dictionary has three new tests for parallel fetching). In the browser pane: before the fix, a 600–800 ms lookup moved the text twice; after it, a fast lookup moves it once with no spinner, and a 700 ms artificial delay opens the note once at about 240 ms with the spinner, with no second move. Preview with the service worker: tap to note in 10–17 ms; the preload finishes about 1.5 s after page load. Offline lookups work through the service worker.
-- Not checked: hosted GitHub Pages timings (after deploy), slow phones, phone-width layout, and screen readers.
-- Next action: get the owner's answer to P-13, then publish as the `open-pr` skill says.
-- Pending **P-13**: push `perf/dictionary-lookup` and open the PR with the drafted title and body (Closes #52). Why: pushing and opening a PR need the owner's approval. Blocks: review and merge.
+- Task: [#55](https://github.com/pomodorozhong/extensive-reading-assistant/issues/55) — tapping *ate* showed the goddess Ate. The branch is linked to #55 and fully resolves it.
+- PR: none.
+- Code checkpoint: `origin/main` `3a13b21` plus `5e481ea` (adds *ate, bade, drew, fed, led, lent, sung* to `IRREGULAR` in `src/lib/dictionary.ts`, with a `test:dictionary` case).
+- State: committed and pushed; awaiting a PR.
+- Verification: 2026-10-29, `npm run lint`, `npm run build`, and all six `test:*` suites passed (85 tests). In the dev preview, tapping *ate*, *drew*, and *led* in a test story showed "take in solid food", "cause to move by pulling", and "take somebody somewhere", with no console errors.
+- Next action: open a PR with the `open-pr` skill once **P-21** is approved.
+- Avoid: dropping capitalized-only WordNet entries at build time. Lookups use the lowercased word, and the lemmatizer would then map names wrongly (*James → jam*, *Mars → mar*).
+- Pending **P-21**: open a PR from this branch to `main` closing #55. Why: opening a PR needs the owner's approval. Blocks: the fix reaching `main`.
+- Pending **P-22**: file an issue for the same bug in regular plurals and past forms. About 130 surface forms have only a proper-noun entry (for example *banks, fields, gates, laws, windows, marks, judges, writings*), so they show a person or place instead of the base noun or verb. Fixing it needs capitalization-aware lookups or another way to separate names from inflections. Why: filing needs the owner's approval. Blocks: nothing.
 
 ## Ranked work
 
