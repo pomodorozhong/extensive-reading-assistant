@@ -5,20 +5,26 @@ import { dictionaryForms, lookupDefinition } from '../src/lib/dictionary.ts'
 
 // The npm script rebuilds these shards from the bundled WordNet data before the tests run.
 const shards = new Map()
-function shard(word) {
-  const name = /[a-z]/.test(word.charAt(0)) ? word.charAt(0) : '_'
+async function loadBundled(name) {
   if (!shards.has(name)) {
     shards.set(name, JSON.parse(readFileSync(new URL(`../public/dictionary/${name}.json`, import.meta.url), 'utf8')))
   }
   return shards.get(name)
 }
 
-// Mirrors lookupDefinition: the first candidate with a bundled entry wins.
-function resolvedForm(word) {
-  return dictionaryForms(word).find((form) => Object.hasOwn(shard(form), form))
+async function gloss(key) {
+  const first = key.charAt(0).toLowerCase()
+  return (await loadBundled(/[a-z]/.test(first) ? first : '_'))[key]
 }
 
-test('irregular verbs, plural nouns, and comparative adjectives resolve to their base entries', () => {
+// Checks that looking up `word` shows the bundled entry stored under `key`.
+async function assertResolves(word, key, options) {
+  const expected = await gloss(key)
+  assert.ok(expected, `no bundled entry for ${key}`)
+  assert.deepEqual(await lookupDefinition(word, loadBundled, options), { ok: true, text: expected }, word)
+}
+
+test('irregular verbs, plural nouns, and comparative adjectives resolve to their base entries', async () => {
   for (const [word, base] of [
     ['met', 'meet'],
     ['drank', 'drink'],
@@ -28,13 +34,13 @@ test('irregular verbs, plural nouns, and comparative adjectives resolve to their
     ['Children', 'child'],
     ["children's", 'child'],
   ]) {
-    assert.equal(resolvedForm(word), base, word)
+    await assertResolves(word, base)
   }
 })
 
 // These surface forms have only a proper-noun or acronym entry (Ate the goddess, LED,
 // the Sung dynasty), so the base verb must come first.
-test('irregular past forms prefer the base verb over a proper-noun entry', () => {
+test('irregular past forms prefer the base verb over a proper-noun entry', async () => {
   for (const [word, base] of [
     ['ate', 'eat'],
     ['bade', 'bid'],
@@ -44,11 +50,11 @@ test('irregular past forms prefer the base verb over a proper-noun entry', () =>
     ['lent', 'lend'],
     ['sung', 'sing'],
   ]) {
-    assert.equal(resolvedForm(word), base, word)
+    await assertResolves(word, base)
   }
 })
 
-test('lookups that already succeeded keep the same entry', () => {
+test('lookups that already succeeded keep the same entry', async () => {
   for (const [word, form] of [
     ['saw', 'see'],
     ['went', 'go'],
@@ -59,8 +65,58 @@ test('lookups that already succeeded keep the same entry', () => {
     ['garden', 'garden'],
     ['dog’s', 'dog'],
   ]) {
-    assert.equal(resolvedForm(word), form, word)
+    await assertResolves(word, form)
   }
+})
+
+// These plurals have only a name entry (Banks the botanist, W. C. Fields), and the
+// lemmatizer would map a real name to an unrelated word (James to jam).
+test('a word met in lowercase prefers the base word over a name', async () => {
+  for (const [word, base] of [
+    ['banks', 'bank'],
+    ['fields', 'field'],
+    ['laws', 'law'],
+    ['gates', 'gate'],
+    ['windows', 'window'],
+  ]) {
+    await assertResolves(word, base, { mayBeName: false })
+  }
+})
+
+// The old order tried "-es" first, so "notes" showed "not" and "bites" showed "bit".
+test('plurals of words ending in e drop only the s', async () => {
+  for (const [word, base] of [
+    ['bites', 'bite'],
+    ['notes', 'note'],
+    ['games', 'game'],
+    ['cones', 'cone'],
+    ['boxes', 'box'],
+    ['wishes', 'wish'],
+  ]) {
+    await assertResolves(word, base)
+  }
+})
+
+test('a word that may be a name keeps its name entry', async () => {
+  for (const [word, name] of [
+    ['james', 'James'],
+    ['mars', 'Mars'],
+    ['kent', 'Kent'],
+    ['banks', 'Banks'],
+  ]) {
+    await assertResolves(word, name)
+  }
+})
+
+test('a name is still found for a lowercase word with no other entry', async () => {
+  const load = async () => ({ Zork: 'a made-up name' })
+  assert.deepEqual(await lookupDefinition('zork', load, { mayBeName: false }), { ok: true, text: 'a made-up name' })
+})
+
+test('a word whose best sense is a name keeps its ordinary sense too', async () => {
+  await assertResolves('august', 'August')
+  await assertResolves('august', 'august', { mayBeName: false })
+  assert.notEqual(await gloss('august'), await gloss('August'))
 })
 
 test('existing candidates keep their order ahead of lemmatizer candidates', () => {

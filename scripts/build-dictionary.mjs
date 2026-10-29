@@ -27,6 +27,8 @@ function parseGloss(line) {
     .replace(/^["']|["']$/g, '')
 }
 
+// Returns each synset's gloss and the lowercased words it spells with a capital, such
+// as "banks" for the synset of Sir Joseph Banks.
 function loadGlosses(filePath, pos) {
   const glosses = new Map()
   const text = fs.readFileSync(filePath, 'utf8')
@@ -40,7 +42,16 @@ function loadGlosses(filePath, pos) {
     }
     const gloss = parseGloss(line)
     if (gloss) {
-      glosses.set(`${pos}:${offset}`, gloss)
+      const parts = line.split(' ')
+      const wordCount = Number.parseInt(parts[3], 16)
+      const capitalized = new Set()
+      for (let i = 0; i < wordCount; i++) {
+        const word = parts[4 + 2 * i].replace(/\(.*\)$/, '')
+        if (/\p{Lu}/u.test(word)) {
+          capitalized.add(word.toLowerCase())
+        }
+      }
+      glosses.set(`${pos}:${offset}`, { gloss, capitalized })
     }
   }
   return glosses
@@ -53,13 +64,14 @@ function parseIndexLine(line) {
   const parts = line.split(' ')
   const lemma = parts[0]
   const pos = parts[1]
+  const synsetCount = Number.parseInt(parts[2], 10)
   const pointerCount = Number.parseInt(parts[3], 10)
-  const synsetOffset = Number.parseInt(parts[6 + pointerCount], 10)
+  const synsetOffsets = parts.slice(6 + pointerCount, 6 + pointerCount + synsetCount).map(Number)
   const tagSenseCount = Number.parseInt(parts[5 + pointerCount], 10)
-  if (!lemma || Number.isNaN(synsetOffset)) {
+  if (!lemma || synsetOffsets.length === 0 || synsetOffsets.some(Number.isNaN)) {
     return null
   }
-  return { lemma, pos, synsetOffset, tagSenseCount: Number.isNaN(tagSenseCount) ? 0 : tagSenseCount }
+  return { lemma, pos, synsetOffsets, tagSenseCount: Number.isNaN(tagSenseCount) ? 0 : tagSenseCount }
 }
 
 const glossByOffset = new Map()
@@ -70,8 +82,11 @@ for (const file of POS_FILES) {
   }
 }
 
-/** @type {Map<string, { gloss: string, score: number }>} */
+/** @type {Map<string, { gloss: string, score: number, name: boolean }>} */
 const best = new Map()
+// The most frequent sense that is not a name, for words whose best entry is one.
+/** @type {Map<string, { gloss: string, score: number }>} */
+const bestCommon = new Map()
 
 for (const file of POS_FILES) {
   const text = fs.readFileSync(path.join(dbDir, file.index), 'utf8')
@@ -80,27 +95,51 @@ for (const file of POS_FILES) {
     if (!parsed) {
       continue
     }
-    const gloss = glossByOffset.get(`${parsed.pos}:${parsed.synsetOffset}`)
-    if (!gloss) {
+    const synsets = parsed.synsetOffsets.map((offset) => glossByOffset.get(`${parsed.pos}:${offset}`))
+    const first = synsets[0]
+    if (!first) {
       continue
     }
     const key = parsed.lemma.replace(/_/g, ' ').toLowerCase()
     const current = best.get(key)
     if (!current || parsed.tagSenseCount > current.score) {
-      best.set(key, { gloss, score: parsed.tagSenseCount })
+      best.set(key, { gloss: first.gloss, score: parsed.tagSenseCount, name: first.capitalized.has(parsed.lemma) })
+    }
+    const common = synsets.find((synset) => synset && !synset.capitalized.has(parsed.lemma))
+    const currentCommon = bestCommon.get(key)
+    if (common && (!currentCommon || parsed.tagSenseCount > currentCommon.score)) {
+      bestCommon.set(key, { gloss: common.gloss, score: parsed.tagSenseCount })
     }
   }
 }
 
+// A name's gloss is stored under the word with its first letter capitalized ("Banks"),
+// so a lookup can pass over it for a word the reader met in lowercase.
+function nameKey(word) {
+  return word.replace(/\p{Ll}/u, (letter) => letter.toUpperCase())
+}
+
 /** @type {Map<string, Record<string, string>>} */
 const shards = new Map()
-for (const [word, { gloss }] of best) {
+function addEntry(word, key, gloss) {
   const first = word.charAt(0)
   const shard = /[a-z]/.test(first) ? first : '_'
   if (!shards.has(shard)) {
     shards.set(shard, {})
   }
-  shards.get(shard)[word] = gloss
+  shards.get(shard)[key] = gloss
+}
+
+for (const [word, { gloss, name }] of best) {
+  if (!name) {
+    addEntry(word, word, gloss)
+    continue
+  }
+  addEntry(word, nameKey(word), gloss)
+  const common = bestCommon.get(word)
+  if (common) {
+    addEntry(word, word, common.gloss)
+  }
 }
 
 fs.mkdirSync(outDir, { recursive: true })
