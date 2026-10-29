@@ -11,7 +11,9 @@ Last verified: 2026-10-29 (Asia/Taipei).
 - Code checkpoint: `ea08b9d2429c343967872d286b84ae54a9c37959`.
 - State: six older documentation commits exist only on this local branch, outside `origin/main`; no matching branch exists on `origin`. They include `doc/user-flow-review-and-roadmap.md` and `doc/roadmap-issue-drafts.md`.
 - Verification: inspected its commit list and file inventory; no application checks were run for this historical documentation branch.
-- Next action: compare the two archive documents with current GitHub issues before deciding whether to publish or retire the branch. Preserve the local branch until that review is complete.
+- State: every roadmap draft is now published or superseded (D1–D10 → #23, #26–#28, #56–#59, #61, #63).
+- Next action: delete the local branch once the owner approves **P-20**.
+- Pending **P-20**: delete the local-only branch `codex/docs/user-flow-roadmap`. Why: deleting unpushed commits can't be undone. Blocks: nothing.
 - Avoid: copying its superseded `AGENTS.md` or `.agents` continuity instructions into the current workflow. The current handoff guidance is the marked section in root `AGENTS.md`.
 
 ### docs/roadmap-issues-and-stale-docs
@@ -37,10 +39,9 @@ Last verified: 2026-10-29 (Asia/Taipei).
 10. [#1 — Add an in-browser mini LLM alternative](https://github.com/pomodorozhong/extensive-reading-assistant/issues/1) — revisit after #27.
 11. [#10 — Expose reading features through WebMCP](https://github.com/pomodorozhong/extensive-reading-assistant/issues/10) — most speculative; the spec is young.
 
-[#18](https://github.com/pomodorozhong/extensive-reading-assistant/issues/18) and [#61](https://github.com/pomodorozhong/extensive-reading-assistant/issues/61) (difficulty feedback after reading, filed from roadmap draft D9) are labeled `ideas` and are not planned.
+[#18](https://github.com/pomodorozhong/extensive-reading-assistant/issues/18) [#61](https://github.com/pomodorozhong/extensive-reading-assistant/issues/61) (difficulty feedback after reading, from roadmap draft D9), and [#63](https://github.com/pomodorozhong/extensive-reading-assistant/issues/63) (reading-size controls and keyboard skip, from D7) are labeled `ideas` and are not planned.
 
 ## Pending
 
-- **P-19** — decide whether to file the last unpublished roadmap draft, D7 (persisted reading-size controls, a skip past the story's word buttons for keyboard users, focus return after definitions, and a phone/zoom/screen-reader check), from `doc/roadmap-issue-drafts.md` on `codex/docs/user-flow-roadmap`. D1–D6 and D8–D10 are published or superseded (#23, #26, #27, #28, #56–#59, #61). Why: filing needs the owner's approval. Blocks: retiring that branch.
 
 Keep the untracked `.claude/launch.json`: it holds the preview configs used for browser checks.
