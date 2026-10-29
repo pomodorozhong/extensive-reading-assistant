@@ -69,6 +69,16 @@ function StoryReader({ id }: { id: string | undefined }) {
     word?.focus({ preventScroll: true })
   }, [searchParams, tokens])
 
+  // Explanations are kept per word, so a word the story ever writes in lowercase is
+  // looked up as an ordinary word everywhere, and one it only capitalizes may be a name.
+  const lowercaseKeys = useMemo(() => {
+    const keys = new Set<string>()
+    tokens.forEach((token) => {
+      if (token.type === 'word' && token.value === token.value.toLowerCase()) keys.add(token.key)
+    })
+    return keys
+  }, [tokens])
+
   useEffect(() => {
     const keys = new Set<string>()
     tokens.forEach((token) => {
@@ -144,7 +154,7 @@ function StoryReader({ id }: { id: string | undefined }) {
       return next
     })
 
-    const result = await lookupDefinition(key)
+    const result = await lookupDefinition(key, undefined, { mayBeName: !lowercaseKeys.has(key) })
 
     window.clearTimeout(spinnerTimer)
     pendingLookups.current.delete(key)

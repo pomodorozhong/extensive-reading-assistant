@@ -73,6 +73,12 @@ function shardName(word: string): string {
   return /[a-z]/.test(first) ? first : '_'
 }
 
+// Matches nameKey in scripts/build-dictionary.mjs: a gloss for a name ("Banks", the
+// botanist) is stored under the word with its first letter capitalized.
+function nameKey(form: string): string {
+  return form.replace(/\p{Ll}/u, (letter) => letter.toUpperCase())
+}
+
 function unique(values: string[]): string[] {
   return [...new Set(values)]
 }
@@ -95,12 +101,16 @@ export function dictionaryForms(word: string): string[] {
     forms.push(`${normalized.slice(0, -3)}y`)
   }
 
-  if (normalized.endsWith('es') && normalized.length > 3) {
-    forms.push(normalized.slice(0, -2))
-  }
-
-  if (normalized.endsWith('s') && !normalized.endsWith('ss') && normalized.length > 2) {
-    forms.push(normalized.slice(0, -1))
+  const esStem = normalized.endsWith('es') && normalized.length > 3 ? normalized.slice(0, -2) : ''
+  const sStem = normalized.endsWith('s') && !normalized.endsWith('ss') && normalized.length > 2
+    ? normalized.slice(0, -1)
+    : ''
+  // "-es" is a plural ending only after s, x, z, ch, sh, or o, so "gates" tries "gate"
+  // before "gat".
+  if (/(s|x|z|ch|sh|o)$/.test(esStem)) {
+    forms.push(esStem, sStem)
+  } else {
+    forms.push(sStem, esStem)
   }
 
   if (normalized.endsWith('ing') && normalized.length > 5) {
@@ -160,9 +170,16 @@ export type DictionaryResult =
   | { ok: true; text: string }
   | { ok: false; message: string }
 
+export type LookupOptions = {
+  // False when the reader met the word in lowercase, so it is not a name: every form's
+  // ordinary entry then comes before any name ("banks" finds "bank", not Banks).
+  mayBeName?: boolean
+}
+
 export async function lookupDefinition(
   word: string,
   load: (name: string) => Promise<Record<string, string>> = loadShard,
+  { mayBeName = true }: LookupOptions = {},
 ): Promise<DictionaryResult> {
   const forms = dictionaryForms(word)
 
@@ -185,10 +202,15 @@ export async function lookupDefinition(
     }
   }
 
+  // A name is tried right after its form, or only once no form has an ordinary entry.
+  const keys = mayBeName
+    ? forms.flatMap((form) => [nameKey(form), form])
+    : [...forms, ...forms.map(nameKey)]
+
   try {
-    for (const form of forms) {
-      const shard = await shards.get(shardName(form))!
-      const gloss = shard[form]
+    for (const key of keys) {
+      const shard = await shards.get(shardName(key.toLowerCase()))!
+      const gloss = shard[key]
       if (gloss) {
         return { ok: true, text: gloss }
       }
