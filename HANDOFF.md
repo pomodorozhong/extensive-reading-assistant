@@ -17,14 +17,12 @@ Last verified: 2026-10-29 (Asia/Taipei).
 ### fix/prefer-base-form-for-irregular-verbs
 
 - Task: [#55](https://github.com/pomodorozhong/extensive-reading-assistant/issues/55) — tapping *ate* showed the goddess Ate. The branch is linked to #55 and fully resolves it.
-- PR: none.
+- PR: [#64](https://github.com/pomodorozhong/extensive-reading-assistant/pull/64), opened 2026-10-29.
 - Code checkpoint: `origin/main` `3a13b21` plus `5e481ea` (adds *ate, bade, drew, fed, led, lent, sung* to `IRREGULAR` in `src/lib/dictionary.ts`, with a `test:dictionary` case).
-- State: committed and pushed; awaiting a PR.
+- State: awaiting review and merge.
 - Verification: 2026-10-29, `npm run lint`, `npm run build`, and all six `test:*` suites passed (85 tests). In the dev preview, tapping *ate*, *drew*, and *led* in a test story showed "take in solid food", "cause to move by pulling", and "take somebody somewhere", with no console errors.
-- Next action: open a PR with the `open-pr` skill once **P-21** is approved.
+- Next action: merge #64 once its Checks pass and the owner approves. Then put [#65](https://github.com/pomodorozhong/extensive-reading-assistant/issues/65) (the same bug for regular plurals and past forms, filed 2026-10-29) in #55's place at the top of `Ranked work`.
 - Avoid: dropping capitalized-only WordNet entries at build time. Lookups use the lowercased word, and the lemmatizer would then map names wrongly (*James → jam*, *Mars → mar*).
-- Pending **P-21**: open a PR from this branch to `main` closing #55. Why: opening a PR needs the owner's approval. Blocks: the fix reaching `main`.
-- Pending **P-22**: file an issue for the same bug in regular plurals and past forms. About 130 surface forms have only a proper-noun entry (for example *banks, fields, gates, laws, windows, marks, judges, writings*), so they show a person or place instead of the base noun or verb. Fixing it needs capitalization-aware lookups or another way to separate names from inflections. Why: filing needs the owner's approval. Blocks: nothing.
 
 ## Ranked work
 
