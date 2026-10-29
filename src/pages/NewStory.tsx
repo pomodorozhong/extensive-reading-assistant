@@ -15,17 +15,42 @@ import { GeminiKeyDialog } from '../components/GeminiKeyDialog'
 import { VocabularyLevelInfo } from '../components/VocabularyLevelInfo'
 import { createGeneratedStory, generateStory } from '../lib/generate'
 import {
+  allowsPointOfView,
+  generationNotes,
   initialGenerationChoices,
+  lockedTextTypes,
+  MAX_TOPIC_LENGTH,
+  POINT_OF_VIEW_LABELS,
   READING_LENGTHS,
   READING_MINUTE_OPTIONS,
   SUPPORTED_MODELS,
-  THEME_EXAMPLES,
+  TEXT_MODE_LABELS,
+  TEXT_TYPE_INFO,
+  textTypeFitsLevel,
+  textTypeLevelRange,
+  textTypesForLevel,
+  TONE_LABELS,
+  topicExamples,
   type GenerationChoices,
   type GenerationModel,
 } from '../lib/generation-options'
 import { clearNewStoryDraft, loadNewStoryDraft, saveNewStoryDraft } from '../lib/new-story-draft'
 import { loadSettings, trySaveNewStory } from '../lib/storage'
-import { CEFR_LEVELS, type CefrLevel, type ReadingMinutes, type Story } from '../types'
+import {
+  CEFR_LEVELS,
+  POINTS_OF_VIEW,
+  TEXT_MODES,
+  TONES,
+  type CefrLevel,
+  type PointOfView,
+  type ReadingMinutes,
+  type Story,
+  type TextMode,
+  type TextType,
+} from '../types'
+
+// The mode and point-of-view controls need a string value for "leave it to the model".
+const ANY = 'any'
 
 const SAVE_FAILED_MESSAGE =
   'Your story was generated, but this browser could not save it. Free up browser storage, then try saving again, or copy the text so it is not lost.'
@@ -39,6 +64,11 @@ export function NewStory() {
   const [unsavedStory, setUnsavedStory] = useState<Story | null>(null)
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null)
   const [keyDialogOpen, setKeyDialogOpen] = useState(false)
+  const [mode, setMode] = useState<TextMode | null>(() =>
+    choices.textType ? TEXT_TYPE_INFO[choices.textType].mode : null,
+  )
+  // A text type cleared because it is not offered at a newly chosen level.
+  const [clearedTextType, setClearedTextType] = useState<TextType | null>(null)
   const generateButton = useRef<HTMLButtonElement>(null)
   const request = useRef<AbortController | null>(null)
   // Failure messages sit above the form, off screen on phones; focusing them shows and announces them.
@@ -49,6 +79,14 @@ export function NewStory() {
   )
   const hasKey = Boolean(settings.apiKey.trim())
   const length = READING_LENGTHS[choices.readingMinutes]
+  const notes = generationNotes(choices)
+  const pointOfViewApplies = allowsPointOfView(choices.textType)
+  const styleSummary = [
+    choices.tone && TONE_LABELS[choices.tone],
+    pointOfViewApplies && choices.pointOfView && POINT_OF_VIEW_LABELS[choices.pointOfView],
+  ].filter(Boolean).join(', ')
+  const textTypeInfo = choices.textType ? TEXT_TYPE_INFO[choices.textType] : null
+  const locked = mode ? lockedTextTypes(mode, choices.level) : []
   // Without a key, Generate Story opens the key dialog, so only being offline blocks it.
   const blocked = hasKey && !isOnline
 
@@ -80,6 +118,25 @@ export function NewStory() {
       saveNewStoryDraft(next)
       return next
     })
+  }
+
+  // Picking a mode selects its first form, so a mode never stands without a form.
+  function changeMode(next: TextMode | null) {
+    setMode(next)
+    setClearedTextType(null)
+    updateChoices({ textType: next ? textTypesForLevel(next, choices.level)[0] : null })
+  }
+
+  function changeLevel(level: CefrLevel) {
+    const { textType } = choices
+    if (textType && !textTypeFitsLevel(textType, level)) {
+      setClearedTextType(textType)
+      setMode(null)
+      updateChoices({ level, textType: null })
+    } else {
+      setClearedTextType(null)
+      updateChoices({ level })
+    }
   }
 
   function onSubmit(event: FormEvent) {
@@ -232,14 +289,14 @@ export function NewStory() {
           <Flex direction="column" gap="3">
             <label>
               <Text as="div" size="2" weight="medium" mb="1">
-                Theme <Text color="gray">(optional)</Text>
+                Topic <Text color="gray">(optional)</Text>
               </Text>
               <TextField.Root
                 size="3"
-                placeholder="A rainy afternoon at a bookshop"
-                value={choices.theme}
-                onChange={(event) => updateChoices({ theme: event.target.value })}
-                maxLength={120}
+                placeholder="What should the story be about?"
+                value={choices.topic}
+                onChange={(event) => updateChoices({ topic: event.target.value })}
+                maxLength={MAX_TOPIC_LENGTH}
                 disabled={generating}
               />
             </label>
@@ -247,17 +304,17 @@ export function NewStory() {
             <div>
               <Text as="p" color="gray" size="2" mb="2">Try an example</Text>
               <Flex wrap="wrap" gap="2">
-                {THEME_EXAMPLES.map((example) => (
+                {topicExamples(choices.textType).map((example) => (
                   <Button
                     key={example}
                     type="button"
                     variant="soft"
-                    color={choices.theme === example ? 'blue' : 'gray'}
+                    color={choices.topic === example ? 'blue' : 'gray'}
                     size="1"
                     className="new-story-example"
-                    aria-pressed={choices.theme === example}
+                    aria-pressed={choices.topic === example}
                     disabled={generating}
-                    onClick={() => updateChoices({ theme: example })}
+                    onClick={() => updateChoices({ topic: example })}
                   >
                     {example}
                   </Button>
@@ -265,6 +322,64 @@ export function NewStory() {
               </Flex>
             </div>
           </Flex>
+
+          <div role="group" aria-labelledby="new-story-type-label" aria-describedby="new-story-type-help">
+            <Text as="div" id="new-story-type-label" size="2" weight="medium" mb="2">
+              Text type <Text color="gray" weight="regular">· for {choices.level}</Text>
+            </Text>
+            <SegmentedControl.Root
+              aria-labelledby="new-story-type-label"
+              value={mode ?? ANY}
+              onValueChange={(value) => changeMode(value === ANY ? null : (value as TextMode))}
+              disabled={generating}
+              // The smaller size keeps all five segments readable at phone width.
+              size={{ initial: '1', sm: '2' }}
+              className="new-story-style-control"
+            >
+              <SegmentedControl.Item value={ANY}>Any</SegmentedControl.Item>
+              {TEXT_MODES.map((item) => (
+                <SegmentedControl.Item key={item} value={item}>{TEXT_MODE_LABELS[item]}</SegmentedControl.Item>
+              ))}
+            </SegmentedControl.Root>
+            {mode && (
+              <Flex wrap="wrap" gap="2" mt="3" role="group" aria-label={`${TEXT_MODE_LABELS[mode]} forms`}>
+                {textTypesForLevel(mode, choices.level).map((textType) => (
+                  <Button
+                    key={textType}
+                    type="button"
+                    variant="soft"
+                    color={choices.textType === textType ? 'blue' : 'gray'}
+                    size="2"
+                    aria-pressed={choices.textType === textType}
+                    disabled={generating}
+                    onClick={() => {
+                      setClearedTextType(null)
+                      updateChoices({ textType })
+                    }}
+                  >
+                    {TEXT_TYPE_INFO[textType].label}
+                  </Button>
+                ))}
+              </Flex>
+            )}
+            <Text as="p" id="new-story-type-help" size="1" color="gray" mt="2">
+              {textTypeInfo
+                ? `${textTypeInfo.label}: ${textTypeInfo.description}.`
+                : 'Any text type; the model usually writes a story.'}
+              {locked.length > 0 &&
+                ` ${locked
+                  .map((textType) => `${TEXT_TYPE_INFO[textType].label} unlocks at ${TEXT_TYPE_INFO[textType].levels[0]}`)
+                  .join('; ')}.`}
+            </Text>
+            <div role="status">
+              {clearedTextType && (
+                <Text as="p" size="1" color="amber" mt="1">
+                  {TEXT_TYPE_INFO[clearedTextType].label} ({textTypeLevelRange(clearedTextType)}) is not offered at{' '}
+                  {choices.level}, so it was cleared.
+                </Text>
+              )}
+            </div>
+          </div>
 
           <div className="new-story-options">
             <div className="new-story-option new-story-level-option">
@@ -277,7 +392,7 @@ export function NewStory() {
               <SegmentedControl.Root
                 aria-labelledby="new-story-level-label"
                 value={choices.level}
-                onValueChange={(value) => updateChoices({ level: value as CefrLevel })}
+                onValueChange={(value) => changeLevel(value as CefrLevel)}
                 disabled={generating}
                 size="3"
                 className="new-story-levels"
@@ -327,6 +442,79 @@ export function NewStory() {
               </Select.Root>
             </div>
           </div>
+
+          <details className="new-story-style">
+            <summary>
+              <Text size="2" weight="medium">Style options</Text>
+              <Text size="2" color="gray"> · {styleSummary || 'defaults'}</Text>
+            </summary>
+            <Flex direction="column" gap="4" mt="3">
+              {/* Chips wrap on phones, where five segments would not fit. */}
+              <div role="group" aria-labelledby="new-story-tone-label">
+                <Text as="div" id="new-story-tone-label" size="2" weight="medium" mb="2">
+                  Tone
+                </Text>
+                <Flex wrap="wrap" gap="2">
+                  {[null, ...TONES].map((tone) => (
+                    <Button
+                      key={tone ?? ANY}
+                      type="button"
+                      variant="soft"
+                      color={choices.tone === tone ? 'blue' : 'gray'}
+                      size="2"
+                      aria-pressed={choices.tone === tone}
+                      disabled={generating}
+                      onClick={() => updateChoices({ tone })}
+                    >
+                      {tone ? TONE_LABELS[tone] : 'Any'}
+                    </Button>
+                  ))}
+                </Flex>
+              </div>
+              <div>
+                <Text as="div" id="new-story-pov-label" size="2" weight="medium" mb="2">
+                  Point of view
+                </Text>
+                <SegmentedControl.Root
+                  aria-labelledby="new-story-pov-label"
+                  value={choices.pointOfView ?? ANY}
+                  onValueChange={(value) =>
+                    updateChoices({ pointOfView: value === ANY ? null : (value as PointOfView) })
+                  }
+                  aria-describedby={pointOfViewApplies ? undefined : 'new-story-pov-help'}
+                  disabled={generating || !pointOfViewApplies}
+                  className="new-story-style-control"
+                >
+                  <SegmentedControl.Item value={ANY}>Any</SegmentedControl.Item>
+                  {POINTS_OF_VIEW.map((pointOfView) => (
+                    <SegmentedControl.Item key={pointOfView} value={pointOfView}>
+                      {POINT_OF_VIEW_LABELS[pointOfView]}
+                    </SegmentedControl.Item>
+                  ))}
+                </SegmentedControl.Root>
+                {textTypeInfo?.fixedPointOfView && (
+                  <Text as="p" id="new-story-pov-help" size="1" color="gray" mt="2">
+                    {textTypeInfo.fixedPointOfView === 'none'
+                      ? `${textTypeInfo.label} has no narrator, so this does not apply.`
+                      : `${textTypeInfo.label} is always in the ${POINT_OF_VIEW_LABELS[textTypeInfo.fixedPointOfView].toLowerCase()}.`}
+                  </Text>
+                )}
+              </div>
+            </Flex>
+          </details>
+
+          {notes.length > 0 && (
+            <Flex direction="column" gap="2">
+              {notes.map((note) => (
+                <Callout.Root key={note} size="1" color="blue">
+                  <Callout.Icon>
+                    <InfoCircledIcon />
+                  </Callout.Icon>
+                  <Callout.Text>{note}</Callout.Text>
+                </Callout.Root>
+              ))}
+            </Flex>
+          )}
 
           {/* aria-disabled keeps the button focusable so keyboard and screen-reader users reach the
               reason it is unavailable; onSubmit ignores it. disabled={false} stops loading from

@@ -131,8 +131,15 @@ test('corrects for made-up words answered Yes and warns about guessing', () => {
 })
 
 test('applying a level keeps the rest of the New Story draft', () => {
-  const fallback = { level: 'A2', theme: '', readingMinutes: 10, model: 'gemini-3.1-flash-lite' }
-  saveNewStoryDraft({ ...fallback, theme: 'A weekend in Tokyo', readingMinutes: 5 })
+  const fallback = { level: 'A2', topic: '', textType: null, tone: null, pointOfView: null, readingMinutes: 10, model: 'gemini-3.1-flash-lite' }
+  saveNewStoryDraft({ ...fallback, topic: 'A weekend in Tokyo', textType: 'letter', readingMinutes: 5 })
   setNewStoryDraftLevel('B2', fallback)
-  assert.deepEqual(loadNewStoryDraft(fallback), { ...fallback, theme: 'A weekend in Tokyo', readingMinutes: 5, level: 'B2' })
+  assert.deepEqual(loadNewStoryDraft(fallback), { ...fallback, topic: 'A weekend in Tokyo', textType: 'letter', readingMinutes: 5, level: 'B2' })
+})
+
+test('applying a level clears a draft text type that the level does not offer', () => {
+  const fallback = { level: 'A2', topic: '', textType: null, tone: null, pointOfView: null, readingMinutes: 10, model: 'gemini-3.1-flash-lite' }
+  saveNewStoryDraft({ ...fallback, textType: 'fairy-tale' })
+  setNewStoryDraftLevel('C1', fallback)
+  assert.deepEqual(loadNewStoryDraft(fallback), { ...fallback, level: 'C1' })
 })

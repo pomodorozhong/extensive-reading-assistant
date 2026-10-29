@@ -173,6 +173,32 @@ body {
   }
 }
 
+.new-story-style {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--gray-a5);
+}
+
+.new-story-style > summary {
+  cursor: pointer;
+  width: fit-content;
+}
+
+.new-story-style-control {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+
+.new-story-style-control .rt-SegmentedControlItem {
+  flex: 1;
+  min-width: 0;
+  padding-inline: 0;
+}
+
+.new-story-style-control .rt-SegmentedControlItemLabel {
+  padding-inline: var(--space-1);
+}
+
 .new-story-unsaved {
   margin-bottom: var(--space-5);
 }

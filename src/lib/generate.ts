@@ -1,6 +1,14 @@
-import type { CefrLevel, ReadingMinutes, Settings, Story } from '../types.ts'
+import type { CefrLevel, PointOfView, ReadingMinutes, Settings, Story, TextType, Tone } from '../types.ts'
 import { allowsLoopbackEndpoint, checkGeminiEndpoint } from './gemini-endpoint.ts'
-import { READING_LENGTHS, type GenerationChoices, type GenerationModel } from './generation-options.ts'
+import {
+  allowsPointOfView,
+  cleanTextType,
+  READING_LENGTHS,
+  TEXT_TYPE_INFO,
+  usesPlainWordsForInventions,
+  type GenerationChoices,
+  type GenerationModel,
+} from './generation-options.ts'
 
 const CEFR_GUIDE: Record<CefrLevel, string> = {
   A1: 'very simple words and short sentences; present tense; everyday topics',
@@ -100,7 +108,7 @@ async function callGemini(
   if (data.promptFeedback?.blockReason) {
     return {
       ok: false,
-      message: `Gemini blocked the prompt (${data.promptFeedback.blockReason}). Try a different theme.`,
+      message: `Gemini blocked the prompt (${data.promptFeedback.blockReason}). Try a different topic.`,
     }
   }
 
@@ -152,35 +160,63 @@ export function parseGeneratedStory(raw: string): { title: string; body: string 
   return { title: 'Untitled story', body: text }
 }
 
+const POINT_OF_VIEW_GUIDE: Record<PointOfView, string> = {
+  first: 'Tell it in the first person, as "I".',
+  third: 'Tell it in the third person.',
+}
+
+const DIALOGUE_GUIDE = {
+  plenty: 'Fill the story with as much dialogue as possible.',
+  some: 'Use dialogue only where it fits naturally.',
+} as const
+
 export async function generateStory(options: {
   level: CefrLevel
-  theme?: string
+  topic?: string
+  textType?: TextType | null
+  tone?: Tone | null
+  pointOfView?: PointOfView | null
   readingMinutes: ReadingMinutes
   model: GenerationModel
   settings: Settings
   signal?: AbortSignal
 }): Promise<GenerateResult> {
-  const { level, theme, readingMinutes, model, settings, signal } = options
+  const { level, topic, tone, readingMinutes, model, settings, signal } = options
+  const textType = cleanTextType(options.textType, level)
+  const info = textType ? TEXT_TYPE_INFO[textType] : null
+  // A form with its own point of view, such as a diary, overrides the reader's choice.
+  const pointOfView = allowsPointOfView(textType) ? options.pointOfView : null
   const length = READING_LENGTHS[readingMinutes]
+  const dialogue = info ? info.dialogue : 'plenty'
 
-  const themeLine = theme?.trim()
-    ? `Theme or topic: ${theme.trim()}`
-    : 'Choose a pleasant, original theme suitable for extensive reading.'
+  const topicLine = topic?.trim()
+    ? `Topic: ${topic.trim()}`
+    : 'Choose a pleasant, original topic suitable for extensive reading.'
 
   const userPrompt = [
-    `Write a complete story at CEFR ${level} (${CEFR_GUIDE[level]}).`,
-    themeLine,
+    `Write a complete ${info?.noun ?? 'story'} at CEFR ${level} (${CEFR_GUIDE[level]}).`,
+    ...(info ? [`Text type: ${info.label} — ${info.guide}.`] : []),
+    topicLine,
+    ...(tone ? [`Tone: ${tone}.`] : []),
+    ...(pointOfView ? [POINT_OF_VIEW_GUIDE[pointOfView]] : []),
     `Aim for ${length.minWords}-${length.maxWords} words, approximately ${readingMinutes} minutes of reading. Reading time varies by learner.`,
     'Stay within that vocabulary level so a learner can read for pleasure without looking many words up.',
+    // Invented words have no dictionary entry, so a learner could not look them up.
+    ...(usesPlainWordsForInventions({ level, textType })
+      ? ['Do not invent words; name magic, creatures, and technology with ordinary English words.']
+      : []),
+    ...(info?.factual
+      ? ['Keep facts accurate; do not invent statistics, dates, or quotes. Explain each topic word in simple words the first time it appears.']
+      : []),
     'Include a title on the first line.',
-    'Fill the story with as much dialogue as possible.',
+    ...(dialogue ? [DIALOGUE_GUIDE[dialogue]] : []),
     'End with THE END.',
-    'No preamble, no notes, no word list — only the title and the story.',
+    'No preamble, no notes, no word list — only the title and the text.',
   ].join('\n')
 
   const result = await callGemini(settings, {
     system:
-      'You generate level-appropriate stories for extensive reading. Output only the title and the story.',
+      'You generate level-appropriate texts for extensive reading. Output only the title and the text.',
     user: userPrompt,
     temperature: 0.7,
     model,
@@ -214,6 +250,11 @@ export function createGeneratedStory(
     wordMarks: {},
     explanations: {},
   }
-  if (choices.theme.trim()) story.theme = choices.theme.trim()
+  const topic = choices.topic.trim()
+  const textType = cleanTextType(choices.textType, choices.level)
+  if (topic) story.topic = topic
+  if (textType) story.textType = textType
+  if (choices.tone) story.tone = choices.tone
+  if (choices.pointOfView && allowsPointOfView(textType)) story.pointOfView = choices.pointOfView
   return story
 }

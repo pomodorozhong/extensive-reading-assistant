@@ -153,7 +153,7 @@ const STEPS: Step[] = [
   },
   {
     title: 'Pick your level, get a story',
-    body: 'Choose a CEFR level (A1 is easiest, C2 hardest) and a theme. The app writes a story at that level.',
+    body: 'Choose a CEFR level (A1 is easiest, C2 hardest) and a topic. The app writes a story at that level.',
     scene: LevelScene,
   },
   {

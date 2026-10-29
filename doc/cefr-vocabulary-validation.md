@@ -10,7 +10,7 @@ The main entry point is [`analyzeVocabulary(body, target)`](../src/lib/cefr.ts).
 
 [`storage.ts`](../src/lib/storage.ts) stores stories and settings in browser `localStorage`. [`StoryView.tsx`](../src/pages/StoryView.tsx) loads the saved story and, when `showVocabularyReport` is enabled, renders [`VocabularyReport`](../src/components/VocabularyReport.tsx) with `story.body` and `story.level`. This path handles both a newly generated story and a story reopened later.
 
-Changing Settings does not change the target of an existing story. For example, a story generated at A1 continues to be checked against A1 after Settings changes to C2. The analyzer examines the body, excluding the title, theme, and saved word marks.
+Changing Settings does not change the target of an existing story. For example, a story generated at A1 continues to be checked against A1 after Settings changes to C2. The analyzer examines the body, excluding the title, topic, and saved word marks.
 
 The report is computed when rendered and memoized by body and level with React `useMemo`. It is not stored as a separate report in `localStorage`. Consequently, reopening a story with an updated app can produce a different report if the bundled dataset or normalization rules have changed.
 

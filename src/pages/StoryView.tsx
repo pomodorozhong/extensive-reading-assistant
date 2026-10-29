@@ -5,6 +5,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { VocabularyReport } from '../components/VocabularyReport'
 import { isDebugFixture } from '../lib/debug-fixtures'
 import { lookupDefinition, preloadShards } from '../lib/dictionary'
+import { TEXT_TYPE_INFO } from '../lib/generation-options'
 import { getStory, loadSettings, updateWordExplanation, updateWordMark } from '../lib/storage'
 import { tokenize } from '../lib/tokenize'
 import type { Story } from '../types'
@@ -231,6 +232,7 @@ function StoryReader({ id }: { id: string | undefined }) {
           <Flex align="center" gap="2" wrap="wrap" mb="2">
             <Heading size="7">{story.title}</Heading>
             <Badge color="blue">{story.level}</Badge>
+            {story.textType && <Badge color="gray">{TEXT_TYPE_INFO[story.textType].label}</Badge>}
             {isDebugFixture(story.id) && <Badge color="amber">Debug fixture</Badge>}
           </Flex>
           <Text as="p" size="2" color="gray">

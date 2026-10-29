@@ -25,7 +25,7 @@ Generate level-appropriate stories and let learners mark words as known or unkno
 | Feature | Where | Behavior |
 | --- | --- | --- |
 | Vocabulary level | Settings and New Story | A2 by default. A saved Settings preference supplies the initial CEFR band (A1–C2); the New Story selection applies to that story. |
-| New story | New Story | Generate with the selected level, optional theme, reading length, and supported model. Theme examples fill the form without submitting. |
+| New story | New Story | Generate with the selected level, optional topic, text type (a mode, then a form offered at that level), reading length, supported model, and optional tone and point of view. Topic examples fill the form without submitting. |
 | Word marking | Story View | Mark any word as known or unknown. Marks persist on that story. |
 | Story library | My Stories | List saved stories and open one in Story View. |
 | Reading level check | Level check | An approximate, offline word-recognition check that suggests a CEFR level for New Story and, optionally, Settings. It is an estimate, not a certified result. |
@@ -48,7 +48,7 @@ App/
 ```
 
 - **Landing route (`/`)** — redirects to the canonical New Story route (`/new`)
-- **New Story** — choose a level, optional theme, reading length, and supported model, then generate and open a story in Story View
+- **New Story** — choose a level, optional topic, text type, reading length, supported model, and style, then generate and open a story in Story View
 - **Level check (`/level-check`)** — estimate a reading level from word recognition, then apply it to New Story
 - **Story View** — read the story and mark words
 - **My Stories** — saved stories; each item opens Story View

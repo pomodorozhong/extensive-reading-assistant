@@ -26,9 +26,12 @@ const server = createServer(async (request, response) => {
     const prompt = JSON.parse(body).contents[0].parts[0].text
     const level = prompt.match(/CEFR (A1|A2|B1|B2|C1|C2)/)?.[1]
     const length = prompt.match(/Aim for (\d+)-(\d+) words, approximately (5|10|15) minutes/)
-    const theme = prompt.match(/Theme or topic: (.+)/)?.[1] ?? 'an original theme'
+    const topic = prompt.match(/^Topic: (.+)$/m)?.[1] ?? 'an original topic'
+    const textType = prompt.match(/^Text type: ([^—]+) —/m)?.[1]?.trim() ?? 'any text type'
+    const tone = prompt.match(/^Tone: (\w+)\./m)?.[1] ?? 'any tone'
+    const pointOfView = prompt.match(/^Tell it in the (first|third) person/m)?.[1] ?? 'any'
     if (!level || !length) throw new Error('Missing generation choices')
-    const text = `Title: Generation options fixture\n\nThis local fixture received CEFR ${level}, ${length[3]} minutes, and a target of ${length[1]}-${length[2]} words.\n\nThe theme is ${theme}. A friend visits a garden.\n\nTHE END.`
+    const text = `Title: Generation options fixture\n\nThis local fixture received CEFR ${level}, ${length[3]} minutes, and a target of ${length[1]}-${length[2]} words.\n\nThe topic is ${topic}. The text type is ${textType}, the tone is ${tone}, and the point of view is ${pointOfView}. A friend visits a garden.\n\nTHE END.`
     response.end(JSON.stringify({ candidates: [{ content: { parts: [{ text }] }, finishReason: 'STOP' }] }))
   } catch {
     response.writeHead(400).end(JSON.stringify({ error: { message: 'The fixture could not read the generation choices.' } }))

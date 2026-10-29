@@ -61,7 +61,7 @@ A more discerning account would acknowledge the garden's contradictions without 
 export const DEBUG_FIXTURES: readonly Story[] = articles.map((article) => ({
   ...article,
   id: `debug-cefr-${article.level.toLowerCase()}`,
-  theme: 'Community garden · debugging fixture',
+  topic: 'Community garden · debugging fixture',
   createdAt: '2026-10-01T00:00:00.000Z',
   wordMarks: {},
   explanations: {},
