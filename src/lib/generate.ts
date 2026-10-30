@@ -165,6 +165,9 @@ const POINT_OF_VIEW_GUIDE: Record<PointOfView, string> = {
   third: 'Tell it in the third person.',
 }
 
+const VARIED_SENTENCES_GUIDE =
+  'Vary sentence and paragraph length: mix short, punchy sentences with longer, flowing ones, and short paragraphs with longer ones, so the text has rhythm.'
+
 const DIALOGUE_GUIDE = {
   plenty: 'Fill the story with as much dialogue as possible.',
   some: 'Use dialogue only where it fits naturally.',
@@ -176,12 +179,13 @@ export async function generateStory(options: {
   textType?: TextType | null
   tone?: Tone | null
   pointOfView?: PointOfView | null
+  variedSentences?: boolean
   readingMinutes: ReadingMinutes
   model: GenerationModel
   settings: Settings
   signal?: AbortSignal
 }): Promise<GenerateResult> {
-  const { level, topic, tone, readingMinutes, model, settings, signal } = options
+  const { level, topic, tone, variedSentences, readingMinutes, model, settings, signal } = options
   const textType = cleanTextType(options.textType, level)
   const info = textType ? TEXT_TYPE_INFO[textType] : null
   // A form with its own point of view, such as a diary, overrides the reader's choice.
@@ -201,6 +205,7 @@ export async function generateStory(options: {
     ...(pointOfView ? [POINT_OF_VIEW_GUIDE[pointOfView]] : []),
     `Aim for ${length.minWords}-${length.maxWords} words, approximately ${readingMinutes} minutes of reading. Reading time varies by learner.`,
     'Stay within that vocabulary level so a learner can read for pleasure without looking many words up.',
+    ...(variedSentences ? [VARIED_SENTENCES_GUIDE] : []),
     // Invented words have no dictionary entry, so a learner could not look them up.
     ...(usesPlainWordsForInventions({ level, textType })
       ? ['Do not invent words; name magic, creatures, and technology with ordinary English words.']

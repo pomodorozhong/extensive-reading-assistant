@@ -50,6 +50,7 @@ test('initial choices default to A2 and ten minutes while preserving a saved lev
   assert.equal(initial.textType, null)
   assert.equal(initial.tone, null)
   assert.equal(initial.pointOfView, null)
+  assert.equal(initial.variedSentences, true)
   assert.ok(!JSON.stringify(initial).includes(apiKey))
   assert.deepEqual(settings, original)
   assert.equal(initialGenerationChoices({ ...settings, model: 'models/gemini-3.1-flash-lite' }).model, DEFAULT_MODEL)
@@ -372,13 +373,13 @@ test('an unfinished draft survives a reload and keeps only the non-secret choice
   saveSettings(settings)
   const fresh = initialGenerationChoices(loadSettings())
   assert.deepEqual(loadNewStoryDraft(fresh), fresh)
-  saveNewStoryDraft({ ...choices, level: 'B2', readingMinutes: 15, textType: 'fable', tone: 'thoughtful', pointOfView: 'first', apiKey, apiBaseUrl: settings.apiBaseUrl })
+  saveNewStoryDraft({ ...choices, level: 'B2', readingMinutes: 15, textType: 'fable', tone: 'thoughtful', pointOfView: 'first', variedSentences: false, apiKey, apiBaseUrl: settings.apiBaseUrl })
   const raw = localStorage.getItem('era.v1.new-story-draft')
   assert.ok(!raw.includes(apiKey))
   assert.ok(!raw.includes('googleapis'))
-  assert.deepEqual(Object.keys(JSON.parse(raw)).sort(), ['level', 'model', 'pointOfView', 'readingMinutes', 'textType', 'tone', 'topic'])
+  assert.deepEqual(Object.keys(JSON.parse(raw)).sort(), ['level', 'model', 'pointOfView', 'readingMinutes', 'textType', 'tone', 'topic', 'variedSentences'])
   assert.deepEqual(loadNewStoryDraft(fresh), {
-    level: 'B2', topic: '  A weekend in Tokyo  ', textType: 'fable', tone: 'thoughtful', pointOfView: 'first', readingMinutes: 15, model: DEFAULT_MODEL,
+    level: 'B2', topic: '  A weekend in Tokyo  ', textType: 'fable', tone: 'thoughtful', pointOfView: 'first', variedSentences: false, readingMinutes: 15, model: DEFAULT_MODEL,
   })
   saveNewStoryDraft({ ...choices, tone: 'cozy' })
   saveNewStoryDraft({ ...choices, tone: null })
@@ -393,7 +394,7 @@ test('invalid or legacy draft fields fall back individually, and clearing restor
   assert.deepEqual(loadNewStoryDraft(fresh), { ...fresh, topic: 'Rain' })
   localStorage.setItem('era.v1.new-story-draft', JSON.stringify({ topic: 'Snow', theme: 'Rain', textType: 'letter', tone: 'grim', pointOfView: 'second' }))
   assert.deepEqual(loadNewStoryDraft(fresh), { ...fresh, topic: 'Snow', textType: 'letter' })
-  localStorage.setItem('era.v1.new-story-draft', JSON.stringify({ textType: 'mystery', genres: ['fable'], topic: 7 }))
+  localStorage.setItem('era.v1.new-story-draft', JSON.stringify({ textType: 'mystery', genres: ['fable'], topic: 7, variedSentences: 'yes' }))
   assert.deepEqual(loadNewStoryDraft(fresh), fresh)
   localStorage.setItem('era.v1.new-story-draft', JSON.stringify({ level: 'A1', textType: 'argumentative' }))
   assert.equal(loadNewStoryDraft(fresh).textType, null)
@@ -484,4 +485,15 @@ test('story details list the saved choices and request, and leave out what was n
 
   const legacy = JSON.parse(readFileSync(new URL('./fixtures/cefr-stories.json', import.meta.url), 'utf8')).stories[0]
   assert.equal(storyDetails({ ...legacy, topic: undefined, textType: undefined, readingMinutes: undefined }), null)
+})
+
+test('varied sentence length adds its prompt line only when chosen', async (t) => {
+  const requests = mockGemini(t)
+  const line = 'Vary sentence and paragraph length: mix short, punchy sentences with longer, flowing ones, and short paragraphs with longer ones, so the text has rhythm.'
+  for (const variedSentences of [true, false]) {
+    const result = await generateStory({ ...choices, variedSentences, settings })
+    const prompt = requests.at(-1).json.contents[0].parts[0].text
+    assert.equal(prompt.includes(`\n${line}\n`), variedSentences)
+    assert.equal(result.generation.userPrompt, prompt)
+  }
 })

@@ -61,6 +61,7 @@ export function loadNewStoryDraft(fallback: GenerationChoices): GenerationChoice
     tone: stored.tone === null || isTone(stored.tone) ? stored.tone : fallback.tone,
     pointOfView:
       stored.pointOfView === null || isPointOfView(stored.pointOfView) ? stored.pointOfView : fallback.pointOfView,
+    variedSentences: typeof stored.variedSentences === 'boolean' ? stored.variedSentences : fallback.variedSentences,
     level,
     readingMinutes: isReadingMinutes(stored.readingMinutes) ? stored.readingMinutes : fallback.readingMinutes,
     model: isModel(stored.model) ? stored.model : fallback.model,
@@ -68,11 +69,11 @@ export function loadNewStoryDraft(fallback: GenerationChoices): GenerationChoice
 }
 
 export function saveNewStoryDraft(choices: GenerationChoices): void {
-  const { topic, textType, tone, pointOfView, level, readingMinutes, model } = choices
+  const { topic, textType, tone, pointOfView, variedSentences, level, readingMinutes, model } = choices
   try {
     localStorage.setItem(
       DRAFT_KEY,
-      JSON.stringify({ topic, textType, tone, pointOfView, level, readingMinutes, model }),
+      JSON.stringify({ topic, textType, tone, pointOfView, variedSentences, level, readingMinutes, model }),
     )
   } catch {
     // A draft is a convenience; a full or blocked storage must not break the form.
