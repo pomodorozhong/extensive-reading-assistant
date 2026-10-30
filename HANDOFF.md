@@ -43,6 +43,6 @@ Last verified: 2026-10-30 (Asia/Taipei).
 
 ## Pending
 
-- **P-21**: delete the 32 remote branches on `origin` whose PRs have merged: every remote branch except `main`, `feat/curated-starter-stories`, `feat/save-varied-sentences`, and `fix/prefer-common-entry-over-name` (rechecked 2026-10-30: 31 tips match their merged PR's head; `fix/prefer-base-form-for-irregular-verbs` adds only an outdated `HANDOFF.md` commit). `fix/prefer-common-entry-over-name` can be deleted too once `feat/save-varied-sentences` merges, since `2b84ba8` carries its only unmerged change. Why: deleting remote branches is outward-facing, and the auto-mode safety check blocked it again on 2026-10-30; the user can run the deletion. All merged local branches are deleted. Blocks: nothing.
+- **P-21**: delete the remote branch `fix/prefer-common-entry-over-name` once `feat/save-varied-sentences` (PR #79) merges; `2b84ba8` carries its only unmerged change. The user deleted the other 32 merged remote branches on 2026-10-30, and all merged local branches are deleted. Why: deleting remote branches is outward-facing, and the auto-mode safety check blocks it; the user can run it. Blocks: nothing.
 
 Keep the untracked `.claude/launch.json`: it holds the preview configs used for browser checks.
