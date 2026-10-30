@@ -16,12 +16,13 @@ Last verified: 2026-10-30 (Asia/Taipei).
 
 ### feat/save-varied-sentences
 
-- Task: [#76 — Save the varied sentence length choice on each story and show it in Story View](https://github.com/pomodorozhong/extensive-reading-assistant/issues/76). Linked to #76; the PR will fully resolve it. Unblocked: #75 merged in [#78](https://github.com/pomodorozhong/extensive-reading-assistant/pull/78).
+- Task: [#76 — Save the varied sentence length choice on each story and show it in Story View](https://github.com/pomodorozhong/extensive-reading-assistant/issues/76). Linked to #76; the PR fully resolves it.
 - PR: none yet.
-- Code checkpoint: none; branch created from `main` `f174636` to carry this handoff.
-- State: not started. The approach that worked in an earlier unpushed version is in the [#76 handoff comment](https://github.com/pomodorozhong/extensive-reading-assistant/issues/76#issuecomment-6520788663).
-- Avoid: skipping `test:level-check` or `test:dictionary` locally; CI runs all six `test:*` suites, and the level-check suite builds New Story drafts by hand (it broke CI on #78).
-- Next action: implement #76 and open a PR with the `open-pr` skill.
+- Code checkpoint: `ba33ba6` on `main` `f174636`.
+- State: implemented and committed locally; awaiting approval to push and open the PR (open-pr publish approval).
+- Verification: 2026-10-30, `npm run lint`, `npm run build`, and all six `test:*` suites passed (generation 36/36). In the browser pane, seeded stories showed **Sentence length: Varied**, **Not requested**, and no row for a story without the field; no console errors.
+- Also on this branch: `2b84ba8` restores the lowercase-word sentence for `test:dictionary` in `doc/development.md`, which was committed on the #66 branch after its PR merged.
+- Next action: after approval, push and open the PR with the `open-pr` skill.
 
 ## Ranked work
 
@@ -42,6 +43,6 @@ Last verified: 2026-10-30 (Asia/Taipei).
 
 ## Pending
 
-- **P-21**: delete the 33 remote branches on `origin` whose PRs have merged: every remote branch except `main`, `feat/curated-starter-stories`, and `feat/save-varied-sentences` (rechecked 2026-10-30; now including `feat/save-generation-request` (#70), `feat/story-generation-details` (#74), `docs/exam-workflow-mockup` (#72), and `feat/varied-sentence-length` (#78)). Why: deleting remote branches is outward-facing, and the auto-mode safety check blocked it on 2026-10-30 even after the user asked for cleanup; the user can run the deletion. Merged local branches are deleted, except `docs/exam-workflow-mockup`, which is checked out in the main checkout. Blocks: nothing.
+- **P-21**: delete the 32 remote branches on `origin` whose PRs have merged: every remote branch except `main`, `feat/curated-starter-stories`, `feat/save-varied-sentences`, and `fix/prefer-common-entry-over-name` (rechecked 2026-10-30: 31 tips match their merged PR's head; `fix/prefer-base-form-for-irregular-verbs` adds only an outdated `HANDOFF.md` commit). `fix/prefer-common-entry-over-name` can be deleted too once `feat/save-varied-sentences` merges, since `2b84ba8` carries its only unmerged change. Why: deleting remote branches is outward-facing, and the auto-mode safety check blocked it again on 2026-10-30; the user can run the deletion. All merged local branches are deleted. Blocks: nothing.
 
 Keep the untracked `.claude/launch.json`: it holds the preview configs used for browser checks.
