@@ -2,6 +2,7 @@ import { ArrowRightIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import {
   Button,
   Callout,
+  Checkbox,
   Flex,
   Heading,
   SegmentedControl,
@@ -84,6 +85,8 @@ export function NewStory() {
   const styleSummary = [
     choices.tone && TONE_LABELS[choices.tone],
     pointOfViewApplies && choices.pointOfView && POINT_OF_VIEW_LABELS[choices.pointOfView],
+    // Varied is the default, so only turning it off is worth summarizing.
+    !choices.variedSentences && 'Sentence variety off',
   ].filter(Boolean).join(', ')
   const textTypeInfo = choices.textType ? TEXT_TYPE_INFO[choices.textType] : null
   const locked = mode ? lockedTextTypes(mode, choices.level) : []
@@ -499,6 +502,22 @@ export function NewStory() {
                       : `${textTypeInfo.label} is always in the ${POINT_OF_VIEW_LABELS[textTypeInfo.fixedPointOfView].toLowerCase()}.`}
                   </Text>
                 )}
+              </div>
+              <div>
+                <Text as="label" size="2">
+                  <Flex gap="2" align="center">
+                    <Checkbox
+                      checked={choices.variedSentences}
+                      onCheckedChange={(checked) => updateChoices({ variedSentences: checked === true })}
+                      disabled={generating}
+                      aria-describedby="new-story-varied-help"
+                    />
+                    <Text weight="medium">Varied sentence length</Text>
+                  </Flex>
+                </Text>
+                <Text as="p" id="new-story-varied-help" size="1" color="gray" mt="1">
+                  Mixes short and long sentences and paragraphs, so the text has more rhythm.
+                </Text>
               </div>
             </Flex>
           </details>

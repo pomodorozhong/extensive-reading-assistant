@@ -290,6 +290,8 @@ export type GenerationModel = (typeof SUPPORTED_MODELS)[number]['id']
 export const DEFAULT_MODEL = SUPPORTED_MODELS[0].id
 export const DEFAULT_GENERATION_LEVEL: CefrLevel = 'A2'
 export const DEFAULT_READING_MINUTES: ReadingMinutes = 10
+// Even sentence lengths read flatly, so new stories ask for rhythm unless the reader turns it off.
+export const DEFAULT_VARIED_SENTENCES = true
 
 // Product targets for a reading session, not measured or guaranteed reading times.
 export const READING_LENGTHS: Record<ReadingMinutes, { minWords: number; maxWords: number }> = {
@@ -309,6 +311,8 @@ export type GenerationChoices = {
   tone: Tone | null
   /** null leaves the point of view to the model. */
   pointOfView: PointOfView | null
+  /** Ask for a mix of short and long sentences and paragraphs. */
+  variedSentences: boolean
   readingMinutes: ReadingMinutes
   model: GenerationModel
 }
@@ -321,6 +325,7 @@ export function initialGenerationChoices(settings: Pick<Settings, 'cefrLevel' | 
     textType: null,
     tone: null,
     pointOfView: null,
+    variedSentences: DEFAULT_VARIED_SENTENCES,
     readingMinutes: DEFAULT_READING_MINUTES,
     model: SUPPORTED_MODELS.find((model) => model.id === savedModel)?.id ?? DEFAULT_MODEL,
   }
