@@ -14,7 +14,7 @@ Then open the URL Vite prints (usually `http://localhost:5173`).
 
 Build a production bundle with `npm run build`. Preview it with `npm run preview`.
 
-Run `npm run test:dictionary` to check that inflected words such as *met*, *children*, and *happier* find their base-form definitions. It rebuilds the bundled WordNet files first.
+Run `npm run test:dictionary` to check that inflected words such as *met*, *children*, and *happier* find their base-form definitions, and that a word a story writes in lowercase, such as *banks*, finds the base word rather than a name. It rebuilds the bundled WordNet files first.
 
 ## Verify generation without a live API
 
