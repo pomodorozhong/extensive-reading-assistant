@@ -70,7 +70,19 @@ test('each reading length sends its agreed word band and selected level and mode
     assert.ok(!request.body.includes(apiKey))
     assert.ok(!request.url.includes(apiKey))
     assert.ok(!request.body.includes('Gemini 3.1 Flash Lite'))
-    assert.deepEqual(result, { ok: true, title: 'A Weekend', body: 'A friend visits a garden.\n\nTHE END.' })
+    assert.deepEqual(result, {
+      ok: true,
+      title: 'A Weekend',
+      body: 'A friend visits a garden.\n\nTHE END.',
+      generation: {
+        model: 'gemini-3.1-flash-lite',
+        temperature: request.json.generationConfig.temperature,
+        minWords: min,
+        maxWords: max,
+        systemPrompt: request.json.systemInstruction.parts[0].text,
+        userPrompt: prompt,
+      },
+    })
   }
 })
 
@@ -207,7 +219,7 @@ test('a text type outside the level never reaches the prompt or the saved story'
 })
 
 test('generated stories persist submitted choices without changing global defaults or copying provider settings', async (t) => {
-  mockGemini(t)
+  const requests = mockGemini(t)
   saveSettings(settings)
   const submitted = { ...choices }
   const pending = generateStory({ ...submitted, settings })
@@ -219,6 +231,15 @@ test('generated stories persist submitted choices without changing global defaul
   assert.equal(restored.level, 'B1')
   assert.equal(restored.readingMinutes, 5)
   assert.equal(restored.topic, 'A weekend in Tokyo')
+  const sent = requests.at(-1).json
+  assert.deepEqual(restored.generation, {
+    model: DEFAULT_MODEL,
+    temperature: 0.7,
+    minWords: 400,
+    maxWords: 600,
+    systemPrompt: sent.systemInstruction.parts[0].text,
+    userPrompt: sent.contents[0].parts[0].text,
+  })
   assert.ok(!('textType' in restored || 'tone' in restored || 'pointOfView' in restored))
   const styled = createGeneratedStory(result, { ...submitted, textType: 'fable', tone: 'funny', pointOfView: 'third' })
   upsertStory(styled)
@@ -243,6 +264,8 @@ test('legacy stories still load unchanged alongside new duration metadata', () =
   upsertStory(next)
   assert.deepEqual(getStory(legacy.id), legacy)
   assert.equal(getStory(legacy.id).readingMinutes, undefined)
+  assert.equal(getStory(legacy.id).generation, undefined)
+  assert.ok(!('generation' in getStory(next.id)))
   assert.equal(getStory(next.id).readingMinutes, 15)
   assert.ok(!('topic' in getStory(next.id)))
   assert.equal(loadStories().length, 2)

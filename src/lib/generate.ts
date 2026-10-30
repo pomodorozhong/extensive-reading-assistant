@@ -1,4 +1,4 @@
-import type { CefrLevel, PointOfView, ReadingMinutes, Settings, Story, TextType, Tone } from '../types.ts'
+import type { CefrLevel, PointOfView, ReadingMinutes, Settings, Story, StoryGeneration, TextType, Tone } from '../types.ts'
 import { allowsLoopbackEndpoint, checkGeminiEndpoint } from './gemini-endpoint.ts'
 import {
   allowsPointOfView,
@@ -31,7 +31,7 @@ type GeminiResponse = {
 }
 
 export type GenerateResult =
-  | { ok: true; title: string; body: string }
+  | { ok: true; title: string; body: string; generation: StoryGeneration }
   | { ok: false; message: string; canceled?: true }
 
 type GeminiTextResult = { ok: true; text: string } | { ok: false; message: string; canceled?: true }
@@ -214,11 +214,18 @@ export async function generateStory(options: {
     'No preamble, no notes, no word list — only the title and the text.',
   ].join('\n')
 
-  const result = await callGemini(settings, {
-    system:
-      'You generate level-appropriate texts for extensive reading. Output only the title and the text.',
-    user: userPrompt,
+  const generation: StoryGeneration = {
+    model,
     temperature: 0.7,
+    minWords: length.minWords,
+    maxWords: length.maxWords,
+    systemPrompt: 'You generate level-appropriate texts for extensive reading. Output only the title and the text.',
+    userPrompt,
+  }
+  const result = await callGemini(settings, {
+    system: generation.systemPrompt,
+    user: generation.userPrompt,
+    temperature: generation.temperature,
     model,
     signal,
   })
@@ -233,11 +240,11 @@ export async function generateStory(options: {
     return { ok: false, message }
   }
 
-  return { ok: true, ...parseGeneratedStory(result.text) }
+  return { ok: true, ...parseGeneratedStory(result.text), generation }
 }
 
 export function createGeneratedStory(
-  result: { title: string; body: string },
+  result: { title: string; body: string; generation?: StoryGeneration },
   choices: GenerationChoices,
 ): Story {
   const story: Story = {
@@ -256,5 +263,6 @@ export function createGeneratedStory(
   if (textType) story.textType = textType
   if (choices.tone) story.tone = choices.tone
   if (choices.pointOfView && allowsPointOfView(textType)) story.pointOfView = choices.pointOfView
+  if (result.generation) story.generation = result.generation
   return story
 }
