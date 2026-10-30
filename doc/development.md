@@ -14,7 +14,7 @@ Then open the URL Vite prints (usually `http://localhost:5173`).
 
 Build a production bundle with `npm run build`. Preview it with `npm run preview`.
 
-Run `npm run test:dictionary` to check that inflected words such as *met*, *children*, and *happier* find their base-form definitions. It rebuilds the bundled WordNet files first.
+Run `npm run test:dictionary` to check that inflected words such as *met*, *children*, and *happier* find their base-form definitions, and that a word a story writes in lowercase, such as *banks*, finds the base word rather than a name. It rebuilds the bundled WordNet files first.
 
 ## Verify generation without a live API
 
@@ -45,6 +45,6 @@ This repo deploys the production build with GitHub Actions. Hash-based routes (`
 2. In the GitHub repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 3. After the workflow succeeds, the site is at `https://<user>.github.io/<repo>/`.
 
-Every pull request runs the **Checks** workflow: `npm run lint`, `npm run build`, and the six `test:*` suites. A deploy runs the same checks first and stops if any fail. Third-party actions are pinned to full commit hashes, and Dependabot proposes updates to them weekly. To block merging until the checks pass, require the **Checks** status in a branch ruleset for `main` (a repository setting, not part of this code).
+Every pull request runs the **Checks** workflow: `npm run lint`, `npm run build`, and the six `test:*` suites. Run all six locally before pushing, even ones that look unrelated: `test:level-check` also builds New Story drafts, so a new generation choice can break it. A deploy runs the same checks first and stops if any fail. Third-party actions are pinned to full commit hashes, and Dependabot proposes updates to them weekly. To block merging until the checks pass, require the **Checks** status in a branch ruleset for `main` (a repository setting, not part of this code).
 
 To override the asset base path, set `VITE_BASE` (for example `/` for a custom domain at the site root).

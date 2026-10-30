@@ -249,6 +249,12 @@ test('generated stories persist submitted choices without changing global defaul
   assert.equal(restoredStyled.textType, 'fable')
   assert.equal(restoredStyled.tone, 'funny')
   assert.equal(restoredStyled.pointOfView, 'third')
+  assert.ok(!('variedSentences' in restored))
+  for (const variedSentences of [true, false]) {
+    const saved = createGeneratedStory(result, { ...submitted, variedSentences })
+    upsertStory(saved)
+    assert.equal(getStory(saved.id).variedSentences, variedSentences)
+  }
   assert.equal(restored.body, result.body)
   assert.deepEqual(restored.wordMarks, {})
   assert.deepEqual(restored.explanations, {})
@@ -485,6 +491,21 @@ test('story details list the saved choices and request, and leave out what was n
 
   const legacy = JSON.parse(readFileSync(new URL('./fixtures/cefr-stories.json', import.meta.url), 'utf8')).stories[0]
   assert.equal(storyDetails({ ...legacy, topic: undefined, textType: undefined, readingMinutes: undefined }), null)
+})
+
+test('story details list the sentence length choice after the point of view when it was saved', () => {
+  const story = createGeneratedStory({ title: 'T', body: 'B' }, { ...choices, pointOfView: 'first', variedSentences: true })
+  assert.deepEqual(storyDetails(story).rows.slice(0, 5), [
+    { label: 'Level', value: 'B1' },
+    { label: 'Topic', value: 'A weekend in Tokyo' },
+    { label: 'Point of view', value: 'First person' },
+    { label: 'Sentence length', value: 'Varied' },
+    { label: 'Reading time', value: 'About 5 minutes' },
+  ])
+  const plain = createGeneratedStory({ title: 'T', body: 'B' }, { ...choices, variedSentences: false })
+  assert.deepEqual(storyDetails(plain).rows.find((row) => row.label === 'Sentence length'), { label: 'Sentence length', value: 'Not requested' })
+  const older = createGeneratedStory({ title: 'T', body: 'B' }, choices)
+  assert.ok(!storyDetails(older).rows.some((row) => row.label === 'Sentence length'))
 })
 
 test('varied sentence length adds its prompt line only when chosen', async (t) => {

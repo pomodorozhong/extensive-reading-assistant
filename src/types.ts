@@ -69,6 +69,8 @@ export type Story = {
   textType?: TextType
   tone?: Tone
   pointOfView?: PointOfView
+  /** Whether varied sentence length was requested; absent on stories saved before it was recorded. */
+  variedSentences?: boolean
   readingMinutes?: ReadingMinutes
   /** The request that produced the story; absent on stories saved before it was recorded. */
   generation?: StoryGeneration
