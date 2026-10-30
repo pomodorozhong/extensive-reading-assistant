@@ -50,6 +50,16 @@ export type Settings = {
   showVocabularyReport: boolean
 }
 
+/** What was sent to the model, saved so a story's origin stays known after the prompt code changes. */
+export type StoryGeneration = {
+  model: string
+  temperature: number
+  minWords: number
+  maxWords: number
+  systemPrompt: string
+  userPrompt: string
+}
+
 export type Story = {
   id: string
   title: string
@@ -60,6 +70,8 @@ export type Story = {
   tone?: Tone
   pointOfView?: PointOfView
   readingMinutes?: ReadingMinutes
+  /** The request that produced the story; absent on stories saved before it was recorded. */
+  generation?: StoryGeneration
   createdAt: string
   wordMarks: Record<string, WordMark>
   explanations: Record<string, string>
