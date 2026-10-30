@@ -2,6 +2,7 @@ import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { StoryGenerationDetails } from '../components/StoryGenerationDetails'
 import { VocabularyReport } from '../components/VocabularyReport'
 import { isDebugFixture } from '../lib/debug-fixtures'
 import { lookupDefinition, preloadShards } from '../lib/dictionary'
@@ -388,6 +389,8 @@ function StoryReader({ id }: { id: string | undefined }) {
             </Flex>
           </Card>
         )}
+        {/* A fixture's topic only labels it as debug content; it was not generated. */}
+        {!isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
         {showVocabularyReport && <VocabularyReport body={story.body} level={story.level} />}
       </Flex>
     </Container>
