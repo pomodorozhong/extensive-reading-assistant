@@ -268,6 +268,7 @@ export function createGeneratedStory(
   if (textType) story.textType = textType
   if (choices.tone) story.tone = choices.tone
   if (choices.pointOfView && allowsPointOfView(textType)) story.pointOfView = choices.pointOfView
+  if (typeof choices.variedSentences === 'boolean') story.variedSentences = choices.variedSentences
   if (result.generation) story.generation = result.generation
   return story
 }

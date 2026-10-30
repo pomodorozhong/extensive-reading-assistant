@@ -15,6 +15,9 @@ export function storyDetails(story: Story): StoryDetails | null {
   if (story.topic) rows.push({ label: 'Topic', value: story.topic })
   if (story.tone) rows.push({ label: 'Tone', value: TONE_LABELS[story.tone] })
   if (story.pointOfView) rows.push({ label: 'Point of view', value: POINT_OF_VIEW_LABELS[story.pointOfView] })
+  if (story.variedSentences !== undefined) {
+    rows.push({ label: 'Sentence length', value: story.variedSentences ? 'Varied' : 'Not requested' })
+  }
   if (story.readingMinutes) rows.push({ label: 'Reading time', value: `About ${story.readingMinutes} minutes` })
   if (generation) {
     const model = SUPPORTED_MODELS.find((option) => option.id === generation.model)
