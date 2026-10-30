@@ -12,14 +12,14 @@ Last verified: 2026-10-30 (Asia/Taipei).
 - State: not started. The text types it can cover merged in [#67](https://github.com/pomodorozhong/extensive-reading-assistant/pull/67).
 - Next action: plan the starter stories with the user (which levels and text types, and how the owner reviews the content) before writing code.
 
-### feat/save-generation-request
+### feat/story-generation-details
 
-- Task: [#69 — Save the full generation request with each generated story](https://github.com/pomodorozhong/extensive-reading-assistant/issues/69). Linked to #69; the PR fully resolves it. Done before returning to #27, whose starter stories can use the same record for provenance.
+- Task: [#71 — Show how a story was made in Story View](https://github.com/pomodorozhong/extensive-reading-assistant/issues/71). Linked to #71; the PR fully resolves it. Follows #69 (merged in #70).
 - PR: none yet; awaiting publish approval.
-- Code checkpoint: `3c6210f` on `main` `77eac36`.
+- Code checkpoint: `3b8a624` on `main` `afaa8f8`.
 - State: committed locally; awaiting push and PR approval.
-- Design: `Story.generation` (optional) holds the model, temperature, target word range, and exact system and user prompts; `generateStory` builds it from the same values it sends, and `createGeneratedStory` saves it. No UI change.
-- Verification: 2026-10-30, `npm run lint`, `npm run build`, and `test:generation` (33), `test:cefr` (20), `test:vocabulary` (19), `test:onboarding` (6) passed. In the dev preview with the Gemini fixture, a generated A2, 10-minute story saved the full record with 800–1200 words and no key.
+- Design: `storyDetails` in `src/lib/story-details.ts` builds the rows (level, text type, topic, tone, point of view, reading time, then model, temperature, word target when `generation` exists) and returns null when a story has nothing beyond its level. `StoryGenerationDetails` renders them in a card below the glossary, with prompts in a collapsed `<details>`; Story View skips it for debug fixtures, whose topic only labels them.
+- Verification: 2026-10-30, `npm run lint`, `npm run build`, and `test:generation` (34), `test:cefr` (20), `test:vocabulary` (19), `test:onboarding` (6) passed. In the dev preview at 375px: a fixture-generated story showed all rows and wrapped prompts with no horizontal scroll; a seeded draft showed only its choices and the "not recorded" note; a debug fixture showed no card; no console errors.
 - Not checked: `test:level-check` and `test:dictionary`, which this change cannot affect.
 - Next action: after approval, push and open the PR with the `open-pr` skill, then return to `feat/curated-starter-stories`.
 
