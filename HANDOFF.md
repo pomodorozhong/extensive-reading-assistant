@@ -22,16 +22,16 @@ Last verified: 2026-10-30 (Asia/Taipei).
 - State: not started. The text types it can cover merged in [#67](https://github.com/pomodorozhong/extensive-reading-assistant/pull/67).
 - Next action: plan the starter stories with the user (which levels and text types, and how the owner reviews the content) before writing code.
 
-### feat/story-generation-details
+### feat/varied-sentence-length
 
-- Task: [#71 — Show how a story was made in Story View](https://github.com/pomodorozhong/extensive-reading-assistant/issues/71). Linked to #71; the PR fully resolves it. Follows #69 (merged in #70).
-- PR: [#74](https://github.com/pomodorozhong/extensive-reading-assistant/pull/74), open; awaiting review and merge.
-- Code checkpoint: `3b8a624` on `main` `afaa8f8`.
-- State: pushed; `main` (with #72) merged in to resolve a `HANDOFF.md` conflict.
-- Design: `storyDetails` in `src/lib/story-details.ts` builds the rows (level, text type, topic, tone, point of view, reading time, then model, temperature, word target when `generation` exists) and returns null when a story has nothing beyond its level. `StoryGenerationDetails` renders them in a card below the glossary, with prompts in a collapsed `<details>`; Story View skips it for debug fixtures, whose topic only labels them.
-- Verification: 2026-10-30, `npm run lint`, `npm run build`, and `test:generation` (34), `test:cefr` (20), `test:vocabulary` (19), `test:onboarding` (6) passed. In the dev preview at 375px: a fixture-generated story showed all rows and wrapped prompts with no horizontal scroll; a seeded draft showed only its choices and the "not recorded" note; a debug fixture showed no card; no console errors.
-- Not checked: `test:level-check` and `test:dictionary`, which this change cannot affect.
-- Next action: after #74 merges, return to `feat/curated-starter-stories`.
+- Task: [#75 — Offer a varied sentence length option for new stories, on by default](https://github.com/pomodorozhong/extensive-reading-assistant/issues/75). Linked to #75; the PR fully resolves it. Follow-ups split out at the owner's request for focused PRs: [#76](https://github.com/pomodorozhong/extensive-reading-assistant/issues/76) (save the choice on each story and show it in Story View; depends on #75) and [#77](https://github.com/pomodorozhong/extensive-reading-assistant/issues/77) (stop asking for "THE END").
+- PR: none yet; awaiting publish approval.
+- Code checkpoint: `6963574` on `main` `11bfbd8`.
+- State: committed locally; awaiting push and PR approval.
+- Design: `GenerationChoices.variedSentences` (default `DEFAULT_VARIED_SENTENCES = true`) adds one prompt line after the level instruction and is kept in the New Story draft. It is not saved on stories (that is #76). The style summary mentions it only when turned off.
+- Verification: see the PR; checks run on `6963574`.
+- Not checked: `test:level-check` and `test:dictionary`, which this change cannot affect; whether the line measurably varies rhythm with real Gemini (a 10-story trial showed no clear change in sentence-length spread, but the owner preferred the results).
+- Next action: after approval, push and open the PR with the `open-pr` skill; then #76, then #77, then return to `feat/curated-starter-stories` with the four chosen starters.
 
 ## Ranked work
 
