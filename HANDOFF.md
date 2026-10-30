@@ -4,6 +4,16 @@ Last verified: 2026-10-30 (Asia/Taipei).
 
 ## In progress
 
+### docs/exam-workflow-mockup
+
+- Task: add the designer's exam workflow mockup to `doc/design/exam-workflow-mockup/` as a design reference, with no implementation. No issue; not linked.
+- PR: none yet; awaiting publish approval.
+- Code checkpoint: `99edcc6` on `main` `afaa8f8`.
+- State: committed locally; awaiting push and PR approval.
+- Verification: 2026-10-30, `npm run lint` and `npm run build` passed; the prototype file matches the designer's original byte for byte and renders in the browser pane with no console errors.
+- Not checked: the prototype's interactive flows, since the browser pane shows local files as static snapshots.
+- Next action: after approval, push and open the PR with the `open-pr` skill.
+
 ### feat/curated-starter-stories
 
 - Task: [#27 — Offer curated starter stories without requiring a Gemini API key](https://github.com/pomodorozhong/extensive-reading-assistant/issues/27). Created locally from `main` to carry this handoff; not linked to #27, because it is not yet known whether one PR will fully resolve it.
@@ -11,17 +21,6 @@ Last verified: 2026-10-30 (Asia/Taipei).
 - Code checkpoint: `77eac36` on `main` (no work yet).
 - State: not started. The text types it can cover merged in [#67](https://github.com/pomodorozhong/extensive-reading-assistant/pull/67).
 - Next action: plan the starter stories with the user (which levels and text types, and how the owner reviews the content) before writing code.
-
-### feat/save-generation-request
-
-- Task: [#69 — Save the full generation request with each generated story](https://github.com/pomodorozhong/extensive-reading-assistant/issues/69). Linked to #69; the PR fully resolves it. Done before returning to #27, whose starter stories can use the same record for provenance.
-- PR: none yet; awaiting publish approval.
-- Code checkpoint: `3c6210f` on `main` `77eac36`.
-- State: committed locally; awaiting push and PR approval.
-- Design: `Story.generation` (optional) holds the model, temperature, target word range, and exact system and user prompts; `generateStory` builds it from the same values it sends, and `createGeneratedStory` saves it. No UI change.
-- Verification: 2026-10-30, `npm run lint`, `npm run build`, and `test:generation` (33), `test:cefr` (20), `test:vocabulary` (19), `test:onboarding` (6) passed. In the dev preview with the Gemini fixture, a generated A2, 10-minute story saved the full record with 800–1200 words and no key.
-- Not checked: `test:level-check` and `test:dictionary`, which this change cannot affect.
-- Next action: after approval, push and open the PR with the `open-pr` skill, then return to `feat/curated-starter-stories`.
 
 ## Ranked work
 
