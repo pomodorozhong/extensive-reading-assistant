@@ -22,6 +22,17 @@ Last verified: 2026-10-30 (Asia/Taipei).
 - State: not started. The text types it can cover merged in [#67](https://github.com/pomodorozhong/extensive-reading-assistant/pull/67).
 - Next action: plan the starter stories with the user (which levels and text types, and how the owner reviews the content) before writing code.
 
+### feat/story-generation-details
+
+- Task: [#71 — Show how a story was made in Story View](https://github.com/pomodorozhong/extensive-reading-assistant/issues/71). Linked to #71; the PR fully resolves it. Follows #69 (merged in #70).
+- PR: [#74](https://github.com/pomodorozhong/extensive-reading-assistant/pull/74), open; awaiting review and merge.
+- Code checkpoint: `3b8a624` on `main` `afaa8f8`.
+- State: pushed; `main` (with #72) merged in to resolve a `HANDOFF.md` conflict.
+- Design: `storyDetails` in `src/lib/story-details.ts` builds the rows (level, text type, topic, tone, point of view, reading time, then model, temperature, word target when `generation` exists) and returns null when a story has nothing beyond its level. `StoryGenerationDetails` renders them in a card below the glossary, with prompts in a collapsed `<details>`; Story View skips it for debug fixtures, whose topic only labels them.
+- Verification: 2026-10-30, `npm run lint`, `npm run build`, and `test:generation` (34), `test:cefr` (20), `test:vocabulary` (19), `test:onboarding` (6) passed. In the dev preview at 375px: a fixture-generated story showed all rows and wrapped prompts with no horizontal scroll; a seeded draft showed only its choices and the "not recorded" note; a debug fixture showed no card; no console errors.
+- Not checked: `test:level-check` and `test:dictionary`, which this change cannot affect.
+- Next action: after #74 merges, return to `feat/curated-starter-stories`.
+
 ## Ranked work
 
 1. [#27 — Offer curated starter stories without requiring a Gemini API key](https://github.com/pomodorozhong/extensive-reading-assistant/issues/27) — lets a new reader try the app without a key; needs starter content the owner reviews (Claude can draft one story per level). The text types from [#67](https://github.com/pomodorozhong/extensive-reading-assistant/pull/67) give the starter stories forms to cover.

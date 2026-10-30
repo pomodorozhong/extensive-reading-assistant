@@ -225,6 +225,21 @@ body {
   white-space: pre-wrap;
 }
 
+.story-details-prompts > summary {
+  cursor: pointer;
+  width: fit-content;
+}
+
+.story-details-prompts pre {
+  margin: var(--space-1) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-2);
+  background: var(--gray-a3);
+  font-size: var(--font-size-1);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .settings-form {
   max-width: 36rem;
 }

@@ -6,6 +6,7 @@ import { createGeneratedStory, generateStory, parseGeneratedStory } from '../src
 import { cleanTextType, DEFAULT_MODEL, generationNotes, initialGenerationChoices, lockedTextTypes, TEXT_TYPE_INFO, textTypeLevelRange, textTypesForLevel, TOPIC_EXAMPLES, topicExamples } from '../src/lib/generation-options.ts'
 import { CEFR_LEVELS, TEXT_MODES, TEXT_TYPES } from '../src/types.ts'
 import { clearNewStoryDraft, loadNewStoryDraft, saveNewStoryDraft } from '../src/lib/new-story-draft.ts'
+import { storyDetails } from '../src/lib/story-details.ts'
 import { DEFAULT_SETTINGS, getStory, loadSettings, loadStories, loadVocabulary, saveSettings, trySaveNewStory, upsertStory } from '../src/lib/storage.ts'
 
 const apiKey = 'synthetic-generation-test-key-do-not-send'
@@ -455,4 +456,32 @@ test('loopback fixture endpoints are allowed only when development builds opt in
   for (const base of ['http://127.0.0.2/v1beta', 'ftp://127.0.0.1/v1beta', 'http://a:b@127.0.0.1/v1beta', 'http://localhost.evil.test/v1beta']) {
     assert.equal(checkGeminiEndpoint(base, true).ok, false, base)
   }
+})
+
+test('story details list the saved choices and request, and leave out what was not saved', async (t) => {
+  const requests = mockGemini(t)
+  const submitted = { ...choices, textType: 'fable', tone: 'cozy', readingMinutes: 10 }
+  const story = createGeneratedStory(await generateStory({ ...submitted, settings }), submitted)
+  const details = storyDetails(story)
+  assert.deepEqual(details.rows, [
+    { label: 'Level', value: 'B1' },
+    { label: 'Text type', value: 'Fable' },
+    { label: 'Topic', value: 'A weekend in Tokyo' },
+    { label: 'Tone', value: 'Cozy' },
+    { label: 'Reading time', value: 'About 10 minutes' },
+    { label: 'Model', value: 'Gemini 3.1 Flash Lite' },
+    { label: 'Temperature', value: '0.7' },
+    { label: 'Word target', value: '800–1,200 words' },
+  ])
+  const sent = requests.at(-1).json
+  assert.deepEqual(details.prompts, { system: sent.systemInstruction.parts[0].text, user: sent.contents[0].parts[0].text })
+  assert.ok(!JSON.stringify(details).includes(apiKey))
+
+  const { generation: _, ...older } = story
+  assert.deepEqual(storyDetails(older).rows.map((row) => row.label), ['Level', 'Text type', 'Topic', 'Tone', 'Reading time'])
+  assert.equal(storyDetails(older).prompts, undefined)
+  assert.equal(storyDetails({ ...story, generation: { ...story.generation, model: 'retired-model' } }).rows[5].value, 'retired-model')
+
+  const legacy = JSON.parse(readFileSync(new URL('./fixtures/cefr-stories.json', import.meta.url), 'utf8')).stories[0]
+  assert.equal(storyDetails({ ...legacy, topic: undefined, textType: undefined, readingMinutes: undefined }), null)
 })
