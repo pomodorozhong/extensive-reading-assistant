@@ -17,12 +17,12 @@ Last verified: 2026-10-30 (Asia/Taipei).
 ### feat/save-varied-sentences
 
 - Task: [#76 — Save the varied sentence length choice on each story and show it in Story View](https://github.com/pomodorozhong/extensive-reading-assistant/issues/76). Linked to #76; the PR fully resolves it.
-- PR: none yet.
+- PR: [#79](https://github.com/pomodorozhong/extensive-reading-assistant/pull/79), open; awaiting review and merge.
 - Code checkpoint: `ba33ba6` on `main` `f174636`.
-- State: implemented and committed locally; awaiting approval to push and open the PR (open-pr publish approval).
+- State: pushed; PR open.
 - Verification: 2026-10-30, `npm run lint`, `npm run build`, and all six `test:*` suites passed (generation 36/36). In the browser pane, seeded stories showed **Sentence length: Varied**, **Not requested**, and no row for a story without the field; no console errors.
-- Also on this branch: `2b84ba8` restores the lowercase-word sentence for `test:dictionary` in `doc/development.md`, which was committed on the #66 branch after its PR merged.
-- Next action: after approval, push and open the PR with the `open-pr` skill.
+- Also on this branch: `2b84ba8` restores the lowercase-word sentence for `test:dictionary` in `doc/development.md`. It was committed on the #66 branch after its PR merged, and that branch is now deleted, so this is its only copy.
+- Next action: review and merge #79, then start #77.
 
 ## Ranked work
 
@@ -43,6 +43,6 @@ Last verified: 2026-10-30 (Asia/Taipei).
 
 ## Pending
 
-- **P-21**: delete the remote branch `fix/prefer-common-entry-over-name` once `feat/save-varied-sentences` (PR #79) merges; `2b84ba8` carries its only unmerged change. The user deleted the other 32 merged remote branches on 2026-10-30, and all merged local branches are deleted. Why: deleting remote branches is outward-facing, and the auto-mode safety check blocks it; the user can run it. Blocks: nothing.
+None.
 
 Keep the untracked `.claude/launch.json`: it holds the preview configs used for browser checks.
