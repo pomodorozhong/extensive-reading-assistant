@@ -93,9 +93,11 @@ export function SettingsPage() {
         <p>Customize how reading and exams fit into your routine.</p>
       </div>
 
-      <Flex direction="column" gap="5" className="settings-form card settings-panel">
-        <div>
-          <div className="section-caption">EXAMS</div>
+      <div className="settings-form card settings-panel">
+        <section className="settings-section" aria-labelledby="settings-exams">
+          <h2 id="settings-exams" className="settings-section-title">Exams</h2>
+          <p className="settings-section-desc">Choose whether a short comprehension check follows each story.</p>
+          <div className="settings-items">
           <Text as="label" size="2">
             <Flex align="center" justify="between" gap="4">
               <span>
@@ -111,49 +113,13 @@ export function SettingsPage() {
               />
             </Flex>
           </Text>
-        </div>
+          </div>
+        </section>
 
-        <div>
-          <Text as="div" size="2" weight="medium" mb="1">
-            Install app
-          </Text>
-          <Text as="p" size="2" color="gray" mb="3">
-            Add the reading assistant to your device for quick access.{' '}
-            <Link
-              href="https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/What_is_a_progressive_web_app"
-              target="_blank"
-              rel="noreferrer"
-            >
-              (What is PWA?)
-            </Link>
-          </Text>
-          <Button onClick={handleInstallClick} disabled={installState.isInstalled}>
-            {installState.isInstalled ? 'Installed' : 'Install app'}
-          </Button>
-          {installState.isInstalled && (
-            <Text as="p" size="2" color="gray" mt="2" role="status">
-              This app is installed on this device.
-            </Text>
-          )}
-          {installFeedback && (
-            <Text as="p" size="2" color="gray" mt="2" role="status">
-              {installFeedback}
-            </Text>
-          )}
-          {showInstallInstructions && !installState.isInstalled && (
-            <Callout.Root color="gray" mt="3">
-              <Callout.Icon>
-                <InfoCircledIcon />
-              </Callout.Icon>
-              <Callout.Text>
-                In Chrome or Edge, open the browser menu and choose “Install app” or “Add to Home
-                screen.” On iPhone or iPad, open this page in Safari, tap Share, then choose “Add to
-                Home Screen.”
-              </Callout.Text>
-            </Callout.Root>
-          )}
-        </div>
-
+        <section className="settings-section" aria-labelledby="settings-reading">
+          <h2 id="settings-reading" className="settings-section-title">Reading</h2>
+          <p className="settings-section-desc">Defaults for the stories you generate.</p>
+          <div className="settings-items">
         <div>
           <Flex align="center" gap="2" mb="2">
             <Text as="div" id="settings-level-label" size="2" weight="medium">
@@ -175,7 +141,13 @@ export function SettingsPage() {
             </SegmentedControl.Root>
           </div>
         </div>
+          </div>
+        </section>
 
+        <section className="settings-section" aria-labelledby="settings-gemini">
+          <h2 id="settings-gemini" className="settings-section-title">Gemini</h2>
+          <p className="settings-section-desc">Story and exam questions are written by Google’s Gemini with your own key.</p>
+          <div className="settings-items">
         <div>
           <GeminiKeyField
             id="gemini-api-key"
@@ -230,7 +202,15 @@ export function SettingsPage() {
             </Callout.Text>
           </Callout.Root>
         </div>
-
+        <label>
+          <Text as="div" size="2" weight="medium" mb="1">
+            Model
+          </Text>
+          <TextField.Root
+            value={settings.model}
+            onChange={(event) => patch({ model: event.target.value })}
+          />
+        </label>
         <div>
           <label>
             <Text as="div" size="2" weight="medium" mb="1">
@@ -270,17 +250,53 @@ export function SettingsPage() {
             </Button>
           )}
         </div>
+          </div>
+        </section>
 
-        <label>
+        <section className="settings-section" aria-labelledby="settings-app">
+          <h2 id="settings-app" className="settings-section-title">This app</h2>
+          <p className="settings-section-desc">Install it and revisit the tour.</p>
+          <div className="settings-items">
+        <div>
           <Text as="div" size="2" weight="medium" mb="1">
-            Model
+            Install app
           </Text>
-          <TextField.Root
-            value={settings.model}
-            onChange={(event) => patch({ model: event.target.value })}
-          />
-        </label>
-
+          <Text as="p" size="2" color="gray" mb="3">
+            Add the reading assistant to your device for quick access.{' '}
+            <Link
+              href="https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/What_is_a_progressive_web_app"
+              target="_blank"
+              rel="noreferrer"
+            >
+              (What is PWA?)
+            </Link>
+          </Text>
+          <Button onClick={handleInstallClick} disabled={installState.isInstalled}>
+            {installState.isInstalled ? 'Installed' : 'Install app'}
+          </Button>
+          {installState.isInstalled && (
+            <Text as="p" size="2" color="gray" mt="2" role="status">
+              This app is installed on this device.
+            </Text>
+          )}
+          {installFeedback && (
+            <Text as="p" size="2" color="gray" mt="2" role="status">
+              {installFeedback}
+            </Text>
+          )}
+          {showInstallInstructions && !installState.isInstalled && (
+            <Callout.Root color="gray" mt="3">
+              <Callout.Icon>
+                <InfoCircledIcon />
+              </Callout.Icon>
+              <Callout.Text>
+                In Chrome or Edge, open the browser menu and choose “Install app” or “Add to Home
+                screen.” On iPhone or iPad, open this page in Safari, tap Share, then choose “Add to
+                Home Screen.”
+              </Callout.Text>
+            </Callout.Root>
+          )}
+        </div>
         <div>
           <Text as="div" size="2" weight="medium" mb="1">
             Introduction
@@ -292,9 +308,14 @@ export function SettingsPage() {
             Show the introduction again
           </Button>
         </div>
+          </div>
+        </section>
 
+        <section className="settings-section" aria-labelledby="settings-debug">
+          <h2 id="settings-debug" className="settings-section-title">Debugging</h2>
+          <p className="settings-section-desc">For checking the app; off by default.</p>
+          <div className="settings-items">
         <div>
-          <Text as="div" size="2" weight="medium" mb="2">Debugging</Text>
           <Text as="label" size="2">
             <Flex align="center" gap="2">
               <Switch
@@ -322,7 +343,9 @@ export function SettingsPage() {
             articles in Story View.
           </Text>
         </div>
-      </Flex>
+          </div>
+        </section>
+      </div>
     </Container>
   )
 }

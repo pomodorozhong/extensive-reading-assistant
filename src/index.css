@@ -241,7 +241,43 @@ body {
 }
 
 .settings-form {
+  display: flex;
+  flex-direction: column;
   max-width: 740px;
+}
+
+.settings-section {
+  padding: 26px 0;
+  border-top: 1px solid #e5eaf0;
+}
+
+.settings-section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.settings-section:last-child {
+  padding-bottom: 0;
+}
+
+.settings-section-title {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--gray-12);
+}
+
+.settings-section-desc {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: var(--gray-11);
+}
+
+.settings-items {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
 }
 
 .settings-field-label {
@@ -1354,23 +1390,26 @@ h2.rt-Heading {
 
 /* My Stories */
 .metrics {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-bottom: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin-bottom: 18px;
+  padding: 10px 16px;
+  border: 1px solid #e5eaf0;
+  border-radius: 9px;
+  background: #fafbfd;
 }
 
 .metric {
-  padding: 18px 20px;
-  border: 1px solid #e5eaf0;
-  border-radius: 9px;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
 }
 
 .metric strong {
-  display: block;
-  font-size: 25px;
+  font-size: 18px;
   font-weight: 680;
-  letter-spacing: -0.8px;
+  letter-spacing: -0.4px;
 }
 
 .metric span {
@@ -1942,22 +1981,6 @@ h2.rt-Heading {
     font-size: 29px;
   }
 
-  .metrics {
-    gap: 9px;
-  }
-
-  .metric {
-    padding: 15px 12px;
-  }
-
-  .metric strong {
-    font-size: 23px;
-  }
-
-  .metric span {
-    font-size: 11px;
-  }
-
   .article-body {
     padding: 24px 21px;
   }
@@ -2074,15 +2097,39 @@ h2.rt-Heading {
 }
 
 .group-heading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin: 0 0 12px;
   font-size: 16px;
   letter-spacing: -0.2px;
 }
 
-.group-heading span {
+.group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  color: var(--gray-12);
+  cursor: pointer;
+}
+
+.group-toggle:focus-visible {
+  outline: 3px solid #a0cbff;
+  outline-offset: 2px;
+}
+
+.group-chevron {
+  color: #8793a2;
+  transition: transform 0.15s;
+}
+
+.group-toggle[aria-expanded='false'] .group-chevron {
+  transform: rotate(-90deg);
+}
+
+.group-toggle span {
   padding: 2px 8px;
   border-radius: 99px;
   background: #f1f3f6;

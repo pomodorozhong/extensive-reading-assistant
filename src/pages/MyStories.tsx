@@ -1,5 +1,5 @@
 import { Badge, Button, Container } from '@radix-ui/themes'
-import { ArrowRightIcon } from '@radix-ui/react-icons'
+import { ArrowRightIcon, ChevronDownIcon } from '@radix-ui/react-icons'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { isDebugFixture } from '../lib/debug-fixtures'
@@ -71,6 +71,15 @@ function groupStories(
 export function MyStories() {
   const [grouping, setGrouping] = useState<Grouping>('none')
   const [sorting, setSorting] = useState<Sorting>('newest')
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+
+  function toggleGroup(label: string) {
+    setCollapsed((current) => {
+      const next = new Set(current)
+      if (!next.delete(label)) next.add(label)
+      return next
+    })
+  }
   const stories = loadVisibleStories()
   const progress = loadProgress()
   const ids = new Set(stories.map((story) => story.id))
@@ -146,9 +155,18 @@ export function MyStories() {
           <section key={group.label} aria-label={group.label || undefined} className="story-group">
             {group.label && (
               <h3 className="group-heading">
-                {group.label} <span>{group.stories.length}</span>
+                <button
+                  type="button"
+                  className="group-toggle"
+                  aria-expanded={!collapsed.has(group.label)}
+                  onClick={() => toggleGroup(group.label)}
+                >
+                  <ChevronDownIcon aria-hidden="true" className="group-chevron" />
+                  {group.label} <span>{group.stories.length}</span>
+                </button>
               </h3>
             )}
+          {(!group.label || !collapsed.has(group.label)) && (
           <div className="story-grid">
             {group.stories.map((story) => {
               const done = progress.read.includes(story.id)
@@ -180,6 +198,7 @@ export function MyStories() {
               )
             })}
           </div>
+          )}
           </section>
           ))}
         </>
