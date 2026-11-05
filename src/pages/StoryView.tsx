@@ -178,7 +178,7 @@ function StoryReader({ id }: { id: string | undefined }) {
           {story.textType && <span className="pill">{TEXT_TYPE_INFO[story.textType].label}</span>}
           {story.readingMinutes && <span className="pill">{story.readingMinutes} min</span>}
           <span className={done ? 'pill green' : 'pill'}>{done ? '✓ Read' : 'Not finished'}</span>
-          {isDebugFixture(story.id) && <span className="pill">Debug fixture</span>}
+          {isDebugFixture(story.id) && <span className="pill blue">Example</span>}
           {/* A fixture's topic only labels it as debug content; it was not generated. */}
           {!isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
         </div>

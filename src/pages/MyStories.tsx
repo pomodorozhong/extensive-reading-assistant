@@ -1,4 +1,4 @@
-import { Badge, Button, Container } from '@radix-ui/themes'
+import { Button, Container } from '@radix-ui/themes'
 import { ArrowRightIcon, ChevronDownIcon } from '@radix-ui/react-icons'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -168,7 +168,7 @@ export function MyStories() {
                     {story.textType && <span className="pill">{TEXT_TYPE_INFO[story.textType].label}</span>}
                     {story.readingMinutes && <span className="pill">{story.readingMinutes} min</span>}
                     <span className={done ? 'pill green' : 'pill'}>{done ? '✓ Read' : 'Not finished'}</span>
-                    {isDebugFixture(story.id) && <Badge color="amber">Debug fixture</Badge>}
+                    {isDebugFixture(story.id) && <span className="pill blue">Example</span>}
                   </div>
                   <h3>{story.title}</h3>
                   <p>{preview(story)}</p>

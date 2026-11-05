@@ -18,7 +18,7 @@ export function Vocabulary() {
         <h1>Dictionary</h1>
         <p>
         Words you save while reading stay here even if their stories are removed. Mark a word as known
-        to clear it here and in all visible stories. Debug fixture words appear while fixture
+        to clear it here and in all visible stories. Example story words appear while fixture
         articles are enabled in Settings. CEFR groups are approximate and use the bundled offline
         vocabulary data, independently of each story's level and your Settings level.
         </p>
@@ -77,7 +77,7 @@ export function Vocabulary() {
                                       </Link>
                                     </Text>
                                     {isDebugFixture(source.storyId) && !savedIds.has(source.storyId) && (
-                                      <Badge color="amber">Debug fixture</Badge>
+                                      <Badge color="blue">Example</Badge>
                                     )}
                                   </Flex>
                                 ) : (
