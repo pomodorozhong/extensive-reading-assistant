@@ -1,36 +1,44 @@
-import { Card, DataList, Flex, Heading, Text } from '@radix-ui/themes'
+import { useState } from 'react'
 import { storyDetails } from '../lib/story-details'
 import type { Story } from '../types'
 
+// The header already shows these as its own chips.
+const SHOWN_IN_HEADER = new Set(['Level', 'Text type', 'Reading time'])
+
+/** How a story was made, as chips for the story header's chip row. */
 export function StoryGenerationDetails({ story }: { story: Story }) {
+  const [showPrompts, setShowPrompts] = useState(false)
   const details = storyDetails(story)
   if (!details) return null
+  const rows = details.rows.filter((row) => !SHOWN_IN_HEADER.has(row.label))
+
   return (
-    <Card>
-      <Flex direction="column" gap="3">
-        <Heading as="h2" size="4">How this story was made</Heading>
-        <DataList.Root size="2">
-          {details.rows.map((row) => (
-            <DataList.Item key={row.label}>
-              <DataList.Label minWidth="8rem">{row.label}</DataList.Label>
-              <DataList.Value>{row.value}</DataList.Value>
-            </DataList.Item>
-          ))}
-        </DataList.Root>
-        {details.prompts ? (
-          <details className="story-details-prompts">
-            <summary>Prompts sent to the model</summary>
-            <Text as="p" size="2" weight="medium" mt="2">System prompt</Text>
-            <pre>{details.prompts.system}</pre>
-            <Text as="p" size="2" weight="medium" mt="2">User prompt</Text>
-            <pre>{details.prompts.user}</pre>
-          </details>
-        ) : (
-          <Text as="p" size="2" color="gray">
-            The model and prompt were not recorded for this story.
-          </Text>
-        )}
-      </Flex>
-    </Card>
+    <>
+      {rows.map((row) => (
+        <span key={row.label} className="pill detail">
+          {row.label}: {row.value}
+        </span>
+      ))}
+      {details.prompts ? (
+        <button
+          type="button"
+          className="pill detail pill-button"
+          aria-expanded={showPrompts}
+          onClick={() => setShowPrompts(!showPrompts)}
+        >
+          Prompts {showPrompts ? '▴' : '▾'}
+        </button>
+      ) : (
+        <span className="pill detail">Prompt not recorded</span>
+      )}
+      {details.prompts && showPrompts && (
+        <div className="story-details-prompts">
+          <p>System prompt</p>
+          <pre>{details.prompts.system}</pre>
+          <p>User prompt</p>
+          <pre>{details.prompts.user}</pre>
+        </div>
+      )}
+    </>
   )
 }

@@ -179,6 +179,8 @@ function StoryReader({ id }: { id: string | undefined }) {
           {story.readingMinutes && <span className="pill">{story.readingMinutes} min</span>}
           <span className={done ? 'pill green' : 'pill'}>{done ? '✓ Read' : 'Not finished'}</span>
           {isDebugFixture(story.id) && <span className="pill">Debug fixture</span>}
+          {/* A fixture's topic only labels it as debug content; it was not generated. */}
+          {!isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
         </div>
       </div>
 
@@ -234,8 +236,6 @@ function StoryReader({ id }: { id: string | undefined }) {
             </div>
           </section>
 
-          {/* A fixture's topic only labels it as debug content; it was not generated. */}
-          {!isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
           {settings.showVocabularyReport && <VocabularyReport body={story.body} level={story.level} />}
         </div>
 
