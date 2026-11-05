@@ -2,7 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    # TEMPORARY: the second branch deploys the app redesign preview once. Remove it before merging.
+    branches: [main, claude/app-redesign-mockup-cc1e9f]
   workflow_dispatch:
 
 permissions:
