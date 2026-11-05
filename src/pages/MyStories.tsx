@@ -88,13 +88,25 @@ export function MyStories() {
 
   return (
     <Container size="4" px="4">
-      <div className="page-heading">
+      <div className="page-heading library-heading">
         <div className="eyebrow">YOUR READING LIBRARY</div>
         <h1>My Stories</h1>
-        <p>
-          Open a story, save words to your Dictionary, and finish reading to see the optional
-          comprehension check. Saved stories stay on this device.
-        </p>
+        {stories.length > 0 && (
+          <p className="library-stats">
+            <span>
+              <strong>{stories.length}</strong> {stories.length === 1 ? 'story' : 'stories'}
+            </span>
+            <span>
+              <strong>{completed}</strong> completed
+            </span>
+            <span>
+              <strong>{savedWords}</strong> saved {savedWords === 1 ? 'word' : 'words'}
+            </span>
+            <Link to="/exam" className="text-button">
+              Take a vocabulary exam <ArrowRightIcon aria-hidden="true" />
+            </Link>
+          </p>
+        )}
       </div>
 
       {stories.length === 0 ? (
@@ -106,28 +118,6 @@ export function MyStories() {
         </div>
       ) : (
         <>
-          <div className="metrics">
-            <div className="metric">
-              <strong>{stories.length}</strong>
-              <span>Stories in library</span>
-            </div>
-            <div className="metric">
-              <strong>{completed}</strong>
-              <span>Completed stories</span>
-            </div>
-            <div className="metric">
-              <strong>{savedWords}</strong>
-              <span>Saved dictionary words</span>
-            </div>
-          </div>
-
-          <div className="section-head">
-            <h2>All stories</h2>
-            <Link to="/exam" className="text-button">
-              Go to vocabulary Exam <ArrowRightIcon aria-hidden="true" />
-            </Link>
-          </div>
-
           <div className="filter-row">
             <label className="chip-select">
               <span>Group</span>
@@ -183,7 +173,7 @@ export function MyStories() {
                   <h3>{story.title}</h3>
                   <p>{preview(story)}</p>
                   <div className="tile-actions">
-                    <Button asChild size="3">
+                    <Button asChild size="2" variant="soft">
                       <Link to={`/stories/${story.id}`}>
                         {done ? 'Read again' : 'Read story'} <ArrowRightIcon aria-hidden="true" />
                       </Link>

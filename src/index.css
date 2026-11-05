@@ -1187,10 +1187,6 @@ h2.rt-Heading {
   gap: 15px;
 }
 
-.story-grid > .rt-Card {
-  --card-padding: 24px;
-}
-
 .story-grid .card-link {
   height: 100%;
 }
@@ -1389,53 +1385,10 @@ h2.rt-Heading {
 }
 
 /* My Stories */
-.metrics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 28px;
-  margin-bottom: 18px;
-  padding: 10px 16px;
-  border: 1px solid #e5eaf0;
-  border-radius: 9px;
-  background: #fafbfd;
-}
-
-.metric {
-  display: flex;
-  align-items: baseline;
-  gap: 7px;
-}
-
-.metric strong {
-  font-size: 18px;
-  font-weight: 680;
-  letter-spacing: -0.4px;
-}
-
-.metric span {
-  font-size: 12.5px;
-  color: var(--gray-11);
-}
-
-.section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 30px 0 16px;
-}
-
-.section-head h2 {
-  margin: 0;
-  font-size: 21px;
-  letter-spacing: -0.65px;
-}
-
 .story-tile {
   display: flex;
   flex-direction: column;
-  min-height: 228px;
-  padding: 24px;
+  padding: 20px 22px;
 }
 
 .tile-meta {
@@ -1454,7 +1407,7 @@ h2.rt-Heading {
 }
 
 .story-tile p {
-  margin: 0 0 19px;
+  margin: 0 0 16px;
   font-size: 13.5px;
   line-height: 1.55;
   color: var(--gray-11);
@@ -2136,4 +2089,33 @@ h2.rt-Heading {
   font-size: 11px;
   font-weight: 600;
   color: #748197;
+}
+
+/* My Stories heading carries the stats, replacing the separate stats box */
+.library-heading {
+  padding-bottom: 18px;
+}
+
+.library-heading h1 {
+  margin-bottom: 12px;
+}
+
+.library-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 20px;
+  max-width: none;
+  font-size: 14px;
+  color: var(--gray-11);
+}
+
+.library-stats strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gray-12);
+}
+
+.library-stats .text-button {
+  margin-left: auto;
 }
