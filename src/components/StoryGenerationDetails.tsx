@@ -9,7 +9,7 @@ export function StoryGenerationDetails({ story }: { story: Story }) {
   return (
     <>
       {rows.map((row) => (
-        <span key={row.label} className="pill detail">
+        <span key={row.label} className="pill">
           {row.label}: {row.value}
         </span>
       ))}

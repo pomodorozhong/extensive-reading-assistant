@@ -2104,9 +2104,3 @@ h2.rt-Heading {
 .library-stats .text-button {
   margin-left: auto;
 }
-
-/* "How this story was made" chips in the Story View header */
-.pill.detail {
-  border-style: dashed;
-  background: #fff;
-}
