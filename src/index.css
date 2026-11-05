@@ -225,16 +225,6 @@ body {
   white-space: pre-wrap;
 }
 
-.story-details-prompts pre {
-  margin: var(--space-1) 0 0;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-2);
-  background: var(--gray-a3);
-  font-size: var(--font-size-1);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
 .settings-form {
   display: flex;
   flex-direction: column;
@@ -2119,26 +2109,4 @@ h2.rt-Heading {
 .pill.detail {
   border-style: dashed;
   background: #fff;
-}
-
-.pill-button {
-  font: inherit;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.pill-button:hover {
-  border-color: #cae5ff;
-  color: #0874d6;
-}
-
-.meta .story-details-prompts {
-  flex: 0 0 100%;
-  margin-top: 6px;
-}
-
-.story-details-prompts p {
-  margin: 8px 0 0;
-  font-size: 12.5px;
-  font-weight: 600;
 }
