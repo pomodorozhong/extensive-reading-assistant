@@ -17,7 +17,7 @@ type Grouping = 'none' | 'level' | 'status' | 'type'
 type Sorting = 'newest' | 'oldest' | 'title' | 'level'
 
 const GROUPINGS: Array<[Grouping, string]> = [
-  ['none', 'No grouping'],
+  ['none', 'None'],
   ['level', 'Level'],
   ['status', 'Status'],
   ['type', 'Text type'],
@@ -119,33 +119,27 @@ export function MyStories() {
             </Link>
           </div>
 
-          <div className="filter-row" role="group" aria-label="Group stories by">
-            <span className="filter-label">Group by</span>
-            {GROUPINGS.map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                className={grouping === value ? 'chip-button active' : 'chip-button'}
-                aria-pressed={grouping === value}
-                onClick={() => setGrouping(value)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="filter-row" role="group" aria-label="Sort stories by">
-            <span className="filter-label">Sort by</span>
-            {SORTINGS.map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                className={sorting === value ? 'chip-button active' : 'chip-button'}
-                aria-pressed={sorting === value}
-                onClick={() => setSorting(value)}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="filter-row">
+            <label className="chip-select">
+              <span>Group</span>
+              <select value={grouping} onChange={(event) => setGrouping(event.target.value as Grouping)}>
+                {GROUPINGS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="chip-select">
+              <span>Sort</span>
+              <select value={sorting} onChange={(event) => setSorting(event.target.value as Sorting)}>
+                {SORTINGS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           {groupStories(sortStories(stories, sorting), grouping, new Set(progress.read)).map((group) => (

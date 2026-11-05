@@ -2029,47 +2029,44 @@ h2.rt-Heading {
 /* My Stories grouping and sorting chips */
 .filter-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 9px;
-  margin: 0 0 12px;
+  gap: 8px;
+  margin: 0 0 6px;
 }
 
-.filter-label {
-  min-width: 64px;
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: #8793a2;
-}
-
-.chip-button {
-  padding: 9px 13px;
+.chip-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px 0 11px;
   border: 1px solid #e2e7ef;
-  border-radius: 7px;
+  border-radius: 99px;
   background: #fff;
-  font: inherit;
   font-size: 12.5px;
-  color: #66758a;
-  cursor: pointer;
+  color: #8793a2;
+  white-space: nowrap;
 }
 
-.chip-button:hover {
+.chip-select:hover {
   border-color: #cae5ff;
-  color: #0874d6;
 }
 
-.chip-button.active {
-  border-color: #cae5ff;
-  background: #e8f3ff;
-  font-weight: 600;
-  color: #0874d6;
-}
-
-.chip-button:focus-visible {
+.chip-select:focus-within {
   outline: 3px solid #a0cbff;
   outline-offset: 2px;
+}
+
+.chip-select select {
+  padding: 7px 2px 7px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  color: #0874d6;
+  cursor: pointer;
+  outline: none;
 }
 
 .story-group {
