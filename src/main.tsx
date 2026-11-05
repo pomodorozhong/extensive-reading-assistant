@@ -8,7 +8,7 @@ import './index.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Theme appearance="light" accentColor="blue" radius="medium" scaling="100%">
+    <Theme appearance="light" accentColor="blue" radius="medium" panelBackground="solid" scaling="100%">
       <HashRouter>
         <App />
       </HashRouter>

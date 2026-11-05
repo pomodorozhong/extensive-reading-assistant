@@ -1,55 +1,41 @@
-import { ArrowLeftIcon } from '@radix-ui/react-icons'
-import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
+import { ArrowLeftIcon, ArrowRightIcon, Cross2Icon } from '@radix-ui/react-icons'
+import { Button, Container, Heading, Spinner, Text } from '@radix-ui/themes'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { StoryGenerationDetails } from '../components/StoryGenerationDetails'
 import { VocabularyReport } from '../components/VocabularyReport'
 import { isDebugFixture } from '../lib/debug-fixtures'
 import { lookupDefinition, preloadShards } from '../lib/dictionary'
 import { TEXT_TYPE_INFO } from '../lib/generation-options'
+import { loadProgress, markStoryRead } from '../lib/progress'
 import { getStory, loadSettings, updateWordExplanation, updateWordMark } from '../lib/storage'
 import { tokenize } from '../lib/tokenize'
 import type { Story } from '../types'
 
 export function StoryView() {
   const { id } = useParams()
-  // A new key starts the page fresh, so lookups and the open note never carry over between stories.
+  // A new key starts the page fresh, so lookups and the selected word never carry over between stories.
   return <StoryReader key={id} id={id} />
 }
 
 function StoryReader({ id }: { id: string | undefined }) {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [story, setStory] = useState<Story | undefined>(() => (id ? getStory(id) : undefined))
-  const [showVocabularyReport] = useState(() => loadSettings().showVocabularyReport)
+  const [settings] = useState(() => loadSettings())
+  const [progress, setProgress] = useState(() => loadProgress())
   // A lookup is 'pending' for its first moments and 'slow' once it is worth a spinner.
   const [loadingKeys, setLoadingKeys] = useState<Record<string, 'pending' | 'slow'>>({})
   const [lookupErrors, setLookupErrors] = useState<Record<string, string>>({})
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
-  const [tallNoteIndex, setTallNoteIndex] = useState<number | null>(null)
   const pendingLookups = useRef(new Set<string>())
   const storyRef = useRef(story)
-  const bodyRef = useRef<HTMLDivElement>(null)
-  const noteRef = useRef<HTMLSpanElement>(null)
-  const noteSpaceRef = useRef<HTMLSpanElement>(null)
   const tokens = useMemo(() => tokenize(story?.body ?? ''), [story?.body])
   const activeToken = activeIndex === null ? undefined : tokens[activeIndex]
   const activeKey = activeToken?.type === 'word' ? activeToken.key : undefined
-  const explanation = activeKey ? story?.explanations[activeKey] : undefined
-  const error = activeKey ? lookupErrors[activeKey] : undefined
-  const loading = activeKey ? loadingKeys[activeKey] : undefined
-  // The note stays closed while a lookup is pending, so a fast lookup opens it once,
-  // with the definition already in place.
-  const noteOpen = loading !== 'pending'
-  // Once a note has shown the spinner, it keeps a two-line minimum so a short
-  // definition replacing the spinner does not move the text again.
-  if (loading === 'slow' && tallNoteIndex !== activeIndex) {
-    setTallNoteIndex(activeIndex)
-  }
 
-  const unknownEntries = useMemo(() => {
-    if (!story) {
-      return []
-    }
+  const savedEntries = useMemo(() => {
+    if (!story) return []
     const seen = new Set<string>()
     const entries: Array<{ key: string; sample: string; index: number }> = []
     tokens.forEach((token, index) => {
@@ -89,40 +75,13 @@ function StoryReader({ id }: { id: string | undefined }) {
     return preloadShards(keys)
   }, [tokens])
 
-  useLayoutEffect(() => {
-    if (activeIndex === null || !noteOpen) return
-    const body = bodyRef.current
-    const note = noteRef.current
-    const space = noteSpaceRef.current
-    const word = document.getElementById(`word-${activeIndex}`)
-    if (!body || !note || !space || !word) return
-
-    function positionNote() {
-      if (!body || !note || !space || !word) return
-      const wordRect = word.getBoundingClientRect()
-      const bodyRect = body.getBoundingClientRect()
-      // A zero-width spacer extends the line below its baseline. The note is
-      // positioned separately so it cannot change which words fit on that line.
-      space.style.height = `${wordRect.height + note.getBoundingClientRect().height + 4}px`
-      note.style.top = `${wordRect.bottom - bodyRect.top + 2}px`
-      note.style.visibility = 'visible'
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setActiveIndex(null)
     }
-
-    positionNote()
-    let frame = 0
-    const observer = new ResizeObserver(() => {
-      // Updating the spacer also resizes the body. Defer those writes to avoid
-      // changing an observed element during the observer's delivery cycle.
-      cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(positionNote)
-    })
-    observer.observe(body)
-    observer.observe(note)
-    return () => {
-      observer.disconnect()
-      cancelAnimationFrame(frame)
-    }
-  }, [activeIndex, noteOpen])
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   if (!story) {
     return (
@@ -141,9 +100,7 @@ function StoryReader({ id }: { id: string | undefined }) {
   }
 
   async function lookupWord(key: string, currentStory: Story, showSpinnerNow = false) {
-    if (currentStory.explanations[key] || pendingLookups.current.has(key)) {
-      return
-    }
+    if (currentStory.explanations[key] || pendingLookups.current.has(key)) return
 
     pendingLookups.current.add(key)
     setLoadingKeys((keys) => ({ ...keys, [key]: showSpinnerNow ? 'slow' : 'pending' }))
@@ -167,9 +124,7 @@ function StoryReader({ id }: { id: string | undefined }) {
     })
 
     const latest = storyRef.current
-    if (!latest || latest.id !== currentStory.id || latest.wordMarks[key] !== 'unknown') {
-      return
-    }
+    if (!latest || latest.id !== currentStory.id) return
 
     if (!result.ok) {
       setLookupErrors((errors) => ({ ...errors, [key]: result.message }))
@@ -183,216 +138,189 @@ function StoryReader({ id }: { id: string | undefined }) {
     }
   }
 
-  function openWord(key: string, index: number) {
+  function selectWord(key: string, index: number) {
     const latest = storyRef.current
-    if (!latest) {
-      return
-    }
-
-    const next =
-      latest.wordMarks[key] === 'unknown'
-        ? latest
-        : updateWordMark(latest.id, key, 'unknown')
-    if (!next) {
-      return
-    }
-    storyRef.current = next
-    setStory(next)
+    if (!latest) return
     setActiveIndex(index)
-    void lookupWord(key, next)
+    void lookupWord(key, latest)
   }
 
-  function closeNote() {
-    if (activeIndex !== null) {
-      document.getElementById(`word-${activeIndex}`)?.focus({ preventScroll: true })
-    }
-    setActiveIndex(null)
-  }
-
-  function markKnown(key: string) {
-    const latest = storyRef.current
-    if (!latest || latest.wordMarks[key] !== 'unknown') return
-    const next = updateWordMark(latest.id, key, 'known')
+  function setSaved(key: string, saved: boolean) {
+    const next = updateWordMark(story!.id, key, saved ? 'unknown' : undefined)
     if (!next) return
-    const activeToken = activeIndex === null ? undefined : tokens[activeIndex]
-    if (activeToken?.type === 'word' && activeToken.key === key) closeNote()
     storyRef.current = next
     setStory(next)
   }
+
+  function finishReading() {
+    markStoryRead(story!.id)
+    setProgress(loadProgress())
+    if (settings.offerExamAfterStory) navigate(`/stories/${story!.id}/exam`)
+    else navigate('/stories')
+  }
+
+  const done = progress.read.includes(story.id)
+  const previousResult = progress.readingResults[story.id]
+  const selectedDefinition = activeKey ? story.explanations[activeKey] : undefined
+  const selectedError = activeKey ? lookupErrors[activeKey] : undefined
+  const selectedLoading = activeKey ? loadingKeys[activeKey] : undefined
+  const selectedSaved = activeKey ? story.wordMarks[activeKey] === 'unknown' : false
 
   return (
-    <Container size="3" px="4">
-      <Flex direction="column" gap="4">
+    <div className="container">
+      <div className="reader-top">
+        <Link to="/stories" className="back-link">
+          <ArrowLeftIcon aria-hidden="true" /> My Stories
+        </Link>
+        <h1>{story.title}</h1>
+        <div className="meta">
+          <span className="pill">{story.level}</span>
+          {story.textType && <span className="pill">{TEXT_TYPE_INFO[story.textType].label}</span>}
+          {story.readingMinutes && <span className="pill">{story.readingMinutes} min</span>}
+          <span className={done ? 'pill green' : 'pill'}>{done ? '✓ Read' : 'Not finished'}</span>
+          {isDebugFixture(story.id) && <span className="pill">Debug fixture</span>}
+        </div>
+      </div>
+
+      <div className="reading-layout">
         <div>
-          <Button asChild variant="ghost" size="2" mb="3">
-            <Link to="/stories">
-              <ArrowLeftIcon />
-              My Stories
-            </Link>
-          </Button>
-          <Flex align="center" gap="2" wrap="wrap" mb="2">
-            <Heading size="7">{story.title}</Heading>
-            <Badge color="blue">{story.level}</Badge>
-            {story.textType && <Badge color="gray">{TEXT_TYPE_INFO[story.textType].label}</Badge>}
-            {isDebugFixture(story.id) && <Badge color="amber">Debug fixture</Badge>}
-          </Flex>
-          <Text as="p" size="2" color="gray">
-            Tap a word when you need a definition. Looked-up words are highlighted until you
-            mark them as known.
-          </Text>
-        </div>
-
-        <div className="story-body" ref={bodyRef}>
-          {tokens.map((token, index) => {
-            if (token.type !== 'word') {
-              return <span key={`other-${index}`}>{token.value}</span>
-            }
-
-            const mark = story.wordMarks[token.key]
-            const className = mark === 'unknown' ? 'story-word unknown' : 'story-word'
-            const isActive = activeIndex === index
-            const showGloss = isActive && noteOpen
-
-            return (
-              <span key={`word-${index}`}>
-                <button
-                  type="button"
-                  id={`word-${index}`}
-                  className={className}
-                  onClick={() => {
-                    if (isActive) {
-                      closeNote()
-                    } else {
-                      openWord(token.key, index)
-                    }
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Escape' && isActive) {
-                      event.preventDefault()
-                      closeNote()
-                    }
-                  }}
-                  aria-label={`Look up ${token.value}`}
-                  aria-expanded={showGloss}
-                  aria-controls={showGloss ? `gloss-${index}` : undefined}
-                >
-                  {token.value}
-                </button>
-                {showGloss && (
-                  <span className="story-note-space" ref={noteSpaceRef} aria-hidden="true" />
-                )}
-                {showGloss && (
-                  <span
-                    className={tallNoteIndex === index ? 'inline-gloss inline-gloss-tall' : 'inline-gloss'}
-                    ref={noteRef}
-                    id={`gloss-${activeIndex}`}
-                    role="note"
-                    aria-label={`Definition of ${token.value}`}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Escape') {
-                        event.preventDefault()
-                        closeNote()
-                      }
-                    }}
+          <article className="card article-body">
+            <div className="story-body">
+              {tokens.map((token, index) => {
+                if (token.type !== 'word') return <span key={`other-${index}`}>{token.value}</span>
+                const classes = ['story-word']
+                if (story.wordMarks[token.key] === 'unknown') classes.push('unknown')
+                if (activeIndex === index) classes.push('active')
+                return (
+                  <button
+                    key={`word-${index}`}
+                    type="button"
+                    id={`word-${index}`}
+                    className={classes.join(' ')}
+                    aria-label={`Look up ${token.value}`}
+                    aria-pressed={activeIndex === index}
+                    onClick={() => (activeIndex === index ? setActiveIndex(null) : selectWord(token.key, index))}
                   >
-                    <span className="inline-gloss-word">{token.value}: </span>
-                    <span className="inline-gloss-body" aria-live="polite">
-                      {loading ? (
-                        <><Spinner size="1" /> Looking up…</>
-                      ) : (
-                        error ?? explanation ?? 'No definition saved.'
-                      )}
-                    </span>
-                    <span className="inline-gloss-actions">
-                      {loading ? (
-                        // Holds Retry's place so the row wraps the same way if the lookup fails.
-                        <span className="gloss-action gloss-action-placeholder" aria-hidden="true">
-                          Retry
-                        </span>
-                      ) : error && (
-                        <button
-                          type="button"
-                          className="gloss-action"
-                          onClick={() => {
-                            const latest = storyRef.current
-                            if (latest) {
-                              void lookupWord(token.key, latest, true)
-                            }
-                          }}
-                        >
-                          Retry
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        className="gloss-action"
-                        onClick={() => markKnown(token.key)}
-                      >
-                        Mark as known
-                      </button>
-                      <button type="button" className="gloss-action" onClick={closeNote}>
-                        Close
-                      </button>
-                    </span>
-                  </span>
-                )}
+                    {token.value}
+                  </button>
+                )
+              })}
+            </div>
+          </article>
+
+          <section className="end-card">
+            <div className="eyebrow">YOU’VE REACHED THE END</div>
+            <h2>Finished reading?</h2>
+            <p>
+              {settings.offerExamAfterStory
+                ? 'Finishing this story will open a short reading comprehension exam. You can skip the exam at any time.'
+                : 'Finish this story and return to your library. The automatic reading exam prompt is turned off in Settings.'}
+            </p>
+            <div className="end-actions">
+              <Button type="button" size="3" onClick={finishReading}>
+                Finish reading <ArrowRightIcon aria-hidden="true" />
+              </Button>
+              {previousResult && (
+                <Button asChild size="3" variant="outline" color="gray">
+                  <Link to={`/stories/${story.id}/exam?result=1`}>
+                    View previous result ({previousResult.score}/{previousResult.total})
+                  </Link>
+                </Button>
+              )}
+              <span className="end-note">
+                Reading exam after each story: {settings.offerExamAfterStory ? 'On' : 'Off'} ·{' '}
+                <Link to="/settings">Change in Settings</Link>
               </span>
-            )
-          })}
+            </div>
+          </section>
+
+          {/* A fixture's topic only labels it as debug content; it was not generated. */}
+          {!isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
+          {settings.showVocabularyReport && <VocabularyReport body={story.body} level={story.level} />}
         </div>
 
-        {unknownEntries.length > 0 && (
-          <Card className="glossary">
-            <Heading size="4" mb="3">
-              Unknown words
-            </Heading>
-            <Flex direction="column" gap="3">
-              {unknownEntries.map((entry) => (
-                <Flex key={entry.key} gap="3" align="start" justify="between">
+        <aside className="reader-side" aria-label="Words in this story">
+          {activeKey && activeToken?.type === 'word' && (
+            <section className="card side-panel word-lookup" role="status" aria-live="polite">
+              <button type="button" className="word-close" aria-label="Close definition" onClick={() => setActiveIndex(null)}>
+                <Cross2Icon aria-hidden="true" />
+              </button>
+              <h3>{activeToken.value}</h3>
+              <p className="word-definition">
+                {selectedLoading === 'slow' ? (
+                  <>
+                    <Spinner size="1" /> Looking up…
+                  </>
+                ) : selectedLoading === 'pending' ? (
+                  ' '
+                ) : (
+                  (selectedError ?? selectedDefinition ?? 'No definition saved.')
+                )}
+              </p>
+              <div className="word-actions">
+                <Button
+                  type="button"
+                  size="2"
+                  variant={selectedSaved ? 'soft' : 'solid'}
+                  onClick={() => setSaved(activeKey, !selectedSaved)}
+                >
+                  {selectedSaved ? '✓ Saved' : '＋ Save word'}
+                </Button>
+                {selectedError && (
+                  <Button
+                    type="button"
+                    size="2"
+                    variant="outline"
+                    color="gray"
+                    onClick={() => void lookupWord(activeKey, story, true)}
+                  >
+                    Retry
+                  </Button>
+                )}
+              </div>
+              <p className="side-note">
+                {selectedSaved ? 'Saved to Dictionary.' : 'Save this word to study it in Exam.'}
+              </p>
+            </section>
+          )}
+
+          <section className="card side-panel">
+            <h3>Words in this story</h3>
+            {savedEntries.length === 0 ? (
+              <p>Click a word in the article for its meaning. Save only the words you want to study later.</p>
+            ) : (
+              savedEntries.map((entry) => (
+                <div key={entry.key} className="vocab-mini">
                   <button
                     type="button"
-                    className="glossary-item"
+                    className="vocab-mini-word"
                     aria-label={`Go to ${entry.sample} in the story`}
                     onClick={() => {
-                      openWord(entry.key, entry.index)
+                      selectWord(entry.key, entry.index)
                       requestAnimationFrame(() => {
                         const word = document.getElementById(`word-${entry.index}`)
                         word?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                        word?.focus({ preventScroll: true })
                       })
                     }}
                   >
-                    <Text weight="medium" size="2">
-                      {entry.sample}
-                    </Text>
-                    <span className="glossary-definition">
-                      {loadingKeys[entry.key] === 'pending' ? (
-                        '\u00a0'
-                      ) : loadingKeys[entry.key] === 'slow' ? (
-                        <><Spinner size="1" /> Looking up…</>
-                      ) : (
-                        lookupErrors[entry.key] ?? story.explanations[entry.key] ??
-                        'Tap to look up a definition.'
-                      )}
-                    </span>
+                    {entry.sample}
                   </button>
+                  <span>{story.explanations[entry.key] ?? 'Click the word to look up a definition.'}</span>
                   <button
                     type="button"
-                    className="gloss-action glossary-known"
-                    aria-label={`Mark ${entry.sample} as known`}
-                    onClick={() => markKnown(entry.key)}
+                    className="gloss-action"
+                    aria-label={`Remove ${entry.sample} from saved words`}
+                    onClick={() => setSaved(entry.key, false)}
                   >
-                    Mark as known
+                    Remove
                   </button>
-                </Flex>
-              ))}
-            </Flex>
-          </Card>
-        )}
-        {/* A fixture's topic only labels it as debug content; it was not generated. */}
-        {!isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
-        {showVocabularyReport && <VocabularyReport body={story.body} level={story.level} />}
-      </Flex>
-    </Container>
+                </div>
+              ))
+            )}
+            <p className="side-note">Saved words appear in Dictionary and can be used in Exam.</p>
+          </section>
+        </aside>
+      </div>
+    </div>
   )
 }

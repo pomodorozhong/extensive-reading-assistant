@@ -34,11 +34,11 @@ export type GenerateResult =
   | { ok: true; title: string; body: string; generation: StoryGeneration }
   | { ok: false; message: string; canceled?: true }
 
-type GeminiTextResult = { ok: true; text: string } | { ok: false; message: string; canceled?: true }
+export type GeminiTextResult = { ok: true; text: string } | { ok: false; message: string; canceled?: true }
 
 const CANCELED: GeminiTextResult = { ok: false, message: 'Story generation was canceled.', canceled: true }
 
-async function callGemini(
+export async function callGemini(
   settings: Settings,
   options: { system: string; user: string; temperature: number; model: GenerationModel; signal?: AbortSignal },
 ): Promise<GeminiTextResult> {

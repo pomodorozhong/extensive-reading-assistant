@@ -18,6 +18,8 @@ Run `npm run test:dictionary` to check that inflected words such as *met*, *chil
 
 ## Verify generation without a live API
 
+Run `npm run test:exam` for the exam question parsing and vocabulary question building.
+
 Run `npm run test:generation` for mocked request, parsing, persistence, legacy-story, and credential-exclusion checks. No Google requests are made by these tests.
 
 The generation tests give each test a fresh in-memory `localStorage` Map and replace `fetch` with a controlled response. Reuse this pattern for draft and recovery checks so tests stay isolated and cannot send a real provider request.
@@ -45,6 +47,6 @@ This repo deploys the production build with GitHub Actions. Hash-based routes (`
 2. In the GitHub repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 3. After the workflow succeeds, the site is at `https://<user>.github.io/<repo>/`.
 
-Every pull request runs the **Checks** workflow: `npm run lint`, `npm run build`, and the six `test:*` suites. Run all six locally before pushing, even ones that look unrelated: `test:level-check` also builds New Story drafts, so a new generation choice can break it. A deploy runs the same checks first and stops if any fail. Third-party actions are pinned to full commit hashes, and Dependabot proposes updates to them weekly. To block merging until the checks pass, require the **Checks** status in a branch ruleset for `main` (a repository setting, not part of this code).
+Every pull request runs the **Checks** workflow: `npm run lint`, `npm run build`, and the seven `test:*` suites. Run all seven locally before pushing, even ones that look unrelated: `test:level-check` also builds New Story drafts, so a new generation choice can break it. A deploy runs the same checks first and stops if any fail. Third-party actions are pinned to full commit hashes, and Dependabot proposes updates to them weekly. To block merging until the checks pass, require the **Checks** status in a branch ruleset for `main` (a repository setting, not part of this code).
 
 To override the asset base path, set `VITE_BASE` (for example `/` for a custom domain at the site root).

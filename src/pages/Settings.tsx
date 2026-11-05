@@ -4,7 +4,6 @@ import {
   Callout,
   Container,
   Flex,
-  Heading,
   Link,
   SegmentedControl,
   Switch,
@@ -80,7 +79,7 @@ export function SettingsPage() {
   }
 
   return (
-    <Container size="2" px="4">
+    <Container size="3" px="4">
       {fromNewStory && (
         <Button asChild variant="soft" mb="4">
           <RouterLink to="/new">
@@ -88,14 +87,32 @@ export function SettingsPage() {
           </RouterLink>
         </Button>
       )}
-      <Heading size="7" mb="2">
-        Settings
-      </Heading>
-      <Text as="p" color="gray" mb="5">
-        Your CEFR level defaults to A2 for New Story.
-      </Text>
+      <div className="page-heading">
+        <div className="eyebrow">PREFERENCES</div>
+        <h1>Settings</h1>
+        <p>Customize how reading and exams fit into your routine.</p>
+      </div>
 
-      <Flex direction="column" gap="5" className="settings-form">
+      <Flex direction="column" gap="5" className="settings-form card settings-panel">
+        <div>
+          <div className="section-caption">EXAMS</div>
+          <Text as="label" size="2">
+            <Flex align="center" justify="between" gap="4">
+              <span>
+                <Text as="div" size="3" weight="bold">Offer an exam after each story</Text>
+                <Text as="div" color="gray" mt="1">
+                  When on, finishing a story takes you to a short reading comprehension exam, which
+                  you can skip. When off, finishing a story simply marks it as read.
+                </Text>
+              </span>
+              <Switch
+                checked={settings.offerExamAfterStory}
+                onCheckedChange={(checked) => patch({ offerExamAfterStory: checked })}
+              />
+            </Flex>
+          </Text>
+        </div>
+
         <div>
           <Text as="div" size="2" weight="medium" mb="1">
             Install app

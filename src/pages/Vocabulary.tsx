@@ -12,17 +12,20 @@ export function Vocabulary() {
   const sections = groupVocabularyByLevel(words)
 
   return (
-    <Container size="2" px="4">
-      <Heading size="7" mb="2">Vocabulary</Heading>
-      <Text as="p" color="gray" mb="5">
-        Words you are learning stay here even if their stories are removed. Mark a word as known
+    <Container size="3" px="4">
+      <div className="page-heading">
+        <div className="eyebrow">MY PERSONAL WORD BANK</div>
+        <h1>Dictionary</h1>
+        <p>
+        Words you save while reading stay here even if their stories are removed. Mark a word as known
         to clear it here and in all visible stories. Debug fixture words appear while fixture
         articles are enabled in Settings. CEFR groups are approximate and use the bundled offline
         vocabulary data, independently of each story's level and your Settings level.
-      </Text>
+        </p>
+      </div>
       {words.length === 0 ? (
         <Flex direction="column" gap="3" align="start">
-          <Text>No unknown words yet. Look up a word while reading to add it here.</Text>
+          <Text>No unknown words yet. Save a word while reading to add it here.</Text>
           <Button asChild><Link to="/stories">Open My Stories</Link></Button>
         </Flex>
       ) : (

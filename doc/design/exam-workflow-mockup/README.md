@@ -1,6 +1,6 @@
 # Exam workflow mockup
 
-Design reference only: nothing here is implemented in the app.
+The app now follows this design: header and navigation, My Stories, Story View with a side panel and end card, the reading and vocabulary exams, and Settings. The Dictionary page keeps its existing layout, as the designer asked, and the demo-only items (sample data, **Reset demo progress**, API key preview) are not part of the app. Questions come from Gemini for stories, and from the dictionary data for vocabulary.
 
 [`exam-workflow-prototype.html`](exam-workflow-prototype.html) is an interactive prototype from the designer, 啟平, received in October 2026. To try it, download the file and open it in a browser. It runs offline with sample stories and questions, needs no Gemini key, and keeps its demo progress in `localStorage` under its own key (**Settings → Reset demo progress** clears it).
 
