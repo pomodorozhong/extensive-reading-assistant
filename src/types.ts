@@ -48,6 +48,8 @@ export type Settings = {
   model: string
   showDebugFixtures: boolean
   showVocabularyReport: boolean
+  /** Open a short reading comprehension exam when the reader finishes a story. */
+  offerExamAfterStory: boolean
 }
 
 /** What was sent to the model, saved so a story's origin stays known after the prompt code changes. */

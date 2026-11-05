@@ -21,6 +21,7 @@ export const DEFAULT_SETTINGS: Settings = {
   model: DEFAULT_MODEL,
   showDebugFixtures: false,
   showVocabularyReport: false,
+  offerExamAfterStory: true,
 }
 
 function isCefrLevel(value: unknown): value is CefrLevel {
@@ -61,6 +62,7 @@ export function loadSettings(): Settings {
       rememberApiKey,
       showDebugFixtures: parsed.showDebugFixtures === true,
       showVocabularyReport: parsed.showVocabularyReport === true,
+      offerExamAfterStory: parsed.offerExamAfterStory !== false,
       apiBaseUrl:
         !legacyOpenAi && typeof parsed.apiBaseUrl === 'string' && parsed.apiBaseUrl.trim()
           ? parsed.apiBaseUrl

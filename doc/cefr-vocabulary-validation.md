@@ -272,7 +272,7 @@ Enable **Settings → Debugging → Show CEFR fixture articles in My Stories** t
 
 [`storage.ts`](../src/lib/storage.ts) exposes `loadVisibleStories()` to combine saved stories with enabled fixtures. `loadStories()` continues to return only actual saved stories. Fixture text is bundled rather than inserted into saved-story storage. Marking a fixture word or saving its definition writes only its reading state to `era.v1.debug-fixtures`, separate from `era.v1.stories`. Turning the option off hides the fixtures, including direct fixture routes, but keeps saved stories and fixture reading state. Re-enabling restores that state.
 
-[`MyStories.tsx`](../src/pages/MyStories.tsx) lists the enabled articles with a “Debug fixture” badge, and [`StoryView.tsx`](../src/pages/StoryView.tsx) identifies them while displaying the ordinary reading controls and vocabulary report. [`Settings.tsx`](../src/pages/Settings.tsx) provides the switch. [`debug-fixtures.test.mjs`](../tests/debug-fixtures.test.mjs) verifies the default, legacy-settings behavior, visibility, independent persistence, and preservation of saved stories.
+[`MyStories.tsx`](../src/pages/MyStories.tsx) lists the enabled articles with a “Example” chip, and [`StoryView.tsx`](../src/pages/StoryView.tsx) identifies them while displaying the ordinary reading controls and vocabulary report. [`Settings.tsx`](../src/pages/Settings.tsx) provides the switch. [`debug-fixtures.test.mjs`](../tests/debug-fixtures.test.mjs) verifies the default, legacy-settings behavior, visibility, independent persistence, and preservation of saved stories.
 
 ### Automated checks
 

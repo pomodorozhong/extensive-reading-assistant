@@ -1,8 +1,20 @@
 # Handoff
 
-Last verified: 2026-10-30 (Asia/Taipei).
+Last verified: 2026-11-05 (Asia/Taipei).
 
 ## In progress
+
+### claude/app-redesign-mockup-cc1e9f
+
+- Task: redesign the whole app to follow the designer's exam workflow mockup (`doc/design/exam-workflow-mockup`). No issue; the branch is not linked to one.
+- PR: none yet.
+- Code checkpoint: `db620e1` on `main` `e837ad0`; `.github/workflows/deploy-pages.yml` also deploys this branch on push (temporary).
+- State: implemented and committed locally; awaiting approval to push and open the PR (P-22). The restyle covers the header, navigation, Settings sections, My Stories (stats line, group and sort dropdowns, collapsible groups, preview cards), and Story View (side panel with Save word, end card, topic and tone chips, Example chip). New features: the reading comprehension exam (Gemini writes 4 questions), the Exam tab, the Dictionary rename with a `/vocabulary` redirect, and an exam switch in Settings. Read state and scores live in the new `era.v1.progress` entry.
+- Verification: 2026-11-05, `npm run lint`, `npm run build`, and all seven `test:*` suites passed. In the browser pane, My Stories, Story View, Exam (vocabulary quiz and results), the reading exam without a key, and Settings rendered and worked; no console errors were checked beyond that.
+- Not verified: reading exam question generation with a real Gemini key.
+- Next action: after approval, push and open the PR with the `open-pr` skill.
+- Pending: **P-22**: push this branch and open its PR with the title and body shown in the session. Why: publishing is outward-facing. Blocks: the PR.
+- Pending: **P-23**: add this branch to the `github-pages` environment's deployment branch policy (now `main` only), so the push deploy can run. Why: it is a repository setting, and the deploy replaces the live site with this redesign. Blocks: the preview deploy. Before merging, delete the temporary branch line in `deploy-pages.yml` and this branch's entry in that policy.
 
 ### feat/curated-starter-stories
 

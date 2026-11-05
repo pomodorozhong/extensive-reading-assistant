@@ -1,5 +1,5 @@
 import { CheckIcon, HamburgerMenuIcon } from '@radix-ui/react-icons'
-import { Button, DropdownMenu, Flex, IconButton, Text } from '@radix-ui/themes'
+import { DropdownMenu, IconButton } from '@radix-ui/themes'
 import { useEffect } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { setOnboardingOpen, shouldOfferOnboarding } from '../lib/onboarding'
@@ -10,15 +10,13 @@ import { PwaStatus } from './PwaStatus'
 const NAV = [
   { to: '/new', label: 'New Story' },
   { to: '/stories', label: 'My Stories' },
-  { to: '/vocabulary', label: 'Vocabulary' },
+  { to: '/dictionary', label: 'Dictionary' },
+  { to: '/exam', label: 'Exam' },
   { to: '/settings', label: 'Settings' },
 ] as const
 
-function navVariant(pathname: string, to: string): 'soft' | 'ghost' {
-  if (to === '/stories') {
-    return pathname.startsWith('/stories') ? 'soft' : 'ghost'
-  }
-  return pathname === to ? 'soft' : 'ghost'
+function isActive(pathname: string, to: string): boolean {
+  return to === '/stories' ? pathname.startsWith('/stories') : pathname === to
 }
 
 export function Layout() {
@@ -31,21 +29,21 @@ export function Layout() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <Flex align="center" justify="between" gap="3" className="app-header-inner">
+        <div className="app-header-inner">
           <Link to="/" className="brand">
-            <Text weight="medium" size="3">
-              Extensive Reading
-            </Text>
+            Extensive Reading
           </Link>
 
           <nav className="nav-desktop" aria-label="Main navigation">
-            <Flex gap="2" align="center">
-              {NAV.map((item) => (
-                <Button key={item.to} asChild variant={navVariant(pathname, item.to)} size="2">
-                  <NavLink to={item.to}>{item.label}</NavLink>
-                </Button>
-              ))}
-            </Flex>
+            {NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={isActive(pathname, item.to) ? 'nav-link active' : 'nav-link'}
+              >
+                {item.label}
+              </NavLink>
+            ))}
           </nav>
 
           <div className="nav-menu-btn">
@@ -67,12 +65,18 @@ export function Layout() {
               </DropdownMenu.Content>
             </DropdownMenu.Root>
           </div>
-        </Flex>
+        </div>
       </header>
 
       <main className="app-main">
         <Outlet />
       </main>
+      <footer className="app-footer">
+        <div className="app-footer-inner">
+          <span>Extensive Reading</span>
+          <span>Stories and saved words stay on this device</span>
+        </div>
+      </footer>
       <PwaStatus />
       <Onboarding />
     </div>
