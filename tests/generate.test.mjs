@@ -36,15 +36,15 @@ function mockGemini(t, data = { candidates: [{ content: { parts: [{ text: respon
   return requests
 }
 
-test('initial choices default to A2 and ten minutes while preserving a saved level and excluding credentials', () => {
+test('initial choices default to A2 and two minutes while preserving a saved level and excluding credentials', () => {
   assert.equal(initialGenerationChoices(loadSettings()).level, 'A2')
-  assert.equal(initialGenerationChoices(loadSettings()).readingMinutes, 10)
+  assert.equal(initialGenerationChoices(loadSettings()).readingMinutes, 2)
   localStorage.setItem('era.v1.settings', JSON.stringify({ cefrLevel: 'invalid' }))
   assert.equal(initialGenerationChoices(loadSettings()).level, 'A2')
   const original = structuredClone(settings)
   const initial = initialGenerationChoices(settings)
   assert.equal(initial.level, 'C2')
-  assert.equal(initial.readingMinutes, 10)
+  assert.equal(initial.readingMinutes, 2)
   assert.equal(initial.model, 'gemini-3.1-flash-lite')
   assert.equal(initial.topic, '')
   assert.equal(initial.textType, null)
@@ -58,7 +58,7 @@ test('initial choices default to A2 and ten minutes while preserving a saved lev
 
 test('each reading length sends its agreed word band and selected level and model, rather than Settings defaults', async (t) => {
   const requests = mockGemini(t)
-  for (const [readingMinutes, min, max] of [[5, 400, 600], [10, 800, 1200], [15, 1200, 1800]]) {
+  for (const [readingMinutes, min, max] of [[2, 160, 240], [5, 400, 600], [10, 800, 1200], [15, 1200, 1800]]) {
     const result = await generateStory({ ...choices, readingMinutes, settings: { ...settings, apiBaseUrl: `${settings.apiBaseUrl}/` } })
     const request = requests.at(-1)
     assert.equal(request.url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent')
@@ -401,6 +401,8 @@ test('an unfinished draft survives a reload and keeps only the non-secret choice
   assert.deepEqual(loadNewStoryDraft(fresh), {
     level: 'B2', topic: '  A weekend in Tokyo  ', textType: 'fable', tone: 'thoughtful', pointOfView: 'first', variedSentences: false, readingMinutes: 15, model: DEFAULT_MODEL,
   })
+  saveNewStoryDraft({ ...choices, readingMinutes: 2 })
+  assert.equal(loadNewStoryDraft({ ...fresh, readingMinutes: 10 }).readingMinutes, 2)
   saveNewStoryDraft({ ...choices, tone: 'cozy' })
   saveNewStoryDraft({ ...choices, tone: null })
   assert.equal(loadNewStoryDraft({ ...fresh, tone: 'tense' }).tone, null)
@@ -412,6 +414,7 @@ test('invalid or legacy draft fields fall back individually, and clearing restor
   const fresh = initialGenerationChoices(loadSettings())
   localStorage.setItem('era.v1.new-story-draft', JSON.stringify({ theme: 'Rain', level: 'Z9', readingMinutes: 7, model: 'gpt-4' }))
   assert.deepEqual(loadNewStoryDraft(fresh), { ...fresh, topic: 'Rain' })
+  assert.equal(loadNewStoryDraft(fresh).readingMinutes, 2)
   localStorage.setItem('era.v1.new-story-draft', JSON.stringify({ topic: 'Snow', theme: 'Rain', textType: 'letter', tone: 'grim', pointOfView: 'second' }))
   assert.deepEqual(loadNewStoryDraft(fresh), { ...fresh, topic: 'Snow', textType: 'letter' })
   localStorage.setItem('era.v1.new-story-draft', JSON.stringify({ textType: 'mystery', genres: ['fable'], topic: 7, variedSentences: 'yes' }))
