@@ -34,6 +34,17 @@ Last verified: 2026-11-12 (Asia/Taipei).
 - Not run: a reading exam against the real Gemini API.
 - Next action: the owner reviews and merges the PR; afterwards remove this subsection.
 
+### feat/search-home-layout
+
+- Task: rework the New Story home screen at the owner's request: Generate Story inside the topic bar, a line of chips under it (level, length, and text type menus, plus a removable chip for each changed style option, with Options at the right end), topic ideas as cards below, and Options showing its style and model controls directly. No issue; the owner asked for the PR directly. Local branch from `main` at `a5af6f4`, not linked to any issue.
+- PR: none yet.
+- Code checkpoint: `2e35d62` (`feat(new-story): put Generate in the bar and the story choices in chips`), which also updates the README, the features doc, and the guide's second step.
+- State: built and checked; awaiting approval to push. A trial that also put the creator at the end of Story View was dropped at the owner's request.
+- Verification: 2026-11-12, `npm run lint`, `npm run build`, and all seven `test:*` suites passed (generation 37, onboarding 5). In the browser pane at desktop width and 375 × 812: Generate Story sits 6 px from the bar's top, right, and bottom (a 44 px circle on phones); the level, length, and text type menus change their values; the level menu opens the level guide; a level that doesn't offer the chosen form clears it and shows the note; tone, point of view, and sentence variety chips appear and their × resets each option; the chips stay on one line and scroll sideways with Options visible; idea cards set topic and type and scroll sideways on phones; no sideways page scroll; no console errors.
+- Not checked: a real generation, the offline and unsaved-story states, and reduced motion in a browser.
+- Pending: **P-27**: push this branch and open the PR. Why: pushing is outward-facing. Blocks: the PR.
+- Next action: get P-27 approved, then push and open the PR with the `open-pr` skill.
+
 ### feat/story-view-side-dictionary
 
 - Task: show the clicked word's meaning in a Dictionary card at the top of a Story View side panel, with the "Words in this story" list below it, following the exam workflow mockup (the side card added on the local `docs/mockup-side-dictionary` branch). At the owner's request, tapping a word now only shows its meaning and underlines the word in blue; **Mark as unknown** in the card or note tracks it and highlights it in yellow. No issue; the owner chose to open the PR without one.

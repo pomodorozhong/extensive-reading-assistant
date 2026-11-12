@@ -153,7 +153,7 @@ const STEPS: Step[] = [
   },
   {
     title: 'Pick a topic, get a story',
-    body: 'Type a topic or pick an idea, then generate. Your level (A1 is easiest, C2 hardest), length, and style are under Options.',
+    body: 'Type a topic or pick an idea, then generate. The chips under the bar set your level (A1 is easiest, C2 hardest), length, and text type; style is under Options.',
     scene: LevelScene,
   },
   {

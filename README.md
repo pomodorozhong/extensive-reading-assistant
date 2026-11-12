@@ -6,7 +6,7 @@ Extensive reading means reading lots of easy, enjoyable text. This web app helps
 
 ## What you can do
 
-- **Generate a story at your level.** Type a topic or pick a ready-made idea, then generate. **Options** holds the level, the reading length (2, 5, 10, or 15 minutes, starting at 2), the text type (a fable, a diary, a news report, an opinion essay, and more), a tone, and a point of view.
+- **Generate a story at your level.** Type a topic or pick a ready-made idea, then generate. Chips under the topic bar set the level, the reading length (2, 5, 10, or 15 minutes, starting at 2), and the text type (a fable, a diary, a news report, an opinion essay, and more); **Options** holds a tone, a point of view, and the model.
 - **Look up words as you read.** Tap a word to see its meaning. Definitions come from [Princeton WordNet](https://wordnet.princeton.edu/), which is bundled with the app, so they are not made up by the AI.
 - **Keep track of new words.** Choose **Mark as unknown** under a word's meaning to save it. The **Vocabulary** page collects these words from all your stories, grouped by level, with the sentence where you met each one. Mark a word as known once you've learned it.
 - **Check what you understood.** When you finish a story, answer a short multiple-choice exam about it, written by Gemini, or skip it. The **Exam** tab quizzes you on word meanings from your stories or your Vocabulary, with no API key needed.
@@ -17,7 +17,7 @@ Extensive reading means reading lots of easy, enjoyable text. This web app helps
 
 1. Open the app. On New Story, **How it works** opens a short guide.
 2. Get a free [Gemini API key](https://aistudio.google.com/apikey) from Google AI Studio and paste it in **Settings**.
-3. Go to **New Story**, type a topic or pick an idea, and select **Generate Story**. Change your level under **Options**.
+3. Go to **New Story**, type a topic or pick an idea, and select **Generate Story**. Change your level with the level chip under the topic bar.
 
 You need an internet connection to generate a story, but not to read one.
 
