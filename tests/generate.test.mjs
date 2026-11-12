@@ -3,7 +3,7 @@ import { beforeEach, test } from 'node:test'
 import { checkGeminiEndpoint, GEMINI_API_BASE_URL } from '../src/lib/gemini-endpoint.ts'
 import { readFileSync } from 'node:fs'
 import { createGeneratedStory, generateStory, parseGeneratedStory } from '../src/lib/generate.ts'
-import { cleanTextType, DEFAULT_MODEL, generationNotes, initialGenerationChoices, lockedTextTypes, TEXT_TYPE_INFO, textTypeLevelRange, textTypesForLevel, TOPIC_EXAMPLES, topicExamples } from '../src/lib/generation-options.ts'
+import { cleanTextType, DEFAULT_MODEL, generationNotes, initialGenerationChoices, lockedTextTypes, MAX_TOPIC_LENGTH, TEXT_TYPE_INFO, textTypeLevelRange, textTypesForLevel, TOPIC_EXAMPLES, TOPIC_IDEAS, topicExamples, topicIdeasForLevel } from '../src/lib/generation-options.ts'
 import { CEFR_LEVELS, TEXT_MODES, TEXT_TYPES } from '../src/types.ts'
 import { clearNewStoryDraft, loadNewStoryDraft, saveNewStoryDraft } from '../src/lib/new-story-draft.ts'
 import { storyDetails } from '../src/lib/story-details.ts'
@@ -171,6 +171,20 @@ test('factual forms ask for accurate facts and explained topic words', async (t)
     await generateStory({ ...choices, textType, settings })
     assert.equal(requests.at(-1).json.contents[0].parts[0].text.includes('do not invent statistics, dates, or quotes'), expected, textType)
   }
+})
+
+test('topic ideas pair a topic with a known text type and fill a row at every level', () => {
+  for (const idea of TOPIC_IDEAS) {
+    assert.ok(TEXT_TYPES.includes(idea.textType), idea.topic)
+    assert.ok(idea.topic.length > 0 && idea.topic.length <= MAX_TOPIC_LENGTH, idea.topic)
+  }
+  assert.equal(new Set(TOPIC_IDEAS.map((idea) => idea.topic)).size, TOPIC_IDEAS.length)
+  for (const level of CEFR_LEVELS) {
+    const ideas = topicIdeasForLevel(level)
+    assert.ok(ideas.length >= 4, level)
+    for (const idea of ideas) assert.equal(cleanTextType(idea.textType, level), idea.textType, `${level} ${idea.topic}`)
+  }
+  assert.ok(!topicIdeasForLevel('A1').some((idea) => idea.textType === 'argumentative'))
 })
 
 test('topic examples follow the chosen text type and notes explain how choices shape the text', () => {

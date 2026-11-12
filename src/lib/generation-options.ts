@@ -282,6 +282,27 @@ export function topicExamples(textType: TextType | null): readonly string[] {
   return textType ? TEXT_TYPE_INFO[textType].examples : TOPIC_EXAMPLES
 }
 
+export type TopicIdea = { topic: string; textType: TextType }
+
+/** Ready-made ideas for the New Story home, each a topic paired with a text type that suits it. */
+export const TOPIC_IDEAS: readonly TopicIdea[] = [
+  { topic: 'A rainy afternoon at a bookshop', textType: 'short-story' },
+  { topic: 'A weekend in Tokyo', textType: 'diary' },
+  { topic: 'A robot learns to cook', textType: 'fable' },
+  { topic: 'A ghost in the school library', textType: 'play-script' },
+  { topic: 'A missing cat comes home', textType: 'news-report' },
+  { topic: 'A letter to a new pen pal', textType: 'letter' },
+  { topic: 'How bees make honey', textType: 'expository' },
+  { topic: 'The day I got lost in a new city', textType: 'personal-narrative' },
+  { topic: 'Should homework be optional?', textType: 'argumentative' },
+  { topic: 'A fox who wanted to fly', textType: 'fairy-tale' },
+]
+
+/** The topic ideas whose text type is offered at the level. */
+export function topicIdeasForLevel(level: CefrLevel): TopicIdea[] {
+  return TOPIC_IDEAS.filter((idea) => textTypeFitsLevel(idea.textType, level))
+}
+
 export const SUPPORTED_MODELS = [
   { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash Lite' },
 ] as const
