@@ -142,7 +142,7 @@ export function Exam() {
               <Flex direction="column" width="100%">
                 <Text weight="bold">Vocabulary</Text>
                 <Text size="2" color="gray">
-                  Only the words you looked up while reading and still track.
+                  Only the words you marked as unknown while reading and still track.
                 </Text>
                 <Text size="1" color="gray" mt="1">
                   {saved.length} {saved.length === 1 ? 'word' : 'words'}

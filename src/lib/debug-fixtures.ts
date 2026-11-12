@@ -72,7 +72,7 @@ export function isDebugFixture(id: string): boolean {
 }
 
 /**
- * Harder words in each fixture, shown as already looked up when **Add example words to Vocabulary**
+ * Harder words in each fixture, shown as already marked unknown when **Add example words to Vocabulary**
  * is on, so Vocabulary and the Exam tab have words to use. Keys are normalized words.
  */
 export const EXAMPLE_VOCABULARY: Readonly<Record<string, readonly string[]>> = {

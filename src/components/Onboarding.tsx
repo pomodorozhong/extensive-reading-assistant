@@ -168,7 +168,7 @@ const STEPS: Step[] = [
   },
   {
     title: 'Review words in Vocabulary',
-    body: 'Words you looked up wait in Vocabulary. Mark them as known once you’ve learned them.',
+    body: 'Words you mark as unknown wait in Vocabulary. Mark them as known once you’ve learned them.',
     scene: VocabularyScene,
   },
   {

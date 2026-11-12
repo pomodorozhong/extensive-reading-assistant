@@ -365,9 +365,9 @@ body {
   flex-shrink: 0;
 }
 
+/* The word whose meaning is shown is underlined in blue, whether or not it is marked. */
 .story-word.active {
-  outline: 2px solid var(--accent-8);
-  outline-offset: 1px;
+  box-shadow: inset 0 -2px 0 var(--blue-9);
 }
 
 /* Below 941px: story, then the word list, then the finishing cards. */

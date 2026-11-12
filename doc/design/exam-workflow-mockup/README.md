@@ -18,7 +18,7 @@ The rest of the design is still worth adapting, even beyond exams: the header an
 ## Differences from the current app
 
 - The navigation adds **Exam** and names the word page **Dictionary** instead of Vocabulary.
-- In the prototype, words are saved with an explicit **Save word** button. In the app, any word the reader looks up is tracked as unknown until marked as known.
+- In the prototype, words are saved with an explicit **Save word** button. In the app, the reader chooses **Mark as unknown** instead, and the word is tracked until marked as known.
 - Story View adds a sidebar listing the words in the story, and an end card with **Finish reading**.
 - My Stories shows reading progress (stories read, saved words) and each story's last comprehension score.
 - Every story and question is a hard-coded sample. Generating questions with Gemini, and saving exam results, would both need design work.

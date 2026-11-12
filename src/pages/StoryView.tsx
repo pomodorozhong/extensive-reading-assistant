@@ -187,7 +187,7 @@ function StoryReader({ id }: { id: string | undefined }) {
     })
 
     const latest = storyRef.current
-    if (!latest || latest.id !== currentStory.id || latest.wordMarks[key] !== 'unknown') {
+    if (!latest || latest.id !== currentStory.id) {
       return
     }
 
@@ -204,22 +204,13 @@ function StoryReader({ id }: { id: string | undefined }) {
   }
 
   function openWord(key: string, index: number) {
+    // Looking a word up only shows its meaning; the reader decides whether to track it.
     const latest = storyRef.current
     if (!latest) {
       return
     }
-
-    const next =
-      latest.wordMarks[key] === 'unknown'
-        ? latest
-        : updateWordMark(latest.id, key, 'unknown')
-    if (!next) {
-      return
-    }
-    storyRef.current = next
-    setStory(next)
     setActiveIndex(index)
-    void lookupWord(key, next)
+    void lookupWord(key, latest)
   }
 
   function closeNote() {
@@ -229,13 +220,13 @@ function StoryReader({ id }: { id: string | undefined }) {
     setActiveIndex(null)
   }
 
-  function markKnown(key: string) {
+  // The meaning stays open after either mark, so the reader sees the change and can undo it.
+  function markWord(key: string, mark: 'known' | 'unknown') {
     const latest = storyRef.current
-    if (!latest || latest.wordMarks[key] !== 'unknown') return
-    const next = updateWordMark(latest.id, key, 'known')
+    if (!latest || latest.wordMarks[key] === mark) return
+    if (mark === 'known' && latest.wordMarks[key] !== 'unknown') return
+    const next = updateWordMark(latest.id, key, mark)
     if (!next) return
-    const activeToken = activeIndex === null ? undefined : tokens[activeIndex]
-    if (activeToken?.type === 'word' && activeToken.key === key) closeNote()
     storyRef.current = next
     setStory(next)
   }
@@ -269,9 +260,15 @@ function StoryReader({ id }: { id: string | undefined }) {
             Retry
           </button>
         )}
-        <button type="button" className="gloss-action" onClick={() => markKnown(key)}>
-          Mark as known
-        </button>
+        {story?.wordMarks[key] === 'unknown' ? (
+          <button type="button" className="gloss-action" onClick={() => markWord(key, 'known')}>
+            Mark as known
+          </button>
+        ) : (
+          <button type="button" className="gloss-action" onClick={() => markWord(key, 'unknown')}>
+            Mark as unknown
+          </button>
+        )}
       </>
     )
   }
@@ -311,7 +308,7 @@ function StoryReader({ id }: { id: string | undefined }) {
             type="button"
             className="gloss-action glossary-known"
             aria-label={`Mark ${entry.sample} as known`}
-            onClick={() => markKnown(entry.key)}
+            onClick={() => markWord(entry.key, 'known')}
           >
             Mark as known
           </button>
@@ -338,8 +335,8 @@ function StoryReader({ id }: { id: string | undefined }) {
             {loadProgress().read.includes(story.id) && <Badge color="green">Read</Badge>}
           </Flex>
           <Text as="p" size="2" color="gray">
-            Tap a word when you need a definition. Looked-up words are highlighted until you
-            mark them as known.
+            Tap a word to see its meaning. Choose Mark as unknown to highlight it and keep it
+            in Vocabulary until you mark it as known.
           </Text>
         </div>
 
@@ -481,8 +478,8 @@ function StoryReader({ id }: { id: string | undefined }) {
                 </Heading>
                 <Text as="p" size="2" color="gray" mb={unknownEntries.length > 0 ? '3' : undefined}>
                   {unknownEntries.length > 0
-                    ? 'Words you look up stay here until you mark them as known.'
-                    : 'No words looked up yet. Words you look up stay here until you mark them as known.'}
+                    ? 'Words you mark as unknown stay here until you mark them as known.'
+                    : 'No words marked as unknown yet. Words you mark as unknown stay here until you mark them as known.'}
                 </Text>
                 {unknownEntries.length > 0 && unknownWordList}
               </Card>
