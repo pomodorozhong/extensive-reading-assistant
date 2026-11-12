@@ -15,7 +15,7 @@ Extensive reading means reading lots of easy, enjoyable text. This web app helps
 
 ## Get started
 
-1. Open the app. A short introduction walks you through it.
+1. Open the app. On New Story, **How it works** opens a short guide.
 2. Get a free [Gemini API key](https://aistudio.google.com/apikey) from Google AI Studio and paste it in **Settings**.
 3. Go to **New Story**, type a topic or pick an idea, and select **Generate Story**. Change your level under **Options**.
 

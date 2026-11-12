@@ -179,6 +179,7 @@ body {
 .new-story-topic.home-rise { animation-delay: 0.18s; }
 .new-story-ideas.home-rise { animation-delay: 0.31s; }
 .new-story-actions.home-rise { animation-delay: 0.44s; }
+.new-story-guide.home-rise { animation-delay: 0.57s; }
 
 @keyframes home-twinkle {
   0%, 100% { transform: scale(1) rotate(0); opacity: 0.85; }

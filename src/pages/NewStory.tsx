@@ -1,4 +1,4 @@
-import { ArrowRightIcon, Cross2Icon, InfoCircledIcon, ShuffleIcon } from '@radix-ui/react-icons'
+import { ArrowRightIcon, Cross2Icon, InfoCircledIcon, QuestionMarkCircledIcon, ShuffleIcon } from '@radix-ui/react-icons'
 import {
   Button,
   Callout,
@@ -18,6 +18,7 @@ import { GeminiKeyDialog } from '../components/GeminiKeyDialog'
 import { useTypingPlaceholder } from '../components/useTypingPlaceholder'
 import { VocabularyLevelInfo } from '../components/VocabularyLevelInfo'
 import { createGeneratedStory, generateStory } from '../lib/generate'
+import { setOnboardingOpen } from '../lib/onboarding'
 import {
   allowsPointOfView,
   generationNotes,
@@ -578,6 +579,18 @@ export function NewStory() {
             </Popover.Root>
           </Flex>
         </Flex>
+
+        {/* The guide never opens by itself, so this is how a new reader finds it. */}
+        <Button
+          type="button"
+          variant="ghost"
+          color="gray"
+          size="2"
+          className="new-story-guide home-rise"
+          onClick={() => setOnboardingOpen(true)}
+        >
+          <QuestionMarkCircledIcon aria-hidden="true" /> How it works
+        </Button>
 
         <div role="status">
           {generating && (

@@ -41,11 +41,11 @@ For a detailed implementation walkthrough, flowcharts, and links to related code
 
 To try the report without generating a story, also enable **Settings → Debugging → Show CEFR fixture articles in My Stories**. This option is off by default and adds six bundled articles labeled A1–C2. They are illustrative debugging samples, not certified CEFR texts. Their word marks and definitions are stored separately; switching the option off hides the fixtures and preserves your saved stories.
 
-## Introduction
+## Guide
 
-On first use, a six-step introduction explains extensive reading and the app's workflow: pick a level and generate a story, read for the story, tap an unfamiliar word for its meaning, review words in Vocabulary, and where the Gemini key goes, that generation needs internet, and that data stays in this browser. Each step has a short CSS animation; with the system's reduced-motion setting on, every step shows its finished frame instead. Back, Next, and Skip are always available, the arrow keys also change steps, and the last step offers **Choose a level and start** (New Story) and **Check my level** (the level check). Viewing it needs no key.
+A six-step guide explains extensive reading and the app's workflow: pick a topic and generate a story (with the level under Options), read for the story, tap an unfamiliar word for its meaning, review words in Vocabulary, and where the Gemini key goes, that generation needs internet, and that data stays in this browser. Each step has a short CSS animation; with the system's reduced-motion setting on, every step shows its finished frame instead. Back, Next, and Skip are always available, the arrow keys also change steps, and the last step offers **Start a story** (New Story) and **Check my level** (the level check). Viewing it needs no key.
 
-It opens automatically only when no outcome is recorded and no stories are saved, so existing readers are not interrupted. Finishing or skipping (including Esc) saves `completed` or `skipped` in the `era.v1.onboarding` localStorage entry and changes nothing else. **Settings → Introduction → Show the introduction again** reopens it. `npm run test:onboarding` covers the stored outcome and the first-use rule.
+It never opens by itself. **How it works** under Generate Story on New Story opens it, and so does **Settings → Guide → Show the guide**. Finishing or skipping (including Esc) saves `completed` or `skipped` in the `era.v1.onboarding` localStorage entry and changes nothing else. `npm run test:onboarding` covers the stored outcome and opening it from anywhere.
 
 ## Choose a story
 

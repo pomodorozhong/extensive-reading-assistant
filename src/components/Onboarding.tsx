@@ -152,8 +152,8 @@ const STEPS: Step[] = [
     scene: WelcomeScene,
   },
   {
-    title: 'Pick your level, get a story',
-    body: 'Choose a CEFR level (A1 is easiest, C2 hardest) and a topic. The app writes a story at that level.',
+    title: 'Pick a topic, get a story',
+    body: 'Type a topic or pick an idea, then generate. Your level (A1 is easiest, C2 hardest), length, and style are under Options.',
     scene: LevelScene,
   },
   {
@@ -175,7 +175,7 @@ const STEPS: Step[] = [
     title: 'A few things to know',
     body: (
       <ul className="ob-facts">
-        <li>Add your Gemini API key in Settings to create stories. This introduction needs no key.</li>
+        <li>Add your Gemini API key in Settings to create stories. This guide needs no key.</li>
         <li>Creating a story needs an internet connection.</li>
         <li>Stories and words are saved in this browser only. They don’t sync to other devices.</li>
       </ul>
@@ -184,7 +184,7 @@ const STEPS: Step[] = [
   },
 ]
 
-/** The first-use introduction. Opened on first use by Layout and again from Settings. */
+/** The guide to the app. Opened from How it works on New Story and from Settings. */
 export function Onboarding() {
   const open = useSyncExternalStore(subscribeOnboarding, isOnboardingOpen, isOnboardingOpen)
   const [step, setStep] = useState(0)
@@ -279,7 +279,7 @@ export function Onboarding() {
             {/* One button for Next and the final action, so focus stays put on the last step. */}
             <Button ref={primary} onClick={() => (last ? close('completed', '/new') : go(step + 1))}>
               {last ? (
-                'Choose a level and start'
+                'Start a story'
               ) : (
                 <>
                   Next <ArrowRightIcon aria-hidden="true" />

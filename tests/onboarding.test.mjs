@@ -5,7 +5,6 @@ import {
   loadOnboardingOutcome,
   saveOnboardingOutcome,
   setOnboardingOpen,
-  shouldOfferOnboarding,
   subscribeOnboarding,
 } from '../src/lib/onboarding.ts'
 
@@ -24,23 +23,17 @@ beforeEach(() => {
   setOnboardingOpen(false)
 })
 
-test('a new reader with no stories is offered the introduction', () => {
+test('a new reader has no recorded outcome and the guide starts closed', () => {
   assert.equal(loadOnboardingOutcome(), null)
-  assert.equal(shouldOfferOnboarding(), true)
+  assert.equal(isOnboardingOpen(), false)
 })
 
-test('finishing or skipping is remembered and stops the offer', () => {
+test('finishing or skipping is remembered', () => {
   for (const outcome of ['completed', 'skipped']) {
     values.clear()
     saveOnboardingOutcome(outcome)
     assert.equal(loadOnboardingOutcome(), outcome)
-    assert.equal(shouldOfferOnboarding(), false)
   }
-})
-
-test('readers who already have stories are not interrupted', () => {
-  values.set('era.v1.stories', JSON.stringify([{ id: 's1', body: 'A story.' }]))
-  assert.equal(shouldOfferOnboarding(), false)
 })
 
 test('saving the outcome writes only the onboarding entry', () => {
