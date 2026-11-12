@@ -2,11 +2,13 @@ import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { StoryFinish } from '../components/StoryFinish'
 import { StoryGenerationDetails } from '../components/StoryGenerationDetails'
 import { VocabularyReport } from '../components/VocabularyReport'
 import { isDebugFixture } from '../lib/debug-fixtures'
 import { lookupDefinition, preloadShards } from '../lib/dictionary'
 import { TEXT_TYPE_INFO } from '../lib/generation-options'
+import { loadProgress } from '../lib/progress'
 import { getStory, loadSettings, updateWordExplanation, updateWordMark } from '../lib/storage'
 import { tokenize } from '../lib/tokenize'
 import type { Story } from '../types'
@@ -235,6 +237,7 @@ function StoryReader({ id }: { id: string | undefined }) {
             <Badge color="blue">{story.level}</Badge>
             {story.textType && <Badge color="gray">{TEXT_TYPE_INFO[story.textType].label}</Badge>}
             {isDebugFixture(story.id) && <Badge color="amber">Debug fixture</Badge>}
+            {loadProgress().read.includes(story.id) && <Badge color="green">Read</Badge>}
           </Flex>
           <Text as="p" size="2" color="gray">
             Tap a word when you need a definition. Looked-up words are highlighted until you
@@ -389,6 +392,7 @@ function StoryReader({ id }: { id: string | undefined }) {
             </Flex>
           </Card>
         )}
+        <StoryFinish storyId={story.id} />
         {/* A fixture's topic only labels it as debug content; it was not generated. */}
         {!isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
         {showVocabularyReport && <VocabularyReport body={story.body} level={story.level} />}

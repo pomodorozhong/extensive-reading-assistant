@@ -265,6 +265,26 @@ export function SettingsPage() {
         </label>
 
         <div>
+          <Text as="div" size="2" weight="medium" mb="2">
+            Exams
+          </Text>
+          <Text as="label" size="2">
+            <Flex align="center" gap="2">
+              <Switch
+                checked={settings.offerExamAfterStory}
+                onCheckedChange={(checked) => patch({ offerExamAfterStory: checked })}
+              />
+              Offer an exam after each story
+            </Flex>
+          </Text>
+          <Text as="p" size="2" color="gray" mt="2">
+            On by default. Finishing a story opens a short reading comprehension exam written by
+            Gemini, which you can skip. When off, finishing a story just marks it as read. The
+            vocabulary exam on the Exam tab works either way.
+          </Text>
+        </div>
+
+        <div>
           <Text as="div" size="2" weight="medium" mb="1">
             Introduction
           </Text>

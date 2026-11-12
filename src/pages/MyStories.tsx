@@ -2,6 +2,7 @@ import { Badge, Button, Card, Container, Flex, Heading, Text } from '@radix-ui/t
 import { Link } from 'react-router-dom'
 import { isDebugFixture } from '../lib/debug-fixtures'
 import { TEXT_TYPE_INFO } from '../lib/generation-options'
+import { loadProgress } from '../lib/progress'
 import { loadVisibleStories } from '../lib/storage'
 
 function formatDate(iso: string): string {
@@ -14,6 +15,7 @@ function formatDate(iso: string): string {
 
 export function MyStories() {
   const stories = loadVisibleStories()
+  const progress = loadProgress()
 
   return (
     <Container size="2" px="4">
@@ -48,7 +50,15 @@ export function MyStories() {
                       {story.topic ? ` · ${story.topic}` : ''}
                     </Text>
                   </div>
-                  <Badge color="blue">{story.level}</Badge>
+                  <Flex gap="2" wrap="wrap" justify="end" className="story-card-badges">
+                    {progress.read.includes(story.id) && <Badge color="green">Read</Badge>}
+                    {progress.readingResults[story.id] && (
+                      <Badge color="gray">
+                        Exam {progress.readingResults[story.id].score}/{progress.readingResults[story.id].total}
+                      </Badge>
+                    )}
+                    <Badge color="blue">{story.level}</Badge>
+                  </Flex>
                 </Flex>
               </Link>
             </Card>
