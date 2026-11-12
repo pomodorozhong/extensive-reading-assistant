@@ -310,18 +310,19 @@ export const SUPPORTED_MODELS = [
 export type GenerationModel = (typeof SUPPORTED_MODELS)[number]['id']
 export const DEFAULT_MODEL = SUPPORTED_MODELS[0].id
 export const DEFAULT_GENERATION_LEVEL: CefrLevel = 'A2'
-export const DEFAULT_READING_MINUTES: ReadingMinutes = 10
+export const DEFAULT_READING_MINUTES: ReadingMinutes = 2
 // Even sentence lengths read flatly, so new stories ask for rhythm unless the reader turns it off.
 export const DEFAULT_VARIED_SENTENCES = true
 
 // Product targets for a reading session, not measured or guaranteed reading times.
 export const READING_LENGTHS: Record<ReadingMinutes, { minWords: number; maxWords: number }> = {
+  2: { minWords: 160, maxWords: 240 },
   5: { minWords: 400, maxWords: 600 },
   10: { minWords: 800, maxWords: 1200 },
   15: { minWords: 1200, maxWords: 1800 },
 }
 
-export const READING_MINUTE_OPTIONS = [5, 10, 15] as const satisfies readonly ReadingMinutes[]
+export const READING_MINUTE_OPTIONS = [2, 5, 10, 15] as const satisfies readonly ReadingMinutes[]
 
 export type GenerationChoices = {
   level: CefrLevel

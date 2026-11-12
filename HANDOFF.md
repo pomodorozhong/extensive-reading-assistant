@@ -45,6 +45,16 @@ Last verified: 2026-11-12 (Asia/Taipei).
 - Pending: P-01, push `feat/story-view-side-dictionary` and open its PR. Blocks the PR.
 - Next action: on approval, push and open the PR; after it merges, remove this subsection.
 
+### feat/two-minute-reading-length
+
+- Task: add a 2-minute reading length (160–240 words) and make it the default for new stories, at the owner's request. Related to #27 (it settles the starter stories' 2-minute label) but does not resolve it, so the branch is not linked.
+- PR: none yet.
+- Code checkpoint: `448184a` on `main` `07d8f37`.
+- State: built and committed locally; awaiting the owner's approval to push and open the PR. Drafts and stories with a valid saved length keep it; missing or invalid draft lengths fall back to 2 minutes.
+- Verification: 2026-11-12, lint, production build and all 115 tests passed. In the browser pane with the local Gemini fixture: New Story opens at **A2 · about 2 minutes**, Options shows 2, 5, 10 and 15 min with 2 selected and "About 160–240 words", generating sends the 160–240 word target, and Story View's card shows "About 2 minutes" and "160–240 words". At 320 px the four-item length control fits without sideways scrolling.
+- Pending: P-01, push `feat/two-minute-reading-length` and open its PR. Blocks the PR.
+- Next action: on approval, push and open the PR; after it merges, remove this subsection and update #27's "Not decided" 2-minute label note.
+
 ## Ranked work
 
 1. [#77 — Stop asking generated texts to end with THE END](https://github.com/pomodorozhong/extensive-reading-assistant/issues/77) — small and independent; the owner found the line no longer fits.

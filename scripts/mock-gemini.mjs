@@ -25,7 +25,7 @@ const server = createServer(async (request, response) => {
     for await (const chunk of request) body += chunk
     const prompt = JSON.parse(body).contents[0].parts[0].text
     const level = prompt.match(/CEFR (A1|A2|B1|B2|C1|C2)/)?.[1]
-    const length = prompt.match(/Aim for (\d+)-(\d+) words, approximately (5|10|15) minutes/)
+    const length = prompt.match(/Aim for (\d+)-(\d+) words, approximately (2|5|10|15) minutes/)
     const topic = prompt.match(/^Topic: (.+)$/m)?.[1] ?? 'an original topic'
     const textType = prompt.match(/^Text type: ([^—]+) —/m)?.[1]?.trim() ?? 'any text type'
     const tone = prompt.match(/^Tone: (\w+)\./m)?.[1] ?? 'any tone'
