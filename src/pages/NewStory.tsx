@@ -80,6 +80,7 @@ export function NewStory() {
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null)
   const [keyDialogOpen, setKeyDialogOpen] = useState(false)
   const [ideaRow, setIdeaRow] = useState(0)
+  const [optionsOpen, setOptionsOpen] = useState(false)
   // A text type cleared because it is not offered at a newly chosen level.
   const [clearedTextType, setClearedTextType] = useState<TextType | null>(null)
   const generateButton = useRef<HTMLButtonElement>(null)
@@ -386,7 +387,9 @@ export function NewStory() {
               {choices.level} · about {choices.readingMinutes} minutes
               {styleSummary && ` · ${styleSummary}`} ·
             </Text>
-            <Popover.Root>
+            {/* Generating closes the panel and locks its controls: the story already being written
+                would not use changes made now. */}
+            <Popover.Root open={optionsOpen && !generating} onOpenChange={setOptionsOpen}>
               <Popover.Trigger>
                 <Button type="button" variant="ghost" size="2" disabled={generating}>
                   Options
@@ -405,6 +408,7 @@ export function NewStory() {
                       aria-labelledby="new-story-level-label"
                       value={choices.level}
                       onValueChange={(value) => changeLevel(value as CefrLevel)}
+                      disabled={generating}
                       className="new-story-levels"
                     >
                       {CEFR_LEVELS.map((level) => (
@@ -430,6 +434,7 @@ export function NewStory() {
                       aria-describedby="new-story-length-help"
                       value={String(choices.readingMinutes)}
                       onValueChange={(value) => updateChoices({ readingMinutes: Number(value) as ReadingMinutes })}
+                      disabled={generating}
                       className="new-story-lengths"
                     >
                       {READING_MINUTE_OPTIONS.map((minutes) => (
@@ -448,6 +453,7 @@ export function NewStory() {
                     </Text>
                     <Select.Root
                       value={choices.textType ?? ANY}
+                      disabled={generating}
                       onValueChange={(value) => {
                         setClearedTextType(null)
                         updateChoices({ textType: value === ANY ? null : (value as TextType) })
@@ -491,6 +497,7 @@ export function NewStory() {
                               color={choices.tone === tone ? 'blue' : 'gray'}
                               size="1"
                               aria-pressed={choices.tone === tone}
+                              disabled={generating}
                               onClick={() => updateChoices({ tone })}
                             >
                               {tone ? TONE_LABELS[tone] : 'Any'}
@@ -509,7 +516,7 @@ export function NewStory() {
                             updateChoices({ pointOfView: value === ANY ? null : (value as PointOfView) })
                           }
                           aria-describedby={pointOfViewApplies ? undefined : 'new-story-pov-help'}
-                          disabled={!pointOfViewApplies}
+                          disabled={generating || !pointOfViewApplies}
                           size="1"
                           className="new-story-style-control"
                         >
@@ -534,6 +541,7 @@ export function NewStory() {
                             <Checkbox
                               checked={choices.variedSentences}
                               onCheckedChange={(checked) => updateChoices({ variedSentences: checked === true })}
+                              disabled={generating}
                               aria-describedby="new-story-varied-help"
                             />
                             <Text weight="medium">Varied sentence length</Text>
@@ -550,6 +558,7 @@ export function NewStory() {
                         <Select.Root
                           value={choices.model}
                           onValueChange={(value) => updateChoices({ model: value as GenerationModel })}
+                          disabled={generating}
                         >
                           <Select.Trigger id="new-story-model" className="new-story-model" />
                           <Select.Content>
