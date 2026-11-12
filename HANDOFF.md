@@ -16,11 +16,11 @@ Last verified: 2026-11-12 (Asia/Taipei).
 
 ### feat/reading-and-vocabulary-exams
 
-- Task: [#73 — Add reading comprehension and vocabulary exams from the exam workflow mockup](https://github.com/pomodorozhong/extensive-reading-assistant/issues/73). The PR will fully resolve it; link the branch to #73 when pushing. Implementation migrated from the closed experiment PR #80, without its visual redesign (no restyle, side panel, Save word button, Dictionary rename, My Stories grouping, or Settings sections).
-- PR: none yet.
+- Task: [#73 — Add reading comprehension and vocabulary exams from the exam workflow mockup](https://github.com/pomodorozhong/extensive-reading-assistant/issues/73). The PR fully resolves it (`Closes #73`). Implementation migrated from the closed experiment PR #80, without its visual redesign (no restyle, side panel, Save word button, Dictionary rename, My Stories grouping, or Settings sections).
+- PR: [#82](https://github.com/pomodorozhong/extensive-reading-assistant/pull/82), open, Checks passed.
 - Code checkpoint: `62faac0` on `main` `e837ad0` (exam logic, exam UI, docs, a Debugging switch that adds example words to Vocabulary, and exam-specific Gemini error messages).
 - State: pushed and PR opened with the owner's approval; awaiting review and merge.
-- Verification: 2026-11-12, `npm run lint`, `npm run build`, and all seven `test:*` suites passed (exam 7/7, cefr 23/23). The first two commits were also checked on their own. In the browser pane: vocabulary exam from both sources (including the too-few-words message), keyboard-only answering, results, practice on missed words, retake; Finish reading with the switch on and off; the no-key message; a full reading exam, saved result, and retake with a stubbed Gemini response; Read and score badges on My Stories; the example-words switch (on: 18 words in Vocabulary and a 10-question exam from them; off: Vocabulary empty again); no horizontal scroll at 375 px; no console errors.
+- Verification: 2026-11-12, `npm run lint`, `npm run build`, and all seven `test:*` suites passed (exam 8/8, cefr 23/23). The first two commits were also checked on their own. In the browser pane: vocabulary exam from both sources (including the too-few-words message), keyboard-only answering, results, practice on missed words, retake; Finish reading with the switch on and off; the no-key message; a full reading exam, saved result, and retake with a stubbed Gemini response; Read and score badges on My Stories; the example-words switch (on: 18 words in Vocabulary and a 10-question exam from them; off: Vocabulary empty again); no horizontal scroll at 375 px; no console errors.
 - Not run: a reading exam against the real Gemini API.
 - Next action: the owner reviews and merges the PR; afterwards remove this subsection.
 
