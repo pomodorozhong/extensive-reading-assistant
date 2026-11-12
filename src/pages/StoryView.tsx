@@ -1,6 +1,7 @@
-import { ArrowLeftIcon } from '@radix-ui/react-icons'
+import { ArrowLeftIcon, Cross2Icon } from '@radix-ui/react-icons'
 import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import type { ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { StoryFinish } from '../components/StoryFinish'
 import { StoryGenerationDetails } from '../components/StoryGenerationDetails'
@@ -12,6 +13,19 @@ import { loadProgress } from '../lib/progress'
 import { getStory, loadSettings, updateWordExplanation, updateWordMark } from '../lib/storage'
 import { tokenize } from '../lib/tokenize'
 import type { Story } from '../types'
+
+// Wide enough for the story and the side panel; the panel moves below the story otherwise.
+const SIDE_PANEL_QUERY = '(min-width: 941px)'
+
+function subscribeToSidePanelQuery(onChange: () => void) {
+  const query = window.matchMedia(SIDE_PANEL_QUERY)
+  query.addEventListener('change', onChange)
+  return () => query.removeEventListener('change', onChange)
+}
+
+function useSidePanel() {
+  return useSyncExternalStore(subscribeToSidePanelQuery, () => window.matchMedia(SIDE_PANEL_QUERY).matches)
+}
 
 export function StoryView() {
   const { id } = useParams()
@@ -28,6 +42,9 @@ function StoryReader({ id }: { id: string | undefined }) {
   const [lookupErrors, setLookupErrors] = useState<Record<string, string>>({})
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const [tallNoteIndex, setTallNoteIndex] = useState<number | null>(null)
+  // On wide screens the clicked word's meaning shows in the side Dictionary card
+  // instead of a note under the word.
+  const sidePanel = useSidePanel()
   const pendingLookups = useRef(new Set<string>())
   const storyRef = useRef(story)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -42,6 +59,7 @@ function StoryReader({ id }: { id: string | undefined }) {
   // The note stays closed while a lookup is pending, so a fast lookup opens it once,
   // with the definition already in place.
   const noteOpen = loading !== 'pending'
+  const inlineNoteOpen = noteOpen && !sidePanel
   // Once a note has shown the spinner, it keeps a two-line minimum so a short
   // definition replacing the spinner does not move the text again.
   if (loading === 'slow' && tallNoteIndex !== activeIndex) {
@@ -92,7 +110,7 @@ function StoryReader({ id }: { id: string | undefined }) {
   }, [tokens])
 
   useLayoutEffect(() => {
-    if (activeIndex === null || !noteOpen) return
+    if (activeIndex === null || !inlineNoteOpen) return
     const body = bodyRef.current
     const note = noteRef.current
     const space = noteSpaceRef.current
@@ -124,7 +142,7 @@ function StoryReader({ id }: { id: string | undefined }) {
       observer.disconnect()
       cancelAnimationFrame(frame)
     }
-  }, [activeIndex, noteOpen])
+  }, [activeIndex, inlineNoteOpen])
 
   if (!story) {
     return (
@@ -222,8 +240,88 @@ function StoryReader({ id }: { id: string | undefined }) {
     setStory(next)
   }
 
+  function glossBody(): ReactNode {
+    if (loading === 'slow') return <><Spinner size="1" /> Looking up…</>
+    // A side card keeps its place, with no text, while a fast lookup finishes.
+    if (loading === 'pending') return '\u00a0'
+    return error ?? explanation ?? 'No definition saved.'
+  }
+
+  function glossActions(key: string): ReactNode {
+    return (
+      <>
+        {loading ? (
+          // Holds Retry's place so the row wraps the same way if the lookup fails.
+          <span className="gloss-action gloss-action-placeholder" aria-hidden="true">
+            Retry
+          </span>
+        ) : error && (
+          <button
+            type="button"
+            className="gloss-action"
+            onClick={() => {
+              const latest = storyRef.current
+              if (latest) {
+                void lookupWord(key, latest, true)
+              }
+            }}
+          >
+            Retry
+          </button>
+        )}
+        <button type="button" className="gloss-action" onClick={() => markKnown(key)}>
+          Mark as known
+        </button>
+      </>
+    )
+  }
+
+  const unknownWordList = (
+    <Flex direction="column" gap="3">
+      {unknownEntries.map((entry) => (
+        <Flex key={entry.key} gap="3" align="start" justify="between">
+          <button
+            type="button"
+            className="glossary-item"
+            aria-label={`Go to ${entry.sample} in the story`}
+            onClick={() => {
+              openWord(entry.key, entry.index)
+              requestAnimationFrame(() => {
+                const word = document.getElementById(`word-${entry.index}`)
+                word?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                word?.focus({ preventScroll: true })
+              })
+            }}
+          >
+            <Text weight="medium" size="2">
+              {entry.sample}
+            </Text>
+            <span className="glossary-definition">
+              {loadingKeys[entry.key] === 'pending' ? (
+                '\u00a0'
+              ) : loadingKeys[entry.key] === 'slow' ? (
+                <><Spinner size="1" /> Looking up…</>
+              ) : (
+                lookupErrors[entry.key] ?? story.explanations[entry.key] ??
+                'Tap to look up a definition.'
+              )}
+            </span>
+          </button>
+          <button
+            type="button"
+            className="gloss-action glossary-known"
+            aria-label={`Mark ${entry.sample} as known`}
+            onClick={() => markKnown(entry.key)}
+          >
+            Mark as known
+          </button>
+        </Flex>
+      ))}
+    </Flex>
+  )
+
   return (
-    <Container size="3" px="4">
+    <Container size="4" maxWidth="1024px" px="4">
       <Flex direction="column" gap="4">
         <div>
           <Button asChild variant="ghost" size="2" mb="3">
@@ -245,157 +343,152 @@ function StoryReader({ id }: { id: string | undefined }) {
           </Text>
         </div>
 
-        <div className="story-body" ref={bodyRef}>
-          {tokens.map((token, index) => {
-            if (token.type !== 'word') {
-              return <span key={`other-${index}`}>{token.value}</span>
-            }
+        <div className="story-layout">
+          <div className="story-main">
+            <div className="story-body" ref={bodyRef}>
+              {tokens.map((token, index) => {
+                if (token.type !== 'word') {
+                  return <span key={`other-${index}`}>{token.value}</span>
+                }
 
-            const mark = story.wordMarks[token.key]
-            const className = mark === 'unknown' ? 'story-word unknown' : 'story-word'
-            const isActive = activeIndex === index
-            const showGloss = isActive && noteOpen
+                const mark = story.wordMarks[token.key]
+                const isActive = activeIndex === index
+                const className = [
+                  'story-word',
+                  mark === 'unknown' ? 'unknown' : '',
+                  isActive ? 'active' : '',
+                ].filter(Boolean).join(' ')
+                const showGloss = isActive && inlineNoteOpen
+                const showSideCard = isActive && sidePanel
 
-            return (
-              <span key={`word-${index}`}>
-                <button
-                  type="button"
-                  id={`word-${index}`}
-                  className={className}
-                  onClick={() => {
-                    if (isActive) {
-                      closeNote()
-                    } else {
-                      openWord(token.key, index)
-                    }
-                  }}
+                return (
+                  <span key={`word-${index}`}>
+                    <button
+                      type="button"
+                      id={`word-${index}`}
+                      className={className}
+                      onClick={() => {
+                        if (isActive) {
+                          closeNote()
+                        } else {
+                          openWord(token.key, index)
+                        }
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Escape' && isActive) {
+                          event.preventDefault()
+                          closeNote()
+                        }
+                      }}
+                      aria-label={`Look up ${token.value}`}
+                      aria-expanded={showGloss || showSideCard}
+                      aria-controls={
+                        showGloss ? `gloss-${index}` : showSideCard ? 'side-dictionary' : undefined
+                      }
+                    >
+                      {token.value}
+                    </button>
+                    {showGloss && (
+                      <span className="story-note-space" ref={noteSpaceRef} aria-hidden="true" />
+                    )}
+                    {showGloss && (
+                      <span
+                        className={tallNoteIndex === index ? 'inline-gloss inline-gloss-tall' : 'inline-gloss'}
+                        ref={noteRef}
+                        id={`gloss-${activeIndex}`}
+                        role="note"
+                        aria-label={`Definition of ${token.value}`}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Escape') {
+                            event.preventDefault()
+                            closeNote()
+                          }
+                        }}
+                      >
+                        <span className="inline-gloss-word">{token.value}: </span>
+                        <span className="inline-gloss-body" aria-live="polite">
+                          {glossBody()}
+                        </span>
+                        <span className="inline-gloss-actions">
+                          {glossActions(token.key)}
+                          <button type="button" className="gloss-action" onClick={closeNote}>
+                            Close
+                          </button>
+                        </span>
+                      </span>
+                    )}
+                  </span>
+                )
+              })}
+            </div>
+            <div className="story-after">
+              <StoryFinish storyId={story.id} />
+              {/* A fixture's topic only labels it as debug content; it was not generated. */}
+              {!isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
+              {showVocabularyReport && <VocabularyReport body={story.body} level={story.level} />}
+            </div>
+          </div>
+
+          {(sidePanel || unknownEntries.length > 0) && (
+            <aside className="story-side" aria-label="Dictionary and words in this story">
+              {sidePanel && (
+                <Card
+                  id="side-dictionary"
+                  className="side-dictionary"
                   onKeyDown={(event) => {
-                    if (event.key === 'Escape' && isActive) {
+                    if (event.key === 'Escape' && activeToken) {
                       event.preventDefault()
                       closeNote()
                     }
                   }}
-                  aria-label={`Look up ${token.value}`}
-                  aria-expanded={showGloss}
-                  aria-controls={showGloss ? `gloss-${index}` : undefined}
                 >
-                  {token.value}
-                </button>
-                {showGloss && (
-                  <span className="story-note-space" ref={noteSpaceRef} aria-hidden="true" />
-                )}
-                {showGloss && (
-                  <span
-                    className={tallNoteIndex === index ? 'inline-gloss inline-gloss-tall' : 'inline-gloss'}
-                    ref={noteRef}
-                    id={`gloss-${activeIndex}`}
-                    role="note"
-                    aria-label={`Definition of ${token.value}`}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Escape') {
-                        event.preventDefault()
-                        closeNote()
-                      }
-                    }}
-                  >
-                    <span className="inline-gloss-word">{token.value}: </span>
-                    <span className="inline-gloss-body" aria-live="polite">
-                      {loading ? (
-                        <><Spinner size="1" /> Looking up…</>
-                      ) : (
-                        error ?? explanation ?? 'No definition saved.'
-                      )}
-                    </span>
-                    <span className="inline-gloss-actions">
-                      {loading ? (
-                        // Holds Retry's place so the row wraps the same way if the lookup fails.
-                        <span className="gloss-action gloss-action-placeholder" aria-hidden="true">
-                          Retry
-                        </span>
-                      ) : error && (
+                  <Text as="p" size="1" weight="bold" className="side-eyebrow">
+                    Dictionary
+                  </Text>
+                  {/* Always mounted, so screen readers announce each new word and its meaning. */}
+                  <div aria-live="polite">
+                    {activeToken?.type === 'word' ? (
+                      <>
                         <button
                           type="button"
-                          className="gloss-action"
-                          onClick={() => {
-                            const latest = storyRef.current
-                            if (latest) {
-                              void lookupWord(token.key, latest, true)
-                            }
-                          }}
+                          className="side-dictionary-close"
+                          aria-label="Close definition"
+                          onClick={closeNote}
                         >
-                          Retry
+                          <Cross2Icon />
                         </button>
-                      )}
-                      <button
-                        type="button"
-                        className="gloss-action"
-                        onClick={() => markKnown(token.key)}
-                      >
-                        Mark as known
-                      </button>
-                      <button type="button" className="gloss-action" onClick={closeNote}>
-                        Close
-                      </button>
-                    </span>
-                  </span>
-                )}
-              </span>
-            )
-          })}
+                        <Heading as="h2" size="4" mt="1" className="side-dictionary-word">
+                          {activeToken.value}
+                        </Heading>
+                        <Text as="p" size="2" mt="1" className="side-dictionary-body">
+                          {glossBody()}
+                        </Text>
+                        <Flex gap="3" wrap="wrap" mt="2">
+                          {glossActions(activeToken.key)}
+                        </Flex>
+                      </>
+                    ) : (
+                      <Text as="p" size="2" color="gray" mt="1">
+                        Tap a word in the story to see its meaning here.
+                      </Text>
+                    )}
+                  </div>
+                </Card>
+              )}
+              <Card className="glossary">
+                <Heading as="h2" size="4" mb="1">
+                  Words in this story
+                </Heading>
+                <Text as="p" size="2" color="gray" mb={unknownEntries.length > 0 ? '3' : undefined}>
+                  {unknownEntries.length > 0
+                    ? 'Words you look up stay here until you mark them as known.'
+                    : 'No words looked up yet. Words you look up stay here until you mark them as known.'}
+                </Text>
+                {unknownEntries.length > 0 && unknownWordList}
+              </Card>
+            </aside>
+          )}
         </div>
-
-        {unknownEntries.length > 0 && (
-          <Card className="glossary">
-            <Heading size="4" mb="3">
-              Unknown words
-            </Heading>
-            <Flex direction="column" gap="3">
-              {unknownEntries.map((entry) => (
-                <Flex key={entry.key} gap="3" align="start" justify="between">
-                  <button
-                    type="button"
-                    className="glossary-item"
-                    aria-label={`Go to ${entry.sample} in the story`}
-                    onClick={() => {
-                      openWord(entry.key, entry.index)
-                      requestAnimationFrame(() => {
-                        const word = document.getElementById(`word-${entry.index}`)
-                        word?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                        word?.focus({ preventScroll: true })
-                      })
-                    }}
-                  >
-                    <Text weight="medium" size="2">
-                      {entry.sample}
-                    </Text>
-                    <span className="glossary-definition">
-                      {loadingKeys[entry.key] === 'pending' ? (
-                        '\u00a0'
-                      ) : loadingKeys[entry.key] === 'slow' ? (
-                        <><Spinner size="1" /> Looking up…</>
-                      ) : (
-                        lookupErrors[entry.key] ?? story.explanations[entry.key] ??
-                        'Tap to look up a definition.'
-                      )}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className="gloss-action glossary-known"
-                    aria-label={`Mark ${entry.sample} as known`}
-                    onClick={() => markKnown(entry.key)}
-                  >
-                    Mark as known
-                  </button>
-                </Flex>
-              ))}
-            </Flex>
-          </Card>
-        )}
-        <StoryFinish storyId={story.id} />
-        {/* A fixture's topic only labels it as debug content; it was not generated. */}
-        {!isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
-        {showVocabularyReport && <VocabularyReport body={story.body} level={story.level} />}
       </Flex>
     </Container>
   )
