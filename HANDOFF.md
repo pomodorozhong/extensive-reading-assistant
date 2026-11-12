@@ -14,6 +14,16 @@ Last verified: 2026-11-12 (Asia/Taipei).
 - Not decided: how to label 2-minute reading time, since `ReadingMinutes` is 5, 10, or 15.
 - Next action: after #76 and #77, plan the #27 PR with the owner (where starters live in code, entry points on Home and empty My Stories, the 2-minute label), and change `*Thump.*` to plain text in *The Whispering Books*.
 
+### feat/new-story-search-home
+
+- Task: [#81 — Simplify the New Story home screen to a Google-style search bar with topic chips](https://github.com/pomodorozhong/extensive-reading-assistant/issues/81). Local branch from `main` at `da997f7`, not pushed and not linked to #81.
+- PR: none yet.
+- Code checkpoint: `729fb0d` (`fix(new-story): close Options and lock its controls while generating`), after `13c8d0f` (the guide button) and `d93911d` (the search-bar home).
+- State: the owner chose direction A from the design canvas (search bar, one row of topic + text type ideas, Generate Story, Options panel from a summary line). Built as approved, plus a text type list in Options so all 16 forms stay reachable, since the ideas cover only ten pairs. At the owner's request the introduction no longer opens by itself: a **How it works** button under Generate Story opens it as a guide, and Settings keeps **Show the guide**.
+- Verification: lint, build and all seven test suites passed (generation 37, onboarding 5). In the in-app browser at 1280 × 800, 390 × 844 and 320 × 568: an idea sets topic and text type and saves the draft, shuffle shows the next three, Options changes length and text type and filters forms by level, Generate Story without a key opens the key dialog, no sideways page scroll, Generate visible at 320 × 568, the placeholder types out topics, no console errors. With storage cleared no popup opens, and How it works opens the guide with the new step 2 text. With a test key and a stalled request, starting generation with Options open closes the panel and Options stays disabled. Not checked in a browser: reduced motion (CSS and hook only), a real generation, offline and unsaved-story states (code paths unchanged).
+- Pending: **P-24**: push this branch and open the PR that closes #81. Why: pushing is outward-facing. Blocks: the PR.
+- Next action: get P-24 approved, then push and open the PR with the `open-pr` skill.
+
 ### feat/reading-and-vocabulary-exams
 
 - Task: [#73 — Add reading comprehension and vocabulary exams from the exam workflow mockup](https://github.com/pomodorozhong/extensive-reading-assistant/issues/73). The PR fully resolves it (`Closes #73`). Implementation migrated from the closed experiment PR #80, without its visual redesign (no restyle, side panel, Save word button, Dictionary rename, My Stories grouping, or Settings sections).

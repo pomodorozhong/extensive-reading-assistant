@@ -1,5 +1,3 @@
-import { loadStories } from './storage.ts'
-
 const ONBOARDING_KEY = 'era.v1.onboarding'
 
 export type OnboardingOutcome = 'completed' | 'skipped'
@@ -18,13 +16,8 @@ export function saveOnboardingOutcome(outcome: OnboardingOutcome): void {
   try {
     localStorage.setItem(ONBOARDING_KEY, outcome)
   } catch {
-    // Without storage the introduction is offered again next time, which is harmless.
+    // The outcome is only a record; without storage nothing is lost.
   }
-}
-
-/** First use means no recorded outcome and no saved stories, so existing readers are not interrupted. */
-export function shouldOfferOnboarding(): boolean {
-  return loadOnboardingOutcome() === null && loadStories().length === 0
 }
 
 let open = false
@@ -39,7 +32,7 @@ export function isOnboardingOpen(): boolean {
   return open
 }
 
-/** Opens or closes the introduction wherever it is mounted, such as from Settings. */
+/** Opens or closes the guide wherever it is mounted, such as from New Story or Settings. */
 export function setOnboardingOpen(next: boolean): void {
   if (open === next) return
   open = next

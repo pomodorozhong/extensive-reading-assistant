@@ -69,51 +69,84 @@ body {
 .new-story-page {
   width: min(1024px, calc(100% - 32px));
   margin-inline: auto;
-  padding-top: clamp(24px, 6vh, 64px);
 }
 
-.new-story-hero {
-  margin-bottom: var(--space-7);
-  text-align: center;
-}
-
-.new-story-icon {
+/* Centered like a search page: the heading, the topic bar, one row of ideas, and Generate. */
+.new-story-home {
+  min-height: calc(100svh - 220px);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  color: var(--accent-9);
-  background: var(--accent-a3);
-  border-radius: var(--radius-4);
+  gap: var(--space-5);
+  padding-bottom: var(--space-6);
 }
 
 .new-story-heading {
   letter-spacing: -0.03em;
+  text-align: center;
   text-wrap: balance;
 }
 
-.new-story-description {
-  max-width: 32rem;
-  line-height: 1.6;
-  text-wrap: pretty;
+.new-story-notices {
+  width: min(640px, 100%);
 }
 
-.new-story-panel {
-  padding: clamp(20px, 4vw, 32px);
-  border: 1px solid var(--gray-a6);
-  border-radius: var(--radius-5);
-  background: var(--color-panel-solid);
+.new-story-notices:empty {
+  display: none;
 }
 
-.new-story-example {
-  max-width: 100%;
-  height: auto;
-  min-height: 32px;
-  padding-block: 6px;
-  white-space: normal;
-  text-align: left;
-  line-height: 1.4;
+.new-story-topic {
+  width: min(640px, 100%);
+  height: 56px;
+  font-size: var(--font-size-4);
+  box-shadow: inset 0 0 0 1px var(--gray-a7);
+  transition: box-shadow 0.2s;
+}
+
+.new-story-topic:hover {
+  box-shadow: inset 0 0 0 1px var(--gray-a8), 0 2px 10px var(--gray-a4);
+}
+
+.new-story-topic .rt-TextFieldSlot:first-child {
+  padding-left: var(--space-4);
+}
+
+.new-story-spark {
+  color: var(--accent-9);
+  animation: home-twinkle 2.4s ease-in-out infinite;
+}
+
+/* Always one row: it scrolls sideways when the ideas do not fit. */
+.new-story-ideas {
+  display: flex;
+  justify-content: safe center;
+  gap: var(--space-2);
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  padding-block: 2px;
+  scrollbar-width: none;
+}
+
+.new-story-idea {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.new-story-idea-type {
+  color: var(--gray-11);
+  font-size: var(--font-size-1);
+}
+
+.new-story-generate {
+  padding-inline: var(--space-6);
+}
+
+.new-story-options-panel {
+  width: min(380px, calc(100vw - 32px));
+  max-height: min(70vh, var(--radix-popover-content-available-height));
+  overflow-y: auto;
 }
 
 .new-story-levels,
@@ -131,45 +164,50 @@ body {
   padding-inline: 0;
 }
 
-.new-story-levels .rt-SegmentedControlItemLabel {
-  padding-inline: clamp(4px, 2vw, 16px);
-}
-
-.new-story-options {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-5);
-}
-
-.new-story-option {
-  min-width: 0;
-}
-
-.new-story-option > label {
-  display: block;
-}
-
 .new-story-model {
+  display: flex;
   width: 100%;
+  margin-top: var(--space-2);
 }
 
-@media (min-width: 768px) {
-  .new-story-options {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+/* Items rise in one after another; readers who prefer reduced motion see them at once. */
+.home-rise {
+  animation: ob-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.new-story-home > .home-rise:nth-child(1) { animation-delay: 0.05s; }
+.new-story-topic.home-rise { animation-delay: 0.18s; }
+.new-story-ideas.home-rise { animation-delay: 0.31s; }
+.new-story-actions.home-rise { animation-delay: 0.44s; }
+.new-story-guide.home-rise { animation-delay: 0.57s; }
+
+@keyframes home-twinkle {
+  0%, 100% { transform: scale(1) rotate(0); opacity: 0.85; }
+  50% { transform: scale(1.18) rotate(12deg); opacity: 1; }
+}
+
+/* On phones the row runs to the screen edges and Generate fills the width. */
+@media (max-width: 640px) {
+  /* The centered column spreads the wider row evenly, so it reaches both edges. */
+  .new-story-ideas {
+    width: calc(100% + 32px);
+    padding-inline: 16px;
   }
 
-  .new-story-level-option {
-    grid-column: 1 / -1;
+  .new-story-actions,
+  .new-story-generate {
+    width: 100%;
   }
 }
 
-@media (min-width: 1024px) {
-  .new-story-options {
-    grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+@media (prefers-reduced-motion: reduce) {
+  .home-rise,
+  .new-story-spark {
+    animation: none;
   }
 
-  .new-story-level-option {
-    grid-column: auto;
+  .new-story-topic {
+    transition: none;
   }
 }
 

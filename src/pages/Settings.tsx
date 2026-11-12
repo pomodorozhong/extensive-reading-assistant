@@ -286,13 +286,13 @@ export function SettingsPage() {
 
         <div>
           <Text as="div" size="2" weight="medium" mb="1">
-            Introduction
+            Guide
           </Text>
           <Text as="p" size="2" color="gray" mb="3">
             A short tour of how extensive reading works in this app.
           </Text>
           <Button type="button" variant="soft" onClick={() => setOnboardingOpen(true)}>
-            Show the introduction again
+            Show the guide
           </Button>
         </div>
 
