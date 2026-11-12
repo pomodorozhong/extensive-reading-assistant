@@ -24,6 +24,17 @@ Last verified: 2026-11-12 (Asia/Taipei).
 - Not run: a reading exam against the real Gemini API.
 - Next action: the owner reviews and merges the PR; afterwards remove this subsection.
 
+### feat/story-view-side-dictionary
+
+- Task: show the clicked word's meaning in a Dictionary card at the top of a Story View side panel, with the "Words in this story" list below it, following the exam workflow mockup (the side card added on the local `docs/mockup-side-dictionary` branch). At the owner's request, tapping a word now only shows its meaning and underlines the word in blue; **Mark as unknown** in the card or note tracks it and highlights it in yellow. No issue; the owner chose to open the PR without one.
+- PR: none yet.
+- Code checkpoint: `867abc3` on `main` `17849d5`.
+- State: built and committed locally; awaiting the owner's approval to push and open the PR.
+- Verification: 2026-11-12, lint, production build and all 115 tests passed. In the browser pane with the CEFR fixture articles: at 1280 and 1440 px a tapped word is underlined in blue, its meaning fills the side card, no note opens, and nothing is added to the list or Vocabulary; **Mark as unknown** turns every occurrence yellow, lists it, adds it to Vocabulary, and switches to **Mark as known**, which reverses it; ×, Escape and tapping again clear the card; a word with no entry shows Retry; the panel stays 80 px from the top while scrolling. At 940, 768, 375 and 320 px the note opens under the word with the same buttons, the list sits below the story, and nothing scrolls sideways. Resizing across 940 px with a word open moves its meaning between the card and the note. No console errors.
+- Not checked: the slow-lookup spinner in the side card (it uses the same text as the note).
+- Pending: P-01, push `feat/story-view-side-dictionary` and open its PR. Blocks the PR.
+- Next action: on approval, push and open the PR; after it merges, remove this subsection.
+
 ## Ranked work
 
 1. [#77 — Stop asking generated texts to end with THE END](https://github.com/pomodorozhong/extensive-reading-assistant/issues/77) — small and independent; the owner found the line no longer fits.
