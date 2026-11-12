@@ -12,21 +12,27 @@ const LEVEL_DESCRIPTIONS: Record<CefrLevel, string> = {
   C2: 'Almost anything, including subtle and literary language.',
 }
 
-/** An "i" button that explains the CEFR levels; it sits after a Vocabulary level label. */
-export function VocabularyLevelInfo() {
+/**
+ * An "i" button that explains the CEFR levels; it sits after a Vocabulary level label. Pass `open` and
+ * `onOpenChange` to open the explanation from somewhere else, such as a menu item, without the button.
+ */
+export function VocabularyLevelInfo({ open, onOpenChange }: { open?: boolean; onOpenChange?: (open: boolean) => void } = {}) {
+  const controlled = open !== undefined
   return (
-    <Dialog.Root>
-      <Dialog.Trigger>
-        <IconButton
-          type="button"
-          variant="ghost"
-          color="gray"
-          size="1"
-          aria-label="What do the vocabulary levels mean?"
-        >
-          <InfoCircledIcon aria-hidden="true" />
-        </IconButton>
-      </Dialog.Trigger>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      {!controlled && (
+        <Dialog.Trigger>
+          <IconButton
+            type="button"
+            variant="ghost"
+            color="gray"
+            size="1"
+            aria-label="What do the vocabulary levels mean?"
+          >
+            <InfoCircledIcon aria-hidden="true" />
+          </IconButton>
+        </Dialog.Trigger>
+      )}
       <Dialog.Content maxWidth="32rem">
         <Dialog.Title>Which level should I choose?</Dialog.Title>
         <Dialog.Description size="2" color="gray" mb="4">

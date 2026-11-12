@@ -71,7 +71,8 @@ body {
   margin-inline: auto;
 }
 
-/* Centered like a search page: the heading, the topic bar, one row of ideas, and Generate. */
+/* Centered like a search page: the heading, the topic bar with Generate inside it, the row of choices,
+   then one row of topic ideas. */
 .new-story-home {
   min-height: calc(100svh - 220px);
   display: flex;
@@ -112,35 +113,118 @@ body {
   padding-left: var(--space-4);
 }
 
+/* Every choice sits in one line just under the bar, starting at its left edge; Options keeps to the right. */
+.new-story-chips {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: min(640px, 100%);
+  margin-top: calc(-1 * var(--space-3));
+  padding-inline: var(--space-2);
+  box-sizing: border-box;
+}
+
+/* Never wraps: extra chips scroll sideways, and the right edge fades so the hidden ones are hinted at. */
+.new-story-chip-list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  padding-block: 2px;
+  padding-right: var(--space-4);
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, #000 calc(100% - var(--space-4)), transparent);
+}
+
+.new-story-chip-list::-webkit-scrollbar {
+  display: none;
+}
+
+.new-story-chip-list > * {
+  flex-shrink: 0;
+}
+
+.new-story-more {
+  flex-shrink: 0;
+}
+
+.new-story-chip-notice {
+  width: min(640px, 100%);
+  margin-top: calc(-1 * var(--space-4));
+  padding-inline: var(--space-2);
+  box-sizing: border-box;
+}
+
+.new-story-chip-notice:empty {
+  display: none;
+}
+
+/* Generate sits at the right end of the bar. Its inset is the same on the top, right, and bottom,
+   so its rounded end is concentric with the bar's. */
+.new-story-topic {
+  --generate-inset: 6px;
+}
+
+.new-story-topic .new-story-generate-slot {
+  padding-right: var(--generate-inset);
+}
+
 .new-story-spark {
   color: var(--accent-9);
   animation: home-twinkle 2.4s ease-in-out infinite;
 }
 
-/* Always one row: it scrolls sideways when the ideas do not fit. */
+/* Topic ideas are cards: three side by side, the same width as the bar. */
 .new-story-ideas {
-  display: flex;
-  justify-content: safe center;
-  gap: var(--space-2);
-  width: 100%;
-  box-sizing: border-box;
-  overflow-x: auto;
-  padding-block: 2px;
-  scrollbar-width: none;
+  width: min(640px, 100%);
+}
+
+.new-story-ideas-head {
+  padding-inline: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.new-story-idea-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
 }
 
 .new-story-idea {
-  flex-shrink: 0;
-  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.new-story-idea:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.new-story-idea[aria-pressed='true'] {
+  background-color: var(--accent-a3);
+  box-shadow: inset 0 0 0 1px var(--accent-a8);
 }
 
 .new-story-idea-type {
-  color: var(--gray-11);
-  font-size: var(--font-size-1);
+  color: var(--accent-11);
+  font-weight: 500;
+}
+
+.new-story-idea-topic {
+  text-wrap: balance;
 }
 
 .new-story-generate {
-  padding-inline: var(--space-6);
+  height: calc(56px - 2 * var(--generate-inset));
+  padding-inline: var(--space-5);
+  font-size: var(--font-size-3);
 }
 
 .new-story-options-panel {
@@ -177,8 +261,8 @@ body {
 
 .new-story-home > .home-rise:nth-child(1) { animation-delay: 0.05s; }
 .new-story-topic.home-rise { animation-delay: 0.18s; }
-.new-story-ideas.home-rise { animation-delay: 0.31s; }
-.new-story-actions.home-rise { animation-delay: 0.44s; }
+.new-story-chips.home-rise { animation-delay: 0.31s; }
+.new-story-ideas.home-rise { animation-delay: 0.44s; }
 .new-story-guide.home-rise { animation-delay: 0.57s; }
 
 @keyframes home-twinkle {
@@ -186,17 +270,44 @@ body {
   50% { transform: scale(1.18) rotate(12deg); opacity: 1; }
 }
 
-/* On phones the row runs to the screen edges and Generate fills the width. */
+/* On phones the row runs to the screen edges and Generate shrinks to its arrow, leaving room to type. */
 @media (max-width: 640px) {
-  /* The centered column spreads the wider row evenly, so it reaches both edges. */
+  /* The cards become one row that scrolls sideways and runs to the screen edges. */
   .new-story-ideas {
     width: calc(100% + 32px);
-    padding-inline: 16px;
   }
 
-  .new-story-actions,
+  .new-story-ideas-head {
+    padding-inline: 24px;
+  }
+
+  .new-story-idea-cards {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px;
+    padding: 2px 16px;
+    scrollbar-width: none;
+  }
+
+  .new-story-idea {
+    flex: 0 0 min(240px, 72%);
+    scroll-snap-align: start;
+  }
+
+  /* A circle the same height as the button on wider screens. */
   .new-story-generate {
-    width: 100%;
+    width: calc(56px - 2 * var(--generate-inset));
+    padding-inline: 0;
+  }
+
+  .new-story-generate-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 
@@ -209,16 +320,6 @@ body {
   .new-story-topic {
     transition: none;
   }
-}
-
-.new-story-style {
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--gray-a5);
-}
-
-.new-story-style > summary {
-  cursor: pointer;
-  width: fit-content;
 }
 
 .new-story-style-control {

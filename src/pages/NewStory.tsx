@@ -1,11 +1,12 @@
-import { ArrowRightIcon, Cross2Icon, InfoCircledIcon, QuestionMarkCircledIcon, ShuffleIcon } from '@radix-ui/react-icons'
+import { ArrowRightIcon, ChevronDownIcon, Cross2Icon, InfoCircledIcon, QuestionMarkCircledIcon, ShuffleIcon } from '@radix-ui/react-icons'
 import {
   Button,
   Callout,
+  Card,
   Checkbox,
+  DropdownMenu,
   Flex,
   Heading,
-  IconButton,
   Popover,
   SegmentedControl,
   Select,
@@ -81,6 +82,7 @@ export function NewStory() {
   const [keyDialogOpen, setKeyDialogOpen] = useState(false)
   const [ideaRow, setIdeaRow] = useState(0)
   const [optionsOpen, setOptionsOpen] = useState(false)
+  const [levelInfoOpen, setLevelInfoOpen] = useState(false)
   // A text type cleared because it is not offered at a newly chosen level.
   const [clearedTextType, setClearedTextType] = useState<TextType | null>(null)
   const generateButton = useRef<HTMLButtonElement>(null)
@@ -96,12 +98,30 @@ export function NewStory() {
   const length = READING_LENGTHS[choices.readingMinutes]
   const notes = generationNotes(choices)
   const pointOfViewApplies = allowsPointOfView(choices.textType)
-  const styleSummary = [
-    choices.tone && TONE_LABELS[choices.tone],
-    pointOfViewApplies && choices.pointOfView && POINT_OF_VIEW_LABELS[choices.pointOfView],
-    // Varied is the default, so only turning it off is worth summarizing.
-    !choices.variedSentences && 'Sentence variety off',
-  ].filter(Boolean).join(', ')
+  // Each option changed from its default gets a chip under the bar; its × puts the default back.
+  const defaults = initialGenerationChoices(settings)
+  const changedOptions: { key: string; label: string; name: string; reset: Partial<GenerationChoices> }[] = [
+    ...(choices.tone ? [{ key: 'tone', label: TONE_LABELS[choices.tone], name: 'Tone', reset: { tone: null } }] : []),
+    ...(pointOfViewApplies && choices.pointOfView
+      ? [{ key: 'pov', label: POINT_OF_VIEW_LABELS[choices.pointOfView], name: 'Point of view', reset: { pointOfView: null } }]
+      : []),
+    ...(choices.variedSentences !== defaults.variedSentences
+      ? [{
+          key: 'varied',
+          label: choices.variedSentences ? 'Sentence variety on' : 'Sentence variety off',
+          name: 'Sentence length',
+          reset: { variedSentences: defaults.variedSentences },
+        }]
+      : []),
+    ...(choices.model !== defaults.model
+      ? [{
+          key: 'model',
+          label: SUPPORTED_MODELS.find((model) => model.id === choices.model)?.label ?? choices.model,
+          name: 'Model',
+          reset: { model: defaults.model },
+        }]
+      : []),
+  ]
   const textTypeInfo = choices.textType ? TEXT_TYPE_INFO[choices.textType] : null
   const ideas = topicIdeasForLevel(choices.level)
   const ideaRows = Math.max(1, Math.ceil(ideas.length / IDEAS_PER_ROW))
@@ -309,267 +329,221 @@ export function NewStory() {
               <path d="M19 16l.7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z" />
             </svg>
           </TextField.Slot>
-          {textTypeInfo && (
-            <TextField.Slot side="right">
+          <TextField.Slot side="right" className="new-story-generate-slot">
+            {/* aria-disabled keeps the button focusable so keyboard and screen-reader users reach the
+                reason it is unavailable; onSubmit ignores it. disabled={false} stops loading from
+                disabling it, which would drop focus during generation. */}
+            <Button
+              ref={generateButton}
+              type="submit"
+              size="3"
+              radius="full"
+              className="new-story-generate"
+              disabled={false}
+              aria-disabled={blocked || undefined}
+              data-disabled={blocked || undefined}
+              aria-describedby={isOnline ? undefined : 'new-story-offline'}
+              loading={generating}
+            >
+              <span className="new-story-generate-label">Generate Story</span> <ArrowRightIcon aria-hidden="true" />
+            </Button>
+          </TextField.Slot>
+        </TextField.Root>
+
+        {/* One line under the bar holds every choice. The chips scroll sideways when they do not fit, so
+            Options always stays at the right end, on the same line. */}
+        <div className="new-story-chips home-rise">
+          <div className="new-story-chip-list" role="group" aria-label="Story choices">
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger disabled={generating}>
+                <Button type="button" variant="soft" color="gray" radius="full" size="1"
+                  aria-label={`Vocabulary level: ${choices.level}`}>
+                  {choices.level} <ChevronDownIcon aria-hidden="true" />
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content size="1">
+                <DropdownMenu.Label>Vocabulary level</DropdownMenu.Label>
+                <DropdownMenu.RadioGroup value={choices.level} onValueChange={(value) => changeLevel(value as CefrLevel)}>
+                  {CEFR_LEVELS.map((level) => (
+                    <DropdownMenu.RadioItem key={level} value={level}>{level}</DropdownMenu.RadioItem>
+                  ))}
+                </DropdownMenu.RadioGroup>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item onSelect={() => setLevelInfoOpen(true)}>Which level should I choose?</DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger disabled={generating}>
+                <Button type="button" variant="soft" color="gray" radius="full" size="1"
+                  aria-label={`Reading length: ${choices.readingMinutes} minutes, about ${length.minWords.toLocaleString('en-US')}–${length.maxWords.toLocaleString('en-US')} words`}>
+                  {choices.readingMinutes} min <ChevronDownIcon aria-hidden="true" />
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content size="1">
+                <DropdownMenu.Label>Reading length</DropdownMenu.Label>
+                <DropdownMenu.RadioGroup
+                  value={String(choices.readingMinutes)}
+                  onValueChange={(value) => updateChoices({ readingMinutes: Number(value) as ReadingMinutes })}
+                >
+                  {READING_MINUTE_OPTIONS.map((minutes) => {
+                    const words = READING_LENGTHS[minutes]
+                    return (
+                      <DropdownMenu.RadioItem key={minutes} value={String(minutes)}>
+                        {minutes} min
+                        <Text color="gray" ml="2">
+                          about {words.minWords.toLocaleString('en-US')}–{words.maxWords.toLocaleString('en-US')} words
+                        </Text>
+                      </DropdownMenu.RadioItem>
+                    )
+                  })}
+                </DropdownMenu.RadioGroup>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger disabled={generating}>
+                <Button type="button" variant="soft" color="gray" radius="full" size="1"
+                  aria-label={`Text type: ${textTypeInfo ? textTypeInfo.label : 'any'}`}>
+                  {textTypeInfo ? textTypeInfo.label : 'Any type'} <ChevronDownIcon aria-hidden="true" />
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content size="1">
+                <DropdownMenu.RadioGroup
+                  value={choices.textType ?? ANY}
+                  onValueChange={(value) => {
+                    setClearedTextType(null)
+                    updateChoices({ textType: value === ANY ? null : (value as TextType) })
+                  }}
+                >
+                  <DropdownMenu.Label>Text type</DropdownMenu.Label>
+                  <DropdownMenu.RadioItem value={ANY}>Any (usually a story)</DropdownMenu.RadioItem>
+                  {TEXT_MODES.map((mode) => (
+                    <DropdownMenu.Group key={mode}>
+                      <DropdownMenu.Separator />
+                      <DropdownMenu.Label>{TEXT_MODE_LABELS[mode]}</DropdownMenu.Label>
+                      {textTypesForLevel(mode, choices.level).map((textType) => (
+                        <DropdownMenu.RadioItem key={textType} value={textType}>
+                          {TEXT_TYPE_INFO[textType].label}
+                        </DropdownMenu.RadioItem>
+                      ))}
+                    </DropdownMenu.Group>
+                  ))}
+                </DropdownMenu.RadioGroup>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+
+            {changedOptions.map((option) => (
               <Button
+                key={option.key}
                 type="button"
                 variant="soft"
                 radius="full"
                 size="1"
                 disabled={generating}
-                aria-label={`Text type: ${textTypeInfo.label}. Remove`}
-                onClick={() => updateChoices({ textType: null })}
+                aria-label={`${option.name}: ${option.label}. Remove`}
+                onClick={() => updateChoices(option.reset)}
               >
-                {textTypeInfo.label} <Cross2Icon aria-hidden="true" />
+                {option.label} <Cross2Icon aria-hidden="true" />
               </Button>
-            </TextField.Slot>
-          )}
-        </TextField.Root>
+            ))}
+          </div>
 
-        <div className="new-story-ideas home-rise" role="group" aria-label="Topic ideas">
-          {shownIdeas.map((idea) => {
-            const picked = choices.topic === idea.topic && choices.textType === idea.textType
-            return (
-              <Button
-                key={idea.topic}
-                type="button"
-                variant={picked ? 'soft' : 'outline'}
-                color={picked ? 'blue' : 'gray'}
-                radius="full"
-                size="2"
-                className="new-story-idea"
-                aria-pressed={picked}
-                disabled={generating}
-                onClick={() => pickIdea(idea)}
-              >
-                {idea.topic}
-                <span className="new-story-idea-type">· {TEXT_TYPE_INFO[idea.textType].label}</span>
-              </Button>
-            )
-          })}
-          {ideaRows > 1 && (
-            <IconButton
-              type="button"
-              variant="outline"
-              color="gray"
-              radius="full"
-              size="2"
-              aria-label="Show other ideas"
-              disabled={generating}
-              onClick={() => setIdeaRow((row) => row + 1)}
-            >
-              <ShuffleIcon />
-            </IconButton>
-          )}
-        </div>
-
-        <Flex direction="column" align="center" gap="3" className="new-story-actions home-rise">
-          {/* aria-disabled keeps the button focusable so keyboard and screen-reader users reach the
-              reason it is unavailable; onSubmit ignores it. disabled={false} stops loading from
-              disabling it, which would drop focus during generation. */}
-          <Button
-            ref={generateButton}
-            type="submit"
-            size="3"
-            radius="full"
-            className="new-story-generate"
-            disabled={false}
-            aria-disabled={blocked || undefined}
-            data-disabled={blocked || undefined}
-            aria-describedby={isOnline ? undefined : 'new-story-offline'}
-            loading={generating}
-          >
-            Generate Story <ArrowRightIcon aria-hidden="true" />
-          </Button>
-
-          <Flex align="center" justify="center" wrap="wrap" gap="1" className="new-story-summary">
-            <Text size="2" color="gray">
-              {choices.level} · about {choices.readingMinutes} minutes
-              {styleSummary && ` · ${styleSummary}`} ·
-            </Text>
+          <Flex align="center" gap="2" className="new-story-more">
             {/* Generating closes the panel and locks its controls: the story already being written
                 would not use changes made now. */}
             <Popover.Root open={optionsOpen && !generating} onOpenChange={setOptionsOpen}>
               <Popover.Trigger>
-                <Button type="button" variant="ghost" size="2" disabled={generating}>
+                <Button type="button" variant="ghost" size="1" disabled={generating}>
                   Options
                 </Button>
               </Popover.Trigger>
               <Popover.Content className="new-story-options-panel" aria-label="Story options">
                 <Flex direction="column" gap="4">
-                  <div>
-                    <Flex align="center" gap="2" mb="2">
-                      <Text as="div" id="new-story-level-label" size="2" weight="medium">
-                        Vocabulary level
-                      </Text>
-                      <VocabularyLevelInfo />
+                  <div role="group" aria-labelledby="new-story-tone-label">
+                    <Text as="div" id="new-story-tone-label" size="2" weight="medium" mb="2">
+                      Tone
+                    </Text>
+                    <Flex wrap="wrap" gap="2">
+                      {[null, ...TONES].map((tone) => (
+                        <Button
+                          key={tone ?? ANY}
+                          type="button"
+                          variant="soft"
+                          color={choices.tone === tone ? 'blue' : 'gray'}
+                          size="1"
+                          aria-pressed={choices.tone === tone}
+                          disabled={generating}
+                          onClick={() => updateChoices({ tone })}
+                        >
+                          {tone ? TONE_LABELS[tone] : 'Any'}
+                        </Button>
+                      ))}
                     </Flex>
-                    <SegmentedControl.Root
-                      aria-labelledby="new-story-level-label"
-                      value={choices.level}
-                      onValueChange={(value) => changeLevel(value as CefrLevel)}
-                      disabled={generating}
-                      className="new-story-levels"
-                    >
-                      {CEFR_LEVELS.map((level) => (
-                        <SegmentedControl.Item key={level} value={level}>{level}</SegmentedControl.Item>
-                      ))}
-                    </SegmentedControl.Root>
-                    <div role="status">
-                      {clearedTextType && (
-                        <Text as="p" size="1" color="amber" mt="1">
-                          {TEXT_TYPE_INFO[clearedTextType].label} ({textTypeLevelRange(clearedTextType)}) is not
-                          offered at {choices.level}, so it was cleared.
-                        </Text>
-                      )}
-                    </div>
                   </div>
-
                   <div>
-                    <Text as="div" id="new-story-length-label" size="2" weight="medium" mb="2">
-                      Reading length
+                    <Text as="div" id="new-story-pov-label" size="2" weight="medium" mb="2">
+                      Point of view
                     </Text>
                     <SegmentedControl.Root
-                      aria-labelledby="new-story-length-label"
-                      aria-describedby="new-story-length-help"
-                      value={String(choices.readingMinutes)}
-                      onValueChange={(value) => updateChoices({ readingMinutes: Number(value) as ReadingMinutes })}
-                      disabled={generating}
-                      className="new-story-lengths"
+                      aria-labelledby="new-story-pov-label"
+                      value={choices.pointOfView ?? ANY}
+                      onValueChange={(value) =>
+                        updateChoices({ pointOfView: value === ANY ? null : (value as PointOfView) })
+                      }
+                      aria-describedby={pointOfViewApplies ? undefined : 'new-story-pov-help'}
+                      disabled={generating || !pointOfViewApplies}
+                      size="1"
+                      className="new-story-style-control"
                     >
-                      {READING_MINUTE_OPTIONS.map((minutes) => (
-                        <SegmentedControl.Item key={minutes} value={String(minutes)}>{minutes} min</SegmentedControl.Item>
+                      <SegmentedControl.Item value={ANY}>Any</SegmentedControl.Item>
+                      {POINTS_OF_VIEW.map((pointOfView) => (
+                        <SegmentedControl.Item key={pointOfView} value={pointOfView}>
+                          {POINT_OF_VIEW_LABELS[pointOfView]}
+                        </SegmentedControl.Item>
                       ))}
                     </SegmentedControl.Root>
-                    <Text as="p" id="new-story-length-help" size="1" color="gray" mt="2">
-                      About {length.minWords.toLocaleString('en-US')}–{length.maxWords.toLocaleString('en-US')} words.
-                      Reading time varies.
-                    </Text>
-                  </div>
-
-                  <div>
-                    <Text as="label" htmlFor="new-story-text-type" size="2" weight="medium">
-                      Text type
-                    </Text>
-                    <Select.Root
-                      value={choices.textType ?? ANY}
-                      disabled={generating}
-                      onValueChange={(value) => {
-                        setClearedTextType(null)
-                        updateChoices({ textType: value === ANY ? null : (value as TextType) })
-                      }}
-                    >
-                      <Select.Trigger id="new-story-text-type" className="new-story-model" />
-                      <Select.Content position="popper">
-                        <Select.Item value={ANY}>Any (usually a story)</Select.Item>
-                        {TEXT_MODES.map((mode) => (
-                          <Select.Group key={mode}>
-                            <Select.Label>{TEXT_MODE_LABELS[mode]}</Select.Label>
-                            {textTypesForLevel(mode, choices.level).map((textType) => (
-                              <Select.Item key={textType} value={textType}>{TEXT_TYPE_INFO[textType].label}</Select.Item>
-                            ))}
-                          </Select.Group>
-                        ))}
-                      </Select.Content>
-                    </Select.Root>
-                    {textTypeInfo && (
-                      <Text as="p" size="1" color="gray" mt="2">
-                        {textTypeInfo.label}: {textTypeInfo.description}.
+                    {textTypeInfo?.fixedPointOfView && (
+                      <Text as="p" id="new-story-pov-help" size="1" color="gray" mt="2">
+                        {textTypeInfo.fixedPointOfView === 'none'
+                          ? `${textTypeInfo.label} has no narrator, so this does not apply.`
+                          : `${textTypeInfo.label} is always in the ${POINT_OF_VIEW_LABELS[textTypeInfo.fixedPointOfView].toLowerCase()}.`}
                       </Text>
                     )}
                   </div>
-
-                  <details className="new-story-style">
-                    <summary>
-                      <Text size="2" weight="medium">Style and model</Text>
-                    </summary>
-                    <Flex direction="column" gap="4" mt="3">
-                      <div role="group" aria-labelledby="new-story-tone-label">
-                        <Text as="div" id="new-story-tone-label" size="2" weight="medium" mb="2">
-                          Tone
-                        </Text>
-                        <Flex wrap="wrap" gap="2">
-                          {[null, ...TONES].map((tone) => (
-                            <Button
-                              key={tone ?? ANY}
-                              type="button"
-                              variant="soft"
-                              color={choices.tone === tone ? 'blue' : 'gray'}
-                              size="1"
-                              aria-pressed={choices.tone === tone}
-                              disabled={generating}
-                              onClick={() => updateChoices({ tone })}
-                            >
-                              {tone ? TONE_LABELS[tone] : 'Any'}
-                            </Button>
-                          ))}
-                        </Flex>
-                      </div>
-                      <div>
-                        <Text as="div" id="new-story-pov-label" size="2" weight="medium" mb="2">
-                          Point of view
-                        </Text>
-                        <SegmentedControl.Root
-                          aria-labelledby="new-story-pov-label"
-                          value={choices.pointOfView ?? ANY}
-                          onValueChange={(value) =>
-                            updateChoices({ pointOfView: value === ANY ? null : (value as PointOfView) })
-                          }
-                          aria-describedby={pointOfViewApplies ? undefined : 'new-story-pov-help'}
-                          disabled={generating || !pointOfViewApplies}
-                          size="1"
-                          className="new-story-style-control"
-                        >
-                          <SegmentedControl.Item value={ANY}>Any</SegmentedControl.Item>
-                          {POINTS_OF_VIEW.map((pointOfView) => (
-                            <SegmentedControl.Item key={pointOfView} value={pointOfView}>
-                              {POINT_OF_VIEW_LABELS[pointOfView]}
-                            </SegmentedControl.Item>
-                          ))}
-                        </SegmentedControl.Root>
-                        {textTypeInfo?.fixedPointOfView && (
-                          <Text as="p" id="new-story-pov-help" size="1" color="gray" mt="2">
-                            {textTypeInfo.fixedPointOfView === 'none'
-                              ? `${textTypeInfo.label} has no narrator, so this does not apply.`
-                              : `${textTypeInfo.label} is always in the ${POINT_OF_VIEW_LABELS[textTypeInfo.fixedPointOfView].toLowerCase()}.`}
-                          </Text>
-                        )}
-                      </div>
-                      <div>
-                        <Text as="label" size="2">
-                          <Flex gap="2" align="center">
-                            <Checkbox
-                              checked={choices.variedSentences}
-                              onCheckedChange={(checked) => updateChoices({ variedSentences: checked === true })}
-                              disabled={generating}
-                              aria-describedby="new-story-varied-help"
-                            />
-                            <Text weight="medium">Varied sentence length</Text>
-                          </Flex>
-                        </Text>
-                        <Text as="p" id="new-story-varied-help" size="1" color="gray" mt="1">
-                          Mixes short and long sentences and paragraphs, so the text has more rhythm.
-                        </Text>
-                      </div>
-                      <div>
-                        <Text as="label" htmlFor="new-story-model" size="2" weight="medium">
-                          Model
-                        </Text>
-                        <Select.Root
-                          value={choices.model}
-                          onValueChange={(value) => updateChoices({ model: value as GenerationModel })}
+                  <div>
+                    <Text as="label" size="2">
+                      <Flex gap="2" align="center">
+                        <Checkbox
+                          checked={choices.variedSentences}
+                          onCheckedChange={(checked) => updateChoices({ variedSentences: checked === true })}
                           disabled={generating}
-                        >
-                          <Select.Trigger id="new-story-model" className="new-story-model" />
-                          <Select.Content>
-                            {SUPPORTED_MODELS.map((model) => (
-                              <Select.Item key={model.id} value={model.id}>{model.label}</Select.Item>
-                            ))}
-                          </Select.Content>
-                        </Select.Root>
-                      </div>
-                    </Flex>
-                  </details>
+                          aria-describedby="new-story-varied-help"
+                        />
+                        <Text weight="medium">Varied sentence length</Text>
+                      </Flex>
+                    </Text>
+                    <Text as="p" id="new-story-varied-help" size="1" color="gray" mt="1">
+                      Mixes short and long sentences and paragraphs, so the text has more rhythm.
+                    </Text>
+                  </div>
+                  <div>
+                    <Text as="label" htmlFor="new-story-model" size="2" weight="medium">
+                      Model
+                    </Text>
+                    <Select.Root
+                      value={choices.model}
+                      onValueChange={(value) => updateChoices({ model: value as GenerationModel })}
+                      disabled={generating}
+                    >
+                      <Select.Trigger id="new-story-model" className="new-story-model" />
+                      <Select.Content>
+                        {SUPPORTED_MODELS.map((model) => (
+                          <Select.Item key={model.id} value={model.id}>{model.label}</Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Root>
+                  </div>
 
                   {notes.length > 0 && (
                     <Flex direction="column" gap="2">
@@ -587,7 +561,57 @@ export function NewStory() {
               </Popover.Content>
             </Popover.Root>
           </Flex>
-        </Flex>
+        </div>
+
+        <div role="status" className="new-story-chip-notice">
+          {clearedTextType && (
+            <Text as="p" size="1" color="amber">
+              {TEXT_TYPE_INFO[clearedTextType].label} ({textTypeLevelRange(clearedTextType)}) is not offered at{' '}
+              {choices.level}, so it was cleared.
+            </Text>
+          )}
+        </div>
+
+        <section className="new-story-ideas home-rise" aria-labelledby="new-story-ideas-title">
+          <Flex align="center" justify="between" className="new-story-ideas-head">
+            <Text as="div" id="new-story-ideas-title" size="2" weight="medium" color="gray">
+              Topic ideas
+            </Text>
+            {ideaRows > 1 && (
+              <Button
+                type="button"
+                variant="ghost"
+                color="gray"
+                size="1"
+                disabled={generating}
+                onClick={() => setIdeaRow((row) => row + 1)}
+              >
+                <ShuffleIcon aria-hidden="true" /> More ideas
+              </Button>
+            )}
+          </Flex>
+          <div className="new-story-idea-cards">
+            {shownIdeas.map((idea) => {
+              const picked = choices.topic === idea.topic && choices.textType === idea.textType
+              const info = TEXT_TYPE_INFO[idea.textType]
+              return (
+                <Card key={idea.topic} asChild size="2" className="new-story-idea">
+                  <button
+                    type="button"
+                    aria-pressed={picked}
+                    disabled={generating}
+                    onClick={() => pickIdea(idea)}
+                  >
+                    <Text as="div" size="1" className="new-story-idea-type">{info.label}</Text>
+                    <Text as="div" size="3" weight="medium" className="new-story-idea-topic">{idea.topic}</Text>
+                    <Text as="div" size="1" color="gray" className="new-story-idea-description">{info.description}</Text>
+                  </button>
+                </Card>
+              )
+            })}
+          </div>
+        </section>
+
 
         {/* The guide never opens by itself, so this is how a new reader finds it. */}
         <Button
@@ -611,6 +635,8 @@ export function NewStory() {
       </form>
 
       {/* Outside the form: the dialog's own form would otherwise submit this one through the React tree. */}
+      <VocabularyLevelInfo open={levelInfoOpen} onOpenChange={setLevelInfoOpen} />
+
       <GeminiKeyDialog
         open={keyDialogOpen}
         onOpenChange={setKeyDialogOpen}
