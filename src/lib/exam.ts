@@ -88,6 +88,7 @@ export async function generateReadingQuestions(
     temperature: 0.4,
     model: settings.model as Parameters<typeof callGemini>[1]['model'],
     signal,
+    task: { name: 'Writing exam questions', finished: 'the questions were finished' },
   })
   if (!result.ok) {
     let message = result.message

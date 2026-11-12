@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   makeVocabularyQuestions,
+  generateReadingQuestions,
   parseReadingQuestions,
   practiceMissedQuestions,
   vocabularyExplanation,
@@ -73,4 +74,25 @@ test('vocabulary explanations end in one full stop and name the story', () => {
     'From “Why rest?”: “idle” means not working.',
   )
   assert.equal(vocabularyExplanation({ word: 'idle', definition: 'not working.', story: '' }), '“idle” means not working.')
+})
+
+test('reading exam errors talk about exam questions, not a story', async () => {
+  const realFetch = globalThis.fetch
+  const settings = { apiKey: 'test-key', apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta', model: 'gemini-3.1-flash-lite' }
+  const story = { title: 'T', body: 'Text.', level: 'A2' }
+  try {
+    globalThis.fetch = async () => {
+      throw new TypeError('offline')
+    }
+    const offline = await generateReadingQuestions(story, settings)
+    assert.equal(offline.ok, false)
+    assert.match(offline.message, /Writing exam questions requires an internet connection/)
+    globalThis.fetch = async () =>
+      new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: '[' }] }, finishReason: 'MAX_TOKENS' }] }))
+    const cut = await generateReadingQuestions(story, settings)
+    assert.match(cut.message, /stopped before the questions were finished \(MAX_TOKENS\)/)
+    assert.doesNotMatch(cut.message, /story/i)
+  } finally {
+    globalThis.fetch = realFetch
+  }
 })
