@@ -47,6 +47,8 @@ export type Settings = {
   apiBaseUrl: string
   model: string
   showDebugFixtures: boolean
+  /** Debugging: show example words in the fixture articles as looked up, so exams have words to use. */
+  addExampleVocabulary: boolean
   showVocabularyReport: boolean
   /** Open a short reading comprehension exam when the reader finishes a story. */
   offerExamAfterStory: boolean

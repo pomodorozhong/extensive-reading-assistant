@@ -1,5 +1,5 @@
 import { CEFR_LEVELS, type CefrLevel, type Settings, type Story, type WordMark } from '../types.ts'
-import { DEBUG_FIXTURES, isDebugFixture } from './debug-fixtures.ts'
+import { DEBUG_FIXTURES, EXAMPLE_VOCABULARY, isDebugFixture } from './debug-fixtures.ts'
 import { DEFAULT_GENERATION_LEVEL, DEFAULT_MODEL } from './generation-options.ts'
 import { normalizeWord } from './tokenize.ts'
 import { reconcileVocabulary, type VocabularyWord } from './vocabulary.ts'
@@ -20,6 +20,7 @@ export const DEFAULT_SETTINGS: Settings = {
   apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
   model: DEFAULT_MODEL,
   showDebugFixtures: false,
+  addExampleVocabulary: false,
   showVocabularyReport: false,
   offerExamAfterStory: true,
 }
@@ -61,6 +62,7 @@ export function loadSettings(): Settings {
       apiKey: rememberApiKey ? (localStorage.getItem(API_KEY_KEY) ?? legacyKey ?? '') : sessionApiKey,
       rememberApiKey,
       showDebugFixtures: parsed.showDebugFixtures === true,
+      addExampleVocabulary: parsed.showDebugFixtures === true && parsed.addExampleVocabulary === true,
       showVocabularyReport: parsed.showVocabularyReport === true,
       offerExamAfterStory: parsed.offerExamAfterStory !== false,
       apiBaseUrl:
@@ -188,14 +190,20 @@ function loadFixtureState(): Record<string, FixtureState> {
 /** Debug fixtures are a view overlay; they never become generated/saved stories. */
 export function loadVisibleStories(): Story[] {
   const saved = loadStories()
-  if (!loadSettings().showDebugFixtures) return saved
+  const settings = loadSettings()
+  if (!settings.showDebugFixtures) return saved
   const state = loadFixtureState()
   const savedIds = new Set(saved.map((story) => story.id))
   return [...saved, ...DEBUG_FIXTURES.filter((story) => !savedIds.has(story.id)).map((story) => ({
     ...story,
-    wordMarks: state[story.id]?.wordMarks ?? {},
+    // The reader's own marks win, so an example word marked known stays known.
+    wordMarks: { ...(settings.addExampleVocabulary ? exampleMarks(story.id) : {}), ...state[story.id]?.wordMarks },
     explanations: state[story.id]?.explanations ?? {},
   }))]
+}
+
+function exampleMarks(id: string): Record<string, WordMark> {
+  return Object.fromEntries((EXAMPLE_VOCABULARY[id] ?? []).map((key) => [key, 'unknown' as const]))
 }
 
 export function getStory(id: string): Story | undefined {
@@ -210,7 +218,13 @@ function saveStoryChanges(story: Story): void {
     saveStories(saved)
   } else if (isDebugFixture(story.id) && loadSettings().showDebugFixtures) {
     const state = loadFixtureState()
-    state[story.id] = { wordMarks: story.wordMarks, explanations: story.explanations }
+    // Example words are an overlay too: store only marks that differ from it, so turning
+    // the example words off removes them.
+    const examples = loadSettings().addExampleVocabulary ? exampleMarks(story.id) : {}
+    const wordMarks = Object.fromEntries(
+      Object.entries(story.wordMarks).filter(([key, mark]) => examples[key] !== mark),
+    )
+    state[story.id] = { wordMarks, explanations: story.explanations }
     localStorage.setItem(FIXTURE_STATE_KEY, JSON.stringify(state))
   }
 }

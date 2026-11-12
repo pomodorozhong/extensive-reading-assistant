@@ -27,6 +27,8 @@ A finished story shows a **Read** badge in Story View and My Stories. After an e
 
 The **Exam** tab quizzes word meanings, whatever the Settings switch is set to. The reader chooses where the words come from, **Past stories** (words above A2 in My Stories that are not marked known) or **Vocabulary** (the words Vocabulary tracks), and 5 or 10 questions. Each question asks for the meaning of a word, every other one shown in its sentence from the story, with four definitions to choose from. Questions and wrong answers come from the bundled dictionary, so this exam needs no Gemini key. A source with too few words asks the reader to read or look up more first, and a short source gives a shorter quiz. Results offer **Retake exam** and practice on the missed words.
 
+To try the exams without reading or generating anything, turn on **Settings → Debugging → Add example words to Vocabulary**. It also turns on the fixture articles, and shows 18 harder words in them (B1–C2 articles, plus one in A2) as already looked up, so both question sources have enough words. The example words are not stored: turning the option off, or hiding the fixture articles, removes them, while words you mark as known yourself stay known. Their definitions are not saved in Vocabulary until you tap them in the article; the Exam tab looks them up itself.
+
 Read state and exam results are kept in this browser (`localStorage`, `era.v1.progress`): the last reading result per story and the last 30 vocabulary exams.
 
 ## Approximate vocabulary difficulty
