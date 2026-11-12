@@ -326,7 +326,7 @@ export function SettingsPage() {
             </Flex>
           </Text>
           <Text as="p" size="2" color="gray" mt="2">
-            Off by default. Shows 18 harder words in the fixture articles as looked up, so
+            Off by default. Shows 18 harder words in the fixture articles as marked unknown, so
             Vocabulary and the Exam tab have words to use. Turns on the fixture articles too.
             Turning it off removes them.
           </Text>

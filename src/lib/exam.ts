@@ -219,7 +219,7 @@ export async function buildVocabularyExam(
       ok: false,
       message:
         source === 'vocabulary'
-          ? 'Look up a few more words while reading, then try again.'
+          ? 'Mark a few more words as unknown while reading, then try again.'
           : 'Read a few more stories so there are enough words to ask about.',
     }
   }

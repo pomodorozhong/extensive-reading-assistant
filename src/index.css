@@ -365,8 +365,120 @@ body {
   flex-shrink: 0;
 }
 
+/* The word whose meaning is shown is underlined in blue, whether or not it is marked. */
+.story-word.active {
+  box-shadow: inset 0 -2px 0 var(--blue-9);
+}
+
+/* Below 941px: story, then the word list, then the finishing cards. */
+.story-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.story-main {
+  display: contents;
+}
+
+.story-body {
+  order: 1;
+}
+
+.story-side {
+  order: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.story-after {
+  order: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
 .glossary {
   max-width: 65ch;
+}
+
+/* Wide screens: the side panel sits beside the story and stays in view while reading. */
+@media (min-width: 941px) {
+  .story-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 274px;
+    gap: 34px;
+    align-items: start;
+  }
+
+  .story-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .story-side {
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 96px);
+    overflow-y: auto;
+  }
+
+  .story-side .glossary {
+    max-width: none;
+  }
+}
+
+.side-dictionary {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.side-eyebrow {
+  color: var(--accent-11);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.side-dictionary-close {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gray-11);
+  cursor: pointer;
+}
+
+.side-dictionary-close:hover {
+  background: var(--gray-a3);
+  color: var(--gray-12);
+}
+
+.side-dictionary-close:focus-visible {
+  outline: 2px solid var(--accent-9);
+  outline-offset: 2px;
+}
+
+.side-dictionary-word {
+  padding-right: 28px;
+  overflow-wrap: anywhere;
+}
+
+.side-dictionary-body {
+  overflow-wrap: anywhere;
+}
+
+.side-dictionary-body .rt-Spinner {
+  display: inline-block;
+  vertical-align: -0.1em;
 }
 
 .glossary-item {

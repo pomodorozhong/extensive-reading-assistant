@@ -22,7 +22,7 @@ export function Vocabulary() {
       </Text>
       {words.length === 0 ? (
         <Flex direction="column" gap="3" align="start">
-          <Text>No unknown words yet. Look up a word while reading to add it here.</Text>
+          <Text>No unknown words yet. While reading, tap a word and choose Mark as unknown to add it here.</Text>
           <Button asChild><Link to="/stories">Open My Stories</Link></Button>
         </Flex>
       ) : (
