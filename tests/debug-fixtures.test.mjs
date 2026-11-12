@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import { beforeEach, test } from 'node:test'
-import { DEBUG_FIXTURES } from '../src/lib/debug-fixtures.ts'
+import { DEBUG_FIXTURES, EXAMPLE_VOCABULARY } from '../src/lib/debug-fixtures.ts'
+import { tokenize } from '../src/lib/tokenize.ts'
 import { analyzeVocabulary } from '../src/lib/cefr.ts'
 import {
   DEFAULT_SETTINGS, getStory, loadSettings, loadStories, loadVisibleStories,
-  saveSettings, updateWordExplanation, updateWordMark, upsertStory,
+  loadVocabulary, markVocabularyKnown, saveSettings, updateWordExplanation, updateWordMark, upsertStory,
 } from '../src/lib/storage.ts'
 
 beforeEach(() => {
@@ -95,4 +96,39 @@ test('article coverage resolves reviewed inflections and spelling aliases', () =
     const report = analyzeVocabulary(story.body, story.level)
     assert.deepEqual(report.unlisted.map((entry) => entry.word), expected[index], story.level)
   }
+})
+
+const exampleKeys = Object.values(EXAMPLE_VOCABULARY).flat()
+
+test('every example word appears in its fixture article', () => {
+  for (const [id, keys] of Object.entries(EXAMPLE_VOCABULARY)) {
+    const fixture = DEBUG_FIXTURES.find((story) => story.id === id)
+    const words = new Set(tokenize(fixture.body).filter((token) => token.type === 'word').map((token) => token.key))
+    for (const key of keys) assert.ok(words.has(key), `${key} in ${id}`)
+  }
+})
+
+test('example words fill Vocabulary only while the option and fixtures are on', () => {
+  assert.equal(loadSettings().addExampleVocabulary, false)
+  localStorage.setItem('era.v1.settings', JSON.stringify({ addExampleVocabulary: true }))
+  assert.equal(loadSettings().addExampleVocabulary, false, 'needs the fixture articles')
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true })
+  assert.deepEqual(loadVocabulary(), [])
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true, addExampleVocabulary: true })
+  assert.deepEqual(loadVocabulary().map((word) => word.key).sort(), [...exampleKeys].sort())
+  assert.equal(getStory('debug-cefr-b2').wordMarks.proposal, 'unknown')
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true, addExampleVocabulary: false })
+  assert.deepEqual(loadVocabulary(), [])
+})
+
+test('example words stay out of stored fixture state, while the reader\'s own marks are kept', () => {
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true, addExampleVocabulary: true })
+  updateWordMark('debug-cefr-b2', 'garden', 'unknown')
+  markVocabularyKnown('expense')
+  const stored = JSON.parse(localStorage.getItem('era.v1.debug-fixtures'))['debug-cefr-b2'].wordMarks
+  assert.deepEqual(stored, { garden: 'unknown', expense: 'known' })
+  assert.equal(getStory('debug-cefr-b2').wordMarks.expense, 'known')
+  assert.ok(!loadVocabulary().some((word) => word.key === 'expense'))
+  saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true, addExampleVocabulary: false })
+  assert.deepEqual(loadVocabulary().map((word) => word.key), ['garden'])
 })

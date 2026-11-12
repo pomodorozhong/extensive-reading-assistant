@@ -34,14 +34,23 @@ export type GenerateResult =
   | { ok: true; title: string; body: string; generation: StoryGeneration }
   | { ok: false; message: string; canceled?: true }
 
-type GeminiTextResult = { ok: true; text: string } | { ok: false; message: string; canceled?: true }
+export type GeminiTextResult = { ok: true; text: string } | { ok: false; message: string; canceled?: true }
 
 const CANCELED: GeminiTextResult = { ok: false, message: 'Story generation was canceled.', canceled: true }
 
-async function callGemini(
+export async function callGemini(
   settings: Settings,
-  options: { system: string; user: string; temperature: number; model: GenerationModel; signal?: AbortSignal },
+  options: {
+    system: string
+    user: string
+    temperature: number
+    model: GenerationModel
+    signal?: AbortSignal
+    /** What the request makes, for error messages: defaults to a story. */
+    task?: { name: string; finished: string }
+  },
 ): Promise<GeminiTextResult> {
+  const task = options.task ?? { name: 'Story generation', finished: 'the story was finished' }
   // Check the destination before the key is attached to any request.
   const endpoint = checkGeminiEndpoint(settings.apiBaseUrl, allowsLoopbackEndpoint())
   if (!endpoint.ok) return { ok: false, message: `${endpoint.message} Update the API base URL in Settings.` }
@@ -71,7 +80,7 @@ async function callGemini(
     return {
       ok: false,
       message:
-        'Could not reach Gemini. Story generation requires an internet connection; check your network and API settings.',
+        `Could not reach Gemini. ${task.name} requires an internet connection; check your network and API settings.`,
     }
   }
 
@@ -121,7 +130,7 @@ async function callGemini(
   // A story cut off before the model finished is incomplete, so it is never saved.
   if (reason && reason !== 'STOP') {
     return content
-      ? { ok: false, message: `Gemini stopped before the story was finished (${reason}). Try again.` }
+      ? { ok: false, message: `Gemini stopped before ${task.finished} (${reason}). Try again.` }
       : { ok: false, message: `Gemini stopped early (${reason}). Try again.` }
   }
 

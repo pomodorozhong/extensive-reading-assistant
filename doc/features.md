@@ -19,6 +19,18 @@ Vocabulary groups unknown words into approximate A1–C2 sections, followed by U
 
 See [Vocabulary verification steps](vocabulary-verification.md) for a disposable fixture and removal/persistence checks.
 
+## Exams
+
+At the end of each story, **Finish reading** marks the story as read. With **Offer an exam after each story** on in Settings (the default), it then opens a reading comprehension exam: Gemini writes four multiple-choice questions about the story, and the results show the score, the correct answers, and a one-sentence explanation for each. The reader can skip the exam at any point. Without a Gemini key, or if the request fails, the exam page says why and offers **Try again** and **Open Settings**; the story stays marked as read. With the switch off, finishing goes straight back to My Stories.
+
+A finished story shows a **Read** badge in Story View and My Stories. After an exam, My Stories also shows the last score, and the story's end card offers **See last result** and **Retake exam**. A retake asks Gemini for new questions.
+
+The **Exam** tab quizzes word meanings, whatever the Settings switch is set to. The reader chooses where the words come from, **Past stories** (words above A2 in My Stories that are not marked known) or **Vocabulary** (the words Vocabulary tracks), and 5 or 10 questions. Each question asks for the meaning of a word, every other one shown in its sentence from the story, with four definitions to choose from. Questions and wrong answers come from the bundled dictionary, so this exam needs no Gemini key. A source with too few words asks the reader to read or look up more first, and a short source gives a shorter quiz. Results offer **Retake exam** and practice on the missed words.
+
+To try the exams without reading or generating anything, turn on **Settings → Debugging → Add example words to Vocabulary**. It also turns on the fixture articles, and shows 18 harder words in them (B1–C2 articles, plus one in A2) as already looked up, so both question sources have enough words. The example words are not stored: turning the option off, or hiding the fixture articles, removes them, while words you mark as known yourself stay known. Their definitions are not saved in Vocabulary until you tap them in the article; the Exam tab looks them up itself.
+
+Read state and exam results are kept in this browser (`localStorage`, `era.v1.progress`): the last reading result per story and the last 30 vocabulary exams.
+
 ## Approximate vocabulary difficulty
 
 Enable **Settings → Debugging → Show approximate vocabulary difficulty** to display a report against each story's recorded CEFR level. This option is off by default. Validation runs locally with bundled A1–C2 vocabulary data, needs no API key, and works offline after the app is cached. Above-level words include occurrence counts and a percentage; unlisted words and detected names appear separately. Reports are advisory and do not block reading or saving.

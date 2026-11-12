@@ -70,3 +70,15 @@ export const DEBUG_FIXTURES: readonly Story[] = articles.map((article) => ({
 export function isDebugFixture(id: string): boolean {
   return DEBUG_FIXTURES.some((story) => story.id === id)
 }
+
+/**
+ * Harder words in each fixture, shown as already looked up when **Add example words to Vocabulary**
+ * is on, so Vocabulary and the Exam tab have words to use. Keys are normalized words.
+ */
+export const EXAMPLE_VOCABULARY: Readonly<Record<string, readonly string[]>> = {
+  'debug-cefr-a2': ['nearby'],
+  'debug-cefr-b1': ['volunteer', 'abandon', 'immediately'],
+  'debug-cefr-b2': ['proposal', 'opponents', 'expense', 'facilities', 'temporary'],
+  'debug-cefr-c1': ['concur', 'funding', 'gradual', 'reluctant'],
+  'debug-cefr-c2': ['tranquillity', 'ephemeral', 'trivial', 'durable', 'innovation'],
+}

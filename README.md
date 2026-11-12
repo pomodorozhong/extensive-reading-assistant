@@ -9,6 +9,7 @@ Extensive reading means reading lots of easy, enjoyable text. This web app helps
 - **Generate a story at your level.** Choose a level, a reading length (5, 10, or 15 minutes), and optionally a topic, a text type (a fable, a diary, a news report, an opinion essay, and more), a tone, and a point of view.
 - **Look up words as you read.** Tap a word to see its meaning. Definitions come from [Princeton WordNet](https://wordnet.princeton.edu/), which is bundled with the app, so they are not made up by the AI.
 - **Keep track of new words.** Words you look up are marked as unknown. The **Vocabulary** page collects them from all your stories, grouped by level, with the sentence where you met each one. Mark a word as known once you've learned it.
+- **Check what you understood.** When you finish a story, answer a short multiple-choice exam about it, written by Gemini, or skip it. The **Exam** tab quizzes you on word meanings from your stories or your Vocabulary, with no API key needed.
 - **Find your level.** Not sure where to start? The reading level check asks which words you know and suggests a level.
 - **Read offline.** Install the app on your phone or computer, and saved stories work without an internet connection.
 

@@ -265,6 +265,26 @@ export function SettingsPage() {
         </label>
 
         <div>
+          <Text as="div" size="2" weight="medium" mb="2">
+            Exams
+          </Text>
+          <Text as="label" size="2">
+            <Flex align="center" gap="2">
+              <Switch
+                checked={settings.offerExamAfterStory}
+                onCheckedChange={(checked) => patch({ offerExamAfterStory: checked })}
+              />
+              Offer an exam after each story
+            </Flex>
+          </Text>
+          <Text as="p" size="2" color="gray" mt="2">
+            On by default. Finishing a story opens a short reading comprehension exam written by
+            Gemini, which you can skip. When off, finishing a story just marks it as read. The
+            vocabulary exam on the Exam tab works either way.
+          </Text>
+        </div>
+
+        <div>
           <Text as="div" size="2" weight="medium" mb="1">
             Introduction
           </Text>
@@ -282,7 +302,10 @@ export function SettingsPage() {
             <Flex align="center" gap="2">
               <Switch
                 checked={settings.showDebugFixtures}
-                onCheckedChange={(checked) => patch({ showDebugFixtures: checked })}
+                onCheckedChange={(checked) =>
+                  // Example words live in the fixture articles, so hiding them turns the words off too.
+                  patch(checked ? { showDebugFixtures: true } : { showDebugFixtures: false, addExampleVocabulary: false })
+                }
               />
               Show CEFR fixture articles in My Stories
             </Flex>
@@ -290,6 +313,22 @@ export function SettingsPage() {
           <Text as="p" size="2" color="gray" mt="2">
             Off by default. Adds six illustrative A1–C2 articles, not certified CEFR texts.
             Hiding them keeps your saved stories.
+          </Text>
+          <Text as="label" size="2" mt="4">
+            <Flex align="center" gap="2">
+              <Switch
+                checked={settings.addExampleVocabulary}
+                onCheckedChange={(checked) =>
+                  patch(checked ? { addExampleVocabulary: true, showDebugFixtures: true } : { addExampleVocabulary: false })
+                }
+              />
+              Add example words to Vocabulary
+            </Flex>
+          </Text>
+          <Text as="p" size="2" color="gray" mt="2">
+            Off by default. Shows 18 harder words in the fixture articles as looked up, so
+            Vocabulary and the Exam tab have words to use. Turns on the fixture articles too.
+            Turning it off removes them.
           </Text>
           <Text as="label" size="2" mt="4">
             <Flex align="center" gap="2">

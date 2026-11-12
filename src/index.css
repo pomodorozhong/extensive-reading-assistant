@@ -1112,3 +1112,17 @@ body {
     opacity: 1;
   }
 }
+
+.story-card-badges,
+.exam-review-badge {
+  flex-shrink: 0;
+}
+
+.exam-option {
+  justify-content: flex-start;
+  text-align: start;
+}
+
+.exam-question:focus {
+  outline: none;
+}
