@@ -101,7 +101,7 @@ export function reconcileVocabulary(saved: VocabularyWord[], stories: Story[]): 
   return [...words.values()].sort((a, b) => a.key.localeCompare(b.key))
 }
 
-function sourceSentence(body: string, start: number, end: number): string {
+export function sourceSentence(body: string, start: number, end: number): string {
   const before = body.slice(0, start)
   const boundary = Math.max(before.lastIndexOf('.'), before.lastIndexOf('!'), before.lastIndexOf('?'), before.lastIndexOf('\n'))
   const after = body.slice(end).search(/[.!?\n]/u)
