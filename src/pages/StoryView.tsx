@@ -37,6 +37,7 @@ function StoryReader({ id }: { id: string | undefined }) {
   const [searchParams] = useSearchParams()
   const [story, setStory] = useState<Story | undefined>(() => (id ? getStory(id) : undefined))
   const [showVocabularyReport] = useState(() => loadSettings().showVocabularyReport)
+  const [showGenerationDetails] = useState(() => loadSettings().showGenerationDetails)
   // A lookup is 'pending' for its first moments and 'slow' once it is worth a spinner.
   const [loadingKeys, setLoadingKeys] = useState<Record<string, 'pending' | 'slow'>>({})
   const [lookupErrors, setLookupErrors] = useState<Record<string, string>>({})
@@ -419,8 +420,9 @@ function StoryReader({ id }: { id: string | undefined }) {
             </div>
             <div className="story-after">
               <StoryFinish storyId={story.id} />
-              {/* A fixture's topic only labels it as debug content; it was not generated. */}
-              {!isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
+              {/* The chips under the title show the main choices, so the full record is a debugging aid.
+                  A fixture's topic only labels it as debug content; it was not generated. */}
+              {showGenerationDetails && !isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
               {showVocabularyReport && <VocabularyReport body={story.body} level={story.level} />}
             </div>
           </div>
