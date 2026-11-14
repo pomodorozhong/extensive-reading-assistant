@@ -15,6 +15,7 @@
 Proposed designs that are not implemented yet.
 
 - [Exam workflow](design/exam-workflow-mockup/README.md): interactive prototype of reading comprehension and vocabulary exams, from the designer 啟平, 2026-10. Ignore its Vocabulary screen, the Dictionary page.
+- [Reading tools, level guide, and story history](design/miyuki-2026-11-mockup/README.md): interactive prototype from the designer 美幸, 2026-11. Use its Story View reading tools, level guide dialog, and My Stories history row; ignore its stale New Story screen.
 
 ## Archive
 
