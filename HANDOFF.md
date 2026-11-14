@@ -56,6 +56,17 @@ Last verified: 2026-11-12 (Asia/Taipei).
 - Pending: P-01, push `feat/story-view-side-dictionary` and open its PR. Blocks the PR.
 - Next action: on approval, push and open the PR; after it merges, remove this subsection.
 
+### feat/story-view-topic-tone-chips
+
+- Task: bring over the one part of the rejected 2026-11-05 redesign the owner wanted to keep (the topic and tone chips in Story View's header, from the closed PR #80 branch), restyled at the owner's request to follow the home page's chip order and style, and also shown on each My Stories card at the owner's request. No issue; the owner asked for the PR directly. Related to #87 (fixes its finding 4 for Story View) but does not resolve it, so the branch is not linked. Local branch from `main` at `82039a2`.
+- PR: none yet.
+- Code checkpoint: `931c045` (`feat(story-view): show the story's choices as chips under the title`), then the My Stories commit, which moves the chips into a shared `StoryChips` component; both update the features doc.
+- State: built and committed; awaiting approval to push and open the PR. Under the title, Story View shows topic, level, length, and text type as soft gray pill badges, then tone in the accent color, then the Debug fixture and Read badges. My Stories cards show the same chips under the title and date, with Read and exam score badges on the right; the blue level badge is gone. Debug fixtures show no topic chip. The "How this story was made" card is unchanged.
+- Verification: 2026-11-14, `npm run lint`, `npm run build`, and all seven `test:*` suites passed (cefr 23, vocabulary 19, generation 37, level-check 11, exam 8, onboarding 5, dictionary 12). In the browser pane with a story seeded in local storage: the chips match the home chips' computed size (24 px tall, 12 px weight-500 text, 8 px padding), they wrap at 375 × 812 with no sideways scroll, and there are no console errors. My Stories shows the full chip row for a story with every choice, only level and type for an older story, and only the level for debug fixtures; it fits at 375 × 812 with no sideways scroll.
+- Not checked: a real generated story, a debug fixture in Story View, and a card with an exam score.
+- Pending: **P-28**: push this branch and open the PR. Why: pushing is outward-facing. Blocks: the PR.
+- Next action: on P-28 approval, push and open the PR with the `open-pr` skill; after it merges, remove this subsection.
+
 ### feat/two-minute-reading-length
 
 - Task: add a 2-minute reading length (160–240 words) and make it the default for new stories, at the owner's request. Related to #27 (it settles the starter stories' 2-minute label) but does not resolve it, so the branch is not linked.
