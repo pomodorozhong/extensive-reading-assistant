@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Extensive Reading · Home</title>
+  <script>tailwind={config:{theme:{extend:{screens:{sm:'768px',lg:'1024px'},colors:{accent:{DEFAULT:'#3980f6',soft:'#eaf3ff'}},maxWidth:{'app':'1440px'}}}}}</script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .word{border-bottom:1px dotted #85898d;cursor:pointer}.word.marked{border-bottom:2px solid #50555a;background:#f0f1f2}.reader-type{font-family:Georgia,'Times New Roman',serif}.switch-dot{transition:transform .18s}.vocab-list{display:none}.review-mode .vocab-list{display:grid}.saved-button.is-saved{background:#202124;color:white;border-color:#202124}.page{display:none}.page.active{display:block}#new-page.page.active{display:flex}
+  </style>
+</head>
+<body class="bg-[#f5f5f4] font-sans text-[#202124]">
+<div class="mx-auto min-h-screen max-w-[1440px] bg-[#fafaf9]">
+  <header class="relative z-40 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-7 lg:px-16">
+    <button id="brand-home" type="button" class="font-semibold tracking-tight">Extensive Reading</button>
+    <nav class="hidden items-center gap-3 text-xs text-gray-600 sm:flex sm:gap-6 sm:text-sm" aria-label="Main navigation">
+      <button type="button" data-view="new" aria-current="page">New Story</button>
+      <button type="button" data-view="stories">My Stories</button>
+      <button type="button" data-view="vocabulary">Vocabulary</button>
+      <button type="button" data-view="settings">Settings</button>
+    </nav>
+    <button id="mobile-menu-button" type="button" aria-label="Open menu" aria-expanded="false" class="rounded-lg border border-gray-200 p-2 text-gray-700 sm:hidden"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <nav id="mobile-menu" class="absolute right-4 top-14 z-50 hidden min-w-44 rounded-xl border border-gray-200 bg-white p-2 shadow-lg sm:hidden" aria-label="Mobile navigation">
+      <button type="button" data-view="new" class="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-50">New Story</button>
+      <button type="button" data-view="stories" class="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-50">My Stories</button>
+      <button type="button" data-view="vocabulary" class="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-50">Vocabulary</button>
+      <button type="button" data-view="settings" class="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-50">Settings</button>
+    </nav>
+  </header>
+
+  <main id="new-page" class="page active mx-auto flex h-[calc(100dvh-4rem)] max-w-5xl flex-col items-center justify-center overflow-hidden px-4 py-6 sm:px-8">
+    <section class="w-full max-w-3xl text-center">
+      <p class="mb-5 text-sm text-gray-500">A little English reading, made for you</p>
+      <h1 class="text-3xl font-normal tracking-tight sm:text-5xl">What would you like to read?</h1>
+      <p class="mx-auto mt-4 max-w-xl text-sm leading-6 text-gray-600 sm:text-base">Enter a topic, or leave it blank for a general story.</p>
+      <label for="topic" class="sr-only">Story topic</label>
+      <div id="search-controls" class="relative mx-auto mt-8 w-full max-w-3xl">
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <div class="flex min-w-0 flex-1 items-center rounded-full border border-gray-300 bg-white px-5 shadow-sm transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 hover:shadow-md">
+            <span class="mr-3 text-lg text-gray-400" aria-hidden="true">⌕</span>
+            <input id="topic" maxlength="160" placeholder="A robot learns to cook…" class="h-14 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-gray-400">
+            <button id="clear-topic" type="button" aria-label="Clear topic" class="hidden rounded-full px-2 text-xl text-gray-400 hover:bg-gray-100">×</button>
+            <button id="generate" type="button" class="ml-2 shrink-0 rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700">Generate Story <span class="ml-1">→</span></button>
+          </div>
+          <button id="advanced-toggle" type="button" aria-expanded="false" aria-controls="advanced-settings" class="flex h-14 shrink-0 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-6 text-sm font-semibold text-gray-800 shadow-sm hover:border-gray-500 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-200">
+            <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" d="M4 6h8m4 0h4M4 12h3m4 0h9M4 18h10m4 0h2"/><circle cx="14" cy="6" r="2" fill="white"/><circle cx="9" cy="12" r="2" fill="white"/><circle cx="16" cy="18" r="2" fill="white"/></svg>
+            <span>Advanced options</span>
+          </button>
+        </div>
+      <div id="filter-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-labelledby="filter-title">
+        <section class="w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl">
+          <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 sm:px-7"><h2 id="filter-title" class="text-lg font-semibold">Advanced story options</h2><button id="close-filter" type="button" aria-label="Close filters" class="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-xl text-gray-600 hover:bg-gray-50">×</button></div>
+      <div id="advanced-settings" class="max-h-[calc(85vh-5rem)] overflow-y-auto px-5 pb-5 sm:px-7">
+        
+        <div class="border-t border-gray-200 py-6">
+          <div class="mb-2 flex items-center justify-between gap-3"><span class="text-sm font-semibold">Vocabulary level</span><button id="open-guide" class="text-xs font-medium text-blue-700 underline underline-offset-2">How can I choose?</button></div>
+          <p class="mb-3 text-xs leading-5 text-gray-600">Choose the level that feels comfortable to read. You can change it for every story.</p>
+          <div class="grid grid-cols-3 gap-2 sm:grid-cols-6" role="radiogroup" aria-label="Vocabulary level">
+            <button class="level-card rounded-lg border border-gray-300 px-1 py-3 text-center" data-level="A1" aria-checked="false"><strong class="block text-sm">A1</strong><small class="mt-1 block text-[10px] text-gray-600">Beginner</small></button>
+            <button class="level-card rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-800 px-1 py-[11px] text-center" data-level="A2" aria-checked="true"><strong class="block text-sm">A2</strong><small class="mt-1 block text-[10px] text-gray-600">Elementary</small></button>
+            <button class="level-card rounded-lg border border-gray-300 px-1 py-3 text-center" data-level="B1" aria-checked="false"><strong class="block text-sm">B1</strong><small class="mt-1 block text-[10px] text-gray-600">Intermediate</small></button>
+            <button class="level-card rounded-lg border border-gray-300 px-1 py-3 text-center" data-level="B2" aria-checked="false"><strong class="block text-sm">B2</strong><small class="mt-1 block text-[10px] text-gray-600">Upper int.</small></button>
+            <button class="level-card rounded-lg border border-gray-300 px-1 py-3 text-center" data-level="C1" aria-checked="false"><strong class="block text-sm">C1</strong><small class="mt-1 block text-[10px] text-gray-600">Advanced</small></button>
+            <button class="level-card rounded-lg border border-gray-300 px-1 py-3 text-center" data-level="C2" aria-checked="false"><strong class="block text-sm">C2</strong><small class="mt-1 block text-[10px] text-gray-600">Proficient</small></button>
+          </div>
+          <p id="level-hint" class="mt-3 text-xs leading-5 text-gray-600">A2 · Everyday phrases and simple stories about daily life.</p>
+        </div>
+
+        <div class="border-t border-gray-200 py-6">
+          <div class="mb-2 text-sm font-semibold">Reading length</div><p class="mb-3 text-xs text-gray-600">Choose how long you want to read.</p>
+          <div class="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Reading length">
+            <button class="length-card rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-800 p-3 text-left" data-length="5" aria-checked="true"><strong class="block text-xs">5 min</strong><small class="mt-1 block text-[10px] text-gray-600">Short · about 400 words</small></button>
+            <button class="length-card rounded-lg border border-gray-300 p-3 text-left" data-length="10" aria-checked="false"><strong class="block text-xs">10 min</strong><small class="mt-1 block text-[10px] text-gray-600">Medium · about 900 words</small></button>
+            <button class="length-card rounded-lg border border-gray-300 p-3 text-left" data-length="15" aria-checked="false"><strong class="block text-xs">15 min</strong><small class="mt-1 block text-[10px] text-gray-600">Long · about 1,400 words</small></button>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-200 py-6">
+          <div class="mb-2 text-sm font-semibold">Text type</div><p class="mb-3 text-xs text-gray-600">Choose a category, then a matching format.</p>
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-5" role="radiogroup" aria-label="Text type">
+            <button class="type-card rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-800 p-2 text-left" data-type="Any" aria-checked="true"><strong class="block text-xs">Any</strong><small class="mt-1 block text-[10px] text-gray-600">No preference</small></button>
+            <button class="type-card rounded-lg border border-gray-300 p-2 text-left" data-type="Stories" aria-checked="false"><strong class="block text-xs">Stories</strong><small class="mt-1 block text-[10px] text-gray-600">Fiction</small></button>
+            <button class="type-card rounded-lg border border-gray-300 p-2 text-left" data-type="Real life" aria-checked="false"><strong class="block text-xs">Real life</strong><small class="mt-1 block text-[10px] text-gray-600">Everyday & true</small></button>
+            <button class="type-card rounded-lg border border-gray-300 p-2 text-left" data-type="Ideas" aria-checked="false"><strong class="block text-xs">Ideas</strong><small class="mt-1 block text-[10px] text-gray-600">Explanations</small></button>
+            <button class="type-card rounded-lg border border-gray-300 p-2 text-left" data-type="Practical" aria-checked="false"><strong class="block text-xs">Practical</strong><small class="mt-1 block text-[10px] text-gray-600">Useful English</small></button>
+          </div>
+          <div class="mt-4"><div class="mb-2 text-xs font-semibold">Format</div><div id="formats" class="flex flex-wrap gap-2"><span class="text-xs text-gray-500">No specific format</span></div></div>
+        </div>
+
+        <div class="border-t border-gray-200 py-6">
+          <label for="model" class="mb-2 block text-sm font-semibold">AI model</label><p class="mb-3 text-xs text-gray-600">Select the model used to create your story.</p>
+          <select id="model" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"><option>Gemini 3.1 Flash Lite</option><option>Default model</option></select>
+        </div>
+        <div class="border-t border-gray-200 py-6">
+          <label for="style" class="mb-2 block text-sm font-semibold">Style preferences <span class="font-normal text-gray-500">(optional)</span></label><p class="mb-3 text-xs text-gray-600">Add a tone or detail if you want to shape the story.</p>
+          <input id="style" class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm placeholder:text-gray-400" placeholder="e.g. warm, funny, mysterious">
+        </div>
+      </div>
+        </section>
+      </div>
+      </div>
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-2 text-sm">
+        <span class="mr-1 text-gray-500">Try:</span>
+        <button class="topic-chip rounded-full border border-gray-200 bg-white px-4 py-2 text-gray-600 hover:border-blue-300 hover:bg-blue-50" data-topic="A rainy afternoon at a bookshop">A rainy afternoon at a bookshop</button>
+        <button class="topic-chip rounded-full border border-gray-200 bg-white px-4 py-2 text-gray-600 hover:border-blue-300 hover:bg-blue-50" data-topic="A weekend in Tokyo">A weekend in Tokyo</button>
+        <button class="topic-chip rounded-full border border-gray-200 bg-white px-4 py-2 text-gray-600 hover:border-blue-300 hover:bg-blue-50" data-topic="A mystery about a missing cat">A missing cat</button>
+      </div>
+      <p id="loading" class="mt-2 hidden text-right text-sm text-gray-500">Creating your story…</p>
+
+    </section>
+  </main>
+
+  <main id="reader-page" class="page mx-auto max-w-7xl px-3 pb-20 pt-4 sm:px-6">
+    <div class="mb-3 h-1 overflow-hidden rounded bg-gray-200"><span id="progress-bar" class="block h-full w-0 bg-gray-600"></span></div>
+    <div class="grid items-start gap-4 sm:grid-cols-[minmax(0,1fr)_260px] lg:grid-cols-[minmax(0,1fr)_300px]">
+      <article class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8 lg:p-12">
+        <button id="back-settings" class="mb-5 text-xs text-gray-600 hover:underline">← Back to story settings</button>
+        <div class="mb-4 flex flex-wrap items-center gap-2 text-xs text-gray-600"><span id="article-level" class="rounded bg-accent-soft px-2 py-1 text-blue-800">A2</span><span id="article-type" class="rounded bg-accent-soft px-2 py-1 text-blue-800">Any</span><span id="article-time">About 5 min</span><span>·</span><span id="article-words">~400 words</span></div>
+        <h1 id="article-title" class="reader-type text-3xl tracking-tight sm:text-4xl">A New Story</h1>
+        <p class="mt-2 border-b border-gray-200 pb-5 text-xs text-gray-500">Select words to collect them for review.</p>
+        <div class="flex items-center gap-2 border-b border-gray-200 py-4"><span class="mr-1 text-[11px] text-gray-500">Text size</span><button id="font-down" class="rounded border border-gray-200 px-3 py-1.5 text-xs">A−</button><button id="font-up" class="rounded border border-gray-200 px-3 py-1.5 text-xs">A+</button><label for="font-family" class="sr-only">Reading font</label><select id="font-family" class="h-8 rounded border border-gray-200 bg-white px-2 text-xs"><option value="serif">Serif</option><option value="sans">Sans</option><option value="mono">Monospace</option></select><span class="flex-1"></span><button id="save-story" class="saved-button rounded border border-gray-300 px-3 py-1.5 text-xs font-semibold">Save story</button></div>
+        <div id="story-body" class="reader-type mx-auto max-w-[66ch] space-y-6 py-6 text-lg leading-8 text-gray-800">
+          <p>The <button class="word">morning</button> was <button class="word">quiet</button>. A small sound came from the old wooden door. Alex took a deep breath and stepped inside. Something <button class="word">unexpected</button> was waiting there.</p>
+          <p>The room was full of books, plants, and warm light. Near the window, a little dog looked up from a blue <button class="word">blanket</button>. It had a note beside it. Alex picked up the note and read the words <button class="word">slowly</button>.</p>
+          <p>“Every good story begins with a <button class="word">question</button>,” it said. Alex smiled. Outside, the rain began to fall, but inside the room, a new <button class="word">adventure</button> was just getting started.</p>
+        </div>
+      </article>
+      <aside id="vocab-panel" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="flex items-center justify-between gap-3"><h2 class="text-sm font-semibold">Vocabulary</h2><div class="flex items-center gap-2"><span id="mode-label" class="text-xs text-gray-500">Reading mode</span><button id="reveal-toggle" role="switch" aria-checked="false" aria-label="Show saved word meanings" class="flex h-6 w-10 items-center rounded-full bg-gray-300 p-1"><span class="switch-dot h-4 w-4 rounded-full bg-white"></span></button></div></div>
+        <p id="vocab-status" class="mt-3 border-t border-gray-100 pt-3 text-xs text-gray-500">0 words recorded · meanings hidden</p>
+        <ul id="vocab-list" class="vocab-list mt-2 gap-2"></ul>
+      </aside>
+    </div>
+    <div class="fixed inset-x-0 bottom-0 z-10 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 text-xs text-gray-600 sm:hidden"><span><b id="mobile-progress">0%</b> read</span><button id="mobile-review" class="rounded-lg border border-gray-300 px-3 py-2 font-semibold text-gray-800">Review words</button></div>
+  </main>
+
+  <main id="stories-page" class="page mx-auto max-w-5xl px-4 pb-16 pt-8 sm:px-6">
+    <p class="mb-2 text-xs uppercase tracking-wider text-gray-500">Your reading shelf</p><h1 class="text-3xl font-semibold">My Stories</h1><p class="mt-2 text-sm text-gray-600">Saved stories and your recent reading history.</p>
+    <section class="mt-8"><div class="mb-3 flex items-baseline justify-between"><h2 class="text-xl font-semibold">Saved stories</h2><span id="saved-story-count" class="text-xs text-gray-500"></span></div><div id="stories-list" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div></section>
+    <section class="mt-10"><div class="mb-3 flex items-baseline justify-between"><div><h2 class="text-xl font-semibold">History</h2><p class="mt-1 text-sm text-gray-500">Stories you generated recently, including ones you did not save.</p></div><span id="history-count" class="text-xs text-gray-500"></span></div><div id="history-list" class="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6"></div></section>
+  </main>
+  <main id="vocabulary-page" class="page mx-auto max-w-4xl px-4 pb-20 pt-8 sm:px-6"><p class="mb-2 text-xs uppercase tracking-wider text-gray-500">Words from your reading</p><h1 class="text-3xl font-semibold">Vocabulary</h1><p class="mt-2 text-sm text-gray-600">Review words saved from your stories.</p><div id="all-vocabulary" class="mt-6 grid gap-3 sm:grid-cols-2"></div></main>
+  <main id="settings-page" class="page mx-auto max-w-2xl px-4 pb-20 pt-8 sm:px-6">
+    <button type="button" data-view="new" class="mb-6 text-sm text-gray-600 hover:underline">← Back to New Story</button>
+    <p class="mb-2 text-xs uppercase tracking-wider text-gray-500">Connect your story generator</p><h1 class="text-3xl font-semibold">Settings</h1>
+    <p class="mt-3 text-sm leading-6 text-gray-600">Add your AI provider details before generating your first story. You can change them later.</p>
+    <section class="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
+      <div class="mb-5"><span class="mb-2 block text-sm font-semibold">AI provider</span><div class="flex h-12 items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-medium"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-700">G</span>Google Gemini</div></div>
+      <label for="api-key" class="mb-2 block text-sm font-semibold">Gemini API key</label><input id="api-key" type="password" autocomplete="off" placeholder="Paste your API key" class="h-12 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+      <p class="mt-3 text-xs leading-5 text-gray-500">Prototype preview: the connection is simulated. Your key is not sent or saved. A live product should store credentials securely on its server.</p>
+      <p id="api-status" class="mt-3 hidden text-sm text-blue-800"></p><p id="api-return-note" class="mt-2 hidden text-sm text-gray-600"></p>
+      <button id="save-api" type="button" class="mt-5 w-full rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700">Save and continue</button>
+    </section>
+  </main>
+</div>
+
+<div id="api-notice" class="fixed inset-x-4 bottom-5 z-[60] mx-auto hidden max-w-xl rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl sm:inset-x-auto sm:right-6 sm:bottom-6" role="alert" aria-live="assertive">
+  <p class="font-semibold">Set up Gemini to generate a story</p>
+  <p class="mt-1 text-sm leading-5 text-gray-600">Connect your Gemini API key in Settings before generating.</p>
+  <div class="mt-4 flex justify-end gap-2"><button id="cancel-api-notice" type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button><button id="go-api-settings" type="button" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Go to Settings</button></div>
+</div>
+
+<div id="guide-modal" class="fixed inset-0 z-50 hidden items-end justify-center bg-black/50 p-0 sm:items-center sm:p-5">
+  <section class="max-h-[92vh] w-full max-w-3xl overflow-auto rounded-t-2xl bg-white p-5 shadow-2xl sm:rounded-2xl sm:p-7">
+    <div class="flex items-start justify-between gap-4"><div><h2 id="modal-title" class="text-xl font-semibold sm:text-2xl">Which level should I choose?</h2><p id="modal-intro" class="mt-2 text-sm leading-6 text-gray-600">Choose a level where reading feels easy and you know almost every word. Extensive reading works best when you can enjoy the story without stopping often.</p></div><button id="close-modal" class="h-9 w-9 rounded-lg border border-gray-200 text-xl text-gray-500">×</button></div>
+    <div id="guide-body" class="mt-5">
+      <div class="grid gap-x-5 sm:grid-cols-2">
+        <div class="grid grid-cols-[34px_1fr] gap-3 border-t border-gray-200 py-3"><b>A1</b><span class="text-sm leading-5 text-gray-600">Very short, simple sentences about familiar things like family, food, and home.</span></div>
+        <div class="grid grid-cols-[34px_1fr] gap-3 border-t border-gray-200 py-3"><b>A2</b><span class="text-sm leading-5 text-gray-600">Everyday phrases and simple stories about daily life.</span></div>
+        <div class="grid grid-cols-[34px_1fr] gap-3 border-t border-gray-200 py-3"><b>B1</b><span class="text-sm leading-5 text-gray-600">Clear stories on familiar topics, with most everyday words.</span></div>
+        <div class="grid grid-cols-[34px_1fr] gap-3 border-t border-gray-200 py-3"><b>B2</b><span class="text-sm leading-5 text-gray-600">Longer stories with some abstract ideas and less common words.</span></div>
+        <div class="grid grid-cols-[34px_1fr] gap-3 border-t border-gray-200 py-3"><b>C1</b><span class="text-sm leading-5 text-gray-600">Detailed, complex writing with idioms and a wide vocabulary.</span></div>
+        <div class="grid grid-cols-[34px_1fr] gap-3 border-t border-gray-200 py-3"><b>C2</b><span class="text-sm leading-5 text-gray-600">Almost anything, including subtle and literary language.</span></div>
+      </div>
+      <div class="mt-4 rounded-lg bg-gray-100 p-4 text-sm text-gray-600">If you keep stopping to look up words, try a lower level.</div>
+      <button id="start-check" class="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800 hover:bg-blue-100">Not sure? Take a 1-minute level check →</button>
+    </div>
+    <div id="check-body" class="mt-5 hidden">
+      <div class="mb-4 flex justify-between text-xs text-gray-500"><span id="question-count">Question 1 of 6</span><span>Quick estimate</span></div><div class="mb-5 h-1 overflow-hidden rounded bg-gray-100"><span id="question-progress" class="block h-full w-0 bg-blue-500"></span></div>
+      <p id="question-passage" class="reader-type rounded-lg border border-gray-200 bg-gray-50 p-4 text-base leading-7 text-gray-700"></p><h3 id="question-title" class="my-4 text-sm font-semibold"></h3><div id="answer-options" class="grid gap-2"></div>
+      <div id="question-actions" class="mt-5 flex items-center justify-between"><button id="back-guide" class="rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600">← Level guide</button><button id="next-question" disabled class="rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white disabled:opacity-40">Next →</button></div>
+      <div id="check-result" class="mt-5 hidden rounded-xl border border-blue-200 bg-blue-50 p-5"><span class="text-[10px] font-semibold uppercase tracking-wider text-blue-700">Your starting point</span><strong id="result-level" class="my-1 block text-2xl"></strong><p class="text-xs leading-5 text-gray-600">This quick check is only an estimate. Choose an easier level if reading starts to feel difficult.</p><button id="use-level" class="mt-4 w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-white">Use this level</button></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const hint={A1:'Very short, simple sentences about familiar things.',A2:'Everyday phrases and simple stories about daily life.',B1:'Clear stories on familiar topics, with most everyday words.',B2:'Longer stories with some abstract ideas and less common words.',C1:'Detailed writing with idioms and a wide vocabulary.',C2:'Subtle language, including literary writing.'};let apiConfigured=false,pendingGeneration=false,hasGeneratedStory=false;let level='A2',minutes=5,type='Any',format='',review=false,fontSize=18,recorded=new Map(),savedWords=new Set(JSON.parse(localStorage.getItem('tw-saved-words')||'[]')),storySaved=false;
+const topic=document.getElementById('topic');
+function updateSummary(){document.getElementById('level-hint').textContent=level+' · '+hint[level]}
+topic.addEventListener('input',()=>{updateSummary();document.getElementById('clear-topic').classList.toggle('hidden',!topic.value)});document.getElementById('clear-topic').addEventListener('click',()=>{topic.value='';document.getElementById('clear-topic').classList.add('hidden');topic.focus();updateSummary()});document.getElementById('advanced-toggle').addEventListener('click',()=>{const modal=document.getElementById('filter-modal');modal.classList.remove('hidden');modal.classList.add('flex');document.getElementById('advanced-toggle').setAttribute('aria-expanded','true')});document.getElementById('close-filter').addEventListener('click',closeFilter);document.getElementById('filter-modal').addEventListener('click',e=>{if(e.target.id==='filter-modal')closeFilter()});function closeFilter(){const modal=document.getElementById('filter-modal');modal.classList.add('hidden');modal.classList.remove('flex');document.getElementById('advanced-toggle').setAttribute('aria-expanded','false')}document.getElementById('mobile-menu-button').addEventListener('click',()=>{const menu=document.getElementById('mobile-menu'),open=menu.classList.toggle('hidden')===false;document.getElementById('mobile-menu-button').setAttribute('aria-expanded',String(open))});
+document.querySelectorAll('.topic-chip').forEach(b=>b.addEventListener('click',()=>{topic.value=b.dataset.topic;updateSummary()}));
+function selectCard(selector,button){document.querySelectorAll(selector).forEach(x=>{const selected=x===button;x.setAttribute('aria-checked',String(selected));x.classList.toggle('border-2',selected);x.classList.toggle('border-blue-500',selected);x.classList.toggle('bg-blue-50',selected);x.classList.toggle('text-blue-800',selected);x.classList.toggle('border-gray-300',!selected);x.classList.toggle('border',!selected);x.classList.toggle('bg-white',!selected);x.classList.toggle('text-gray-800',!selected)})}
+document.querySelectorAll('.level-card').forEach(b=>b.addEventListener('click',()=>{level=b.dataset.level;selectCard('.level-card',b);updateSummary()}));
+document.querySelectorAll('.length-card').forEach(b=>b.addEventListener('click',()=>{minutes=Number(b.dataset.length);selectCard('.length-card',b);updateSummary()}));
+const formatMap={Stories:['Short story','Fairy tale','Fable','Myth or legend','Play script'],'Real life':['Everyday situation','Biography','Travel account','News article'],Ideas:['How it works','Opinion','Thought experiment','Science explainer'],Practical:['Conversation','Email or message','Instructions','How-to guide']};
+function renderFormats(){const box=document.getElementById('formats');box.replaceChildren();const choices=formatMap[type]||[];if(!choices.length){const s=document.createElement('span');s.className='text-xs text-gray-500';s.textContent='No specific format';box.append(s);format='';return}if(!choices.includes(format))format=choices[0];choices.forEach(item=>{const b=document.createElement('button');b.type='button';b.textContent=item;const active=item===format;b.setAttribute('aria-pressed',String(active));b.className=active?'rounded-lg border-2 border-blue-500 bg-blue-50 px-3 py-2 text-xs text-blue-800':'rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600';b.addEventListener('click',()=>{format=item;renderFormats();updateSummary()});box.append(b)})}
+document.querySelectorAll('.type-card').forEach(b=>b.addEventListener('click',()=>{type=b.dataset.type;selectCard('.type-card',b);format='';renderFormats();updateSummary()}));document.getElementById('model').addEventListener('change',updateSummary);renderFormats();updateSummary();
+function showPage(id,updateAddress=true){document.querySelectorAll('.page').forEach(p=>{const active=p.id===id;p.classList.toggle('active',active);p.style.display=active?(id==='new-page'?'flex':'block'):'none'});document.querySelectorAll('[data-view]').forEach(b=>{const destination=b.dataset.view==='new'?(hasGeneratedStory?'reader-page':'new-page'):({stories:'stories-page',vocabulary:'vocabulary-page',settings:'settings-page'}[b.dataset.view]);const active=(id===destination)||(id==='reader-page'&&destination==='reader-page');if(b.parentElement.tagName==='NAV'){if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')}});if(updateAddress){const route=({'new-page':'new','reader-page':'story','stories-page':'stories','vocabulary-page':'vocabulary','settings-page':'settings'}[id]||'new');if(location.hash!=='#/'+route)history.pushState({page:id},'', '#/'+route)}window.scrollTo(0,0);if(id==='stories-page')renderStories();if(id==='vocabulary-page')renderAllWords()}
+document.getElementById('brand-home').addEventListener('click',()=>showPage('new-page'));
+const routeToPage={'#/new':'new-page','#/story':'reader-page','#/stories':'stories-page','#/vocabulary':'vocabulary-page','#/settings':'settings-page'};showPage(routeToPage[location.hash]||'new-page',false);window.addEventListener('popstate',()=>showPage(routeToPage[location.hash]||'new-page',false));
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{showPage(b.dataset.view==='new'?(hasGeneratedStory?'reader-page':'new-page'):({stories:'stories-page',vocabulary:'vocabulary-page',settings:'settings-page'}[b.dataset.view]));document.getElementById('mobile-menu').classList.add('hidden');document.getElementById('mobile-menu-button').setAttribute('aria-expanded','false')}));
+const meanings={morning:'The early part of the day.',quiet:'Making little or no noise.',unexpected:'Not expected; surprising.',blanket:'A warm cover used on a bed.',slowly:'Not quickly; at a relaxed speed.',question:'A sentence that asks for information.',adventure:'An exciting or unusual experience.'};
+function renderWords(){const list=document.getElementById('vocab-list');list.replaceChildren();document.getElementById('vocab-status').textContent=recorded.size+' word'+(recorded.size===1?'':'s')+' recorded · meanings '+(review?'shown':'hidden');document.getElementById('mode-label').textContent=review?'Review mode':'Reading mode';document.getElementById('reveal-toggle').setAttribute('aria-checked',String(review));document.getElementById('reveal-toggle').classList.toggle('bg-gray-800',review);document.getElementById('reveal-toggle').classList.toggle('bg-gray-300',!review);document.querySelector('#reveal-toggle span').classList.toggle('translate-x-4',review);document.getElementById('mobile-review').textContent=review?'Hide meanings':'Review words';recorded.forEach((meaning,word)=>{const li=document.createElement('li');li.className='grid grid-cols-[1fr_auto] items-center gap-2 border-b border-gray-100 py-2';const info=document.createElement('div');const name=document.createElement('strong');name.className='block text-xs';name.textContent=word;const def=document.createElement('small');def.className='mt-1 block text-[11px] leading-4 text-gray-500';def.textContent=meaning;info.append(name,def);const save=document.createElement('button');save.className='saved-button rounded-lg border border-gray-300 px-2.5 py-1.5 text-[10px]';save.textContent=savedWords.has(word)?'Saved':'Save';save.classList.toggle('is-saved',savedWords.has(word));save.addEventListener('click',()=>{savedWords.has(word)?savedWords.delete(word):savedWords.add(word);localStorage.setItem('tw-saved-words',JSON.stringify([...savedWords]));renderWords();renderAllWords()});li.append(info,save);list.append(li)})}
+function toggleWord(el){const word=el.textContent.toLowerCase();if(recorded.has(word)){recorded.delete(word);el.classList.remove('marked')}else{recorded.set(word,meanings[word]||'Saved from this story for later review.');el.classList.add('marked')}renderWords()}
+document.querySelectorAll('.word').forEach(w=>w.addEventListener('click',()=>toggleWord(w)));
+function setReview(on){review=on;document.getElementById('reader-page').classList.toggle('review-mode',review);renderWords();if(innerWidth<768)document.getElementById(review?'vocab-panel':'story-body').scrollIntoView({behavior:'smooth',block:review?'center':'start'})}document.getElementById('reveal-toggle').addEventListener('click',()=>setReview(!review));document.getElementById('mobile-review').addEventListener('click',()=>setReview(!review));
+function showSaved(){const button=document.getElementById('save-story');button.classList.toggle('is-saved',storySaved);button.textContent=storySaved?'Saved':'Save story';button.setAttribute('aria-pressed',String(storySaved))}document.getElementById('save-story').addEventListener('click',()=>{storySaved=!storySaved;const title=document.getElementById('article-title').textContent,key='tw-story:'+title;if(storySaved)localStorage.setItem(key,JSON.stringify({title,body:document.getElementById('story-body').innerText,bodyHtml:document.getElementById('story-body').innerHTML,level,minutes,type,format}));else localStorage.removeItem(key);showSaved()});
+document.getElementById('font-up').addEventListener('click',()=>{fontSize=Math.min(25,fontSize+1);document.getElementById('story-body').style.fontSize=fontSize+'px'});document.getElementById('font-down').addEventListener('click',()=>{fontSize=Math.max(15,fontSize-1);document.getElementById('story-body').style.fontSize=fontSize+'px'});document.getElementById('font-family').addEventListener('change',e=>{const body=document.getElementById('story-body');body.style.fontFamily=e.target.value==='sans'?'system-ui, sans-serif':e.target.value==='mono'?'ui-monospace, monospace':"Georgia, 'Times New Roman', serif"});
+document.getElementById('generate').addEventListener('click',()=>{if(!apiConfigured){pendingGeneration=false;document.getElementById('api-notice').classList.remove('hidden');return}const btn=document.getElementById('generate'),load=document.getElementById('loading');btn.disabled=true;btn.textContent='Creating your story…';load.classList.remove('hidden');setTimeout(()=>{const title=topic.value.trim()||'A Surprise Story';hasGeneratedStory=true;document.getElementById('article-title').textContent=title;document.getElementById('article-level').textContent=level;document.getElementById('article-type').textContent=type+(format?' · '+format:'');document.getElementById('article-time').textContent='About '+minutes+' min';document.getElementById('article-words').textContent='~'+({5:400,10:900,15:1400}[minutes])+' words';recorded.clear();document.querySelectorAll('.word').forEach(w=>w.classList.remove('marked'));review=false;storySaved=!!localStorage.getItem('tw-story:'+title);recordStoryHistory();showSaved();renderWords();btn.disabled=false;btn.innerHTML='Generate story <span class="ml-2">→</span>';load.classList.add('hidden');showPage('reader-page')},700)});
+document.getElementById('back-settings').addEventListener('click',()=>showPage('new-page'));document.getElementById('cancel-api-notice').addEventListener('click',()=>document.getElementById('api-notice').classList.add('hidden'));document.getElementById('go-api-settings').addEventListener('click',()=>{pendingGeneration=true;document.getElementById('api-notice').classList.add('hidden');showPage('settings-page')});document.getElementById('save-api').addEventListener('click',()=>{apiConfigured=true;document.getElementById('api-key').value='';document.getElementById('api-status').textContent='Provider setup complete for this preview.';document.getElementById('api-status').classList.remove('hidden');const resume=pendingGeneration;pendingGeneration=false;showPage('new-page');if(resume)document.getElementById('generate').click()});
+function recordStoryHistory(){const item={title:document.getElementById('article-title').textContent,body:document.getElementById('story-body').innerText,bodyHtml:document.getElementById('story-body').innerHTML,level,minutes,type,format,createdAt:Date.now()};let history=[];try{history=JSON.parse(localStorage.getItem('tw-story-history')||'[]')}catch{}history.unshift(item);localStorage.setItem('tw-story-history',JSON.stringify(history.slice(0,40)))}
+function makeStoryCard(item,compact=false){const button=document.createElement('button');button.type='button';button.className=compact?'w-64 shrink-0 snap-start rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:border-blue-300 hover:shadow-md':'rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:border-blue-300 hover:shadow-md';const title=document.createElement('strong');title.className='block line-clamp-2 text-sm font-semibold';title.textContent=item.title;const excerpt=document.createElement('span');excerpt.className='mt-2 block line-clamp-3 text-xs leading-5 text-gray-600';excerpt.textContent=item.body||'Open this story to continue reading.';const meta=document.createElement('span');meta.className='mt-3 block text-[11px] text-gray-500';meta.textContent=(item.level||'A2')+' · '+(item.minutes||5)+' min'+(item.createdAt?' · '+new Date(item.createdAt).toLocaleDateString():'');button.append(title,excerpt,meta);button.addEventListener('click',()=>openStory(item));return button}
+function openStory(item){document.getElementById('article-title').textContent=item.title;document.getElementById('article-level').textContent=item.level||'A2';document.getElementById('article-type').textContent=(item.type||'Any')+(item.format?' · '+item.format:'');document.getElementById('article-time').textContent='About '+(item.minutes||5)+' min';document.getElementById('article-words').textContent='~'+({5:400,10:900,15:1400}[item.minutes||5])+' words';const body=document.getElementById('story-body');if(item.bodyHtml)body.innerHTML=item.bodyHtml;else{body.replaceChildren();const p=document.createElement('p');p.textContent=item.body||'';body.append(p)}document.querySelectorAll('.word').forEach(w=>w.onclick=()=>toggleWord(w));level=item.level||'A2';minutes=item.minutes||5;type=item.type||'Any';format=item.format||'';recorded.clear();review=false;storySaved=!!localStorage.getItem('tw-story:'+item.title);hasGeneratedStory=true;showSaved();renderWords();showPage('reader-page')}
+function renderStories(){const savedBox=document.getElementById('stories-list'),historyBox=document.getElementById('history-list');savedBox.replaceChildren();historyBox.replaceChildren();const saved=[];for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key&&key.startsWith('tw-story:')){try{saved.push(JSON.parse(localStorage.getItem(key)))}catch{}}}let history=[];try{history=JSON.parse(localStorage.getItem('tw-story-history')||'[]')}catch{}document.getElementById('saved-story-count').textContent=saved.length?saved.length+' saved':'';document.getElementById('history-count').textContent=history.length?history.length+' recent':'';if(!saved.length){savedBox.innerHTML='<p class="rounded-lg border border-dashed border-gray-300 bg-white p-5 text-sm text-gray-500 sm:col-span-2 lg:col-span-3">No saved stories yet. Save a story while reading to keep it here.</p>'}else saved.forEach(item=>savedBox.append(makeStoryCard(item)));if(!history.length){historyBox.innerHTML='<p class="w-full rounded-lg border border-dashed border-gray-300 bg-white p-5 text-sm text-gray-500">Generated stories will appear here, even if you do not save them.</p>'}else history.forEach(item=>historyBox.append(makeStoryCard(item,true)))}
+function renderAllWords(){const box=document.getElementById('all-vocabulary');box.replaceChildren();if(!savedWords.size){box.innerHTML='<p class="rounded-lg border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500 sm:col-span-2">No saved vocabulary yet.</p>';return}savedWords.forEach(word=>{const card=document.createElement('article');card.className='rounded-xl border border-gray-200 bg-white p-4';const h=document.createElement('h2');h.className='font-semibold';h.textContent=word;const p=document.createElement('p');p.className='mt-2 text-sm text-gray-600';p.textContent=meanings[word]||'Saved from a story for review.';card.append(h,p);box.append(card)})}
+
+const quiz=[
+ {p:'Mia has a small dog. It sleeps beside her bed.',q:'Where does the dog sleep?',a:['Beside Mia’s bed','In the garden','At the shop'],c:0},
+ {p:'Tom usually takes the bus to work. Today, he missed it, so he walked.',q:'Why did Tom walk to work?',a:['He wanted exercise','He missed the bus','His work was closed'],c:1},
+ {p:'Although the café was crowded, Nina found a quiet corner to read.',q:'What does “although” tell you?',a:['The ideas contrast','One event happened later','Nina dislikes reading'],c:0},
+ {p:'The museum extended its evening hours for commuters, but attendance barely changed.',q:'What is most likely true?',a:['The museum became much busier','The new hours had little effect','Commuters stopped visiting'],c:1},
+ {p:'The proposal received a tepid response from the audience.',q:'What does “tepid” most nearly mean?',a:['Enthusiastic','Unenthusiastic','Angry'],c:1},
+ {p:'Her apology was impeccably phrased, yet conspicuously absent of contrition.',q:'What does this imply?',a:['It sounded polished but lacked real regret','She forgot how to apologize','Everyone accepted it'],c:0}
+];let qi=0,answers=[];const modal=document.getElementById('guide-modal');
+function showGuide(){document.getElementById('guide-body').classList.remove('hidden');document.getElementById('check-body').classList.add('hidden');document.getElementById('modal-title').textContent='Which level should I choose?';document.getElementById('modal-intro').textContent='Choose a level where reading feels easy and you know almost every word. Extensive reading works best when you can enjoy the story without stopping often.'}
+document.getElementById('open-guide').addEventListener('click',()=>{showGuide();modal.classList.remove('hidden');modal.classList.add('flex')});document.getElementById('close-modal').addEventListener('click',()=>{modal.classList.add('hidden');modal.classList.remove('flex')});
+function renderQuiz(){const item=quiz[qi];document.getElementById('question-count').textContent='Question '+(qi+1)+' of '+quiz.length;document.getElementById('question-progress').style.width=(qi/quiz.length*100)+'%';document.getElementById('question-passage').textContent=item.p;document.getElementById('question-title').textContent=item.q;const box=document.getElementById('answer-options');box.replaceChildren();item.a.forEach((answer,index)=>{const b=document.createElement('button');b.className='rounded-lg border border-gray-200 bg-white p-3 text-left text-xs hover:bg-gray-50';b.textContent=answer;if(answers[qi]===index)b.className='rounded-lg border-2 border-blue-500 bg-blue-50 p-3 text-left text-xs text-blue-900';b.addEventListener('click',()=>{answers[qi]=index;renderQuiz()});box.append(b)});document.getElementById('next-question').disabled=answers[qi]===undefined;document.getElementById('next-question').textContent=qi===quiz.length-1?'See result →':'Next →';document.getElementById('check-result').classList.add('hidden')}
+document.getElementById('start-check').addEventListener('click',()=>{qi=0;answers=[];document.getElementById('guide-body').classList.add('hidden');document.getElementById('check-body').classList.remove('hidden');document.getElementById('modal-title').textContent='Quick level check';document.getElementById('modal-intro').textContent='Choose the best answer for each short reading. It takes about a minute.';document.getElementById('question-actions').classList.remove('hidden');document.getElementById('question-passage').classList.remove('hidden');document.getElementById('question-title').classList.remove('hidden');document.getElementById('answer-options').classList.remove('hidden');document.getElementById('check-body').querySelector('.mb-4').classList.remove('hidden');renderQuiz()});
+document.getElementById('back-guide').addEventListener('click',showGuide);document.getElementById('next-question').addEventListener('click',()=>{if(answers[qi]===undefined)return;if(qi<quiz.length-1){qi++;renderQuiz();return}const score=answers.reduce((n,a,i)=>n+(a===quiz[i].c?1:0),0);const result=['A1','A2','B1','B2','C1','C2','C2'][score];document.getElementById('question-count').textContent='Check complete';document.getElementById('question-progress').style.width='100%';['question-passage','question-title','answer-options','question-actions'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('check-body').querySelector('.mb-4').classList.add('hidden');document.getElementById('result-level').textContent=result;document.getElementById('check-result').classList.remove('hidden');document.getElementById('use-level').onclick=()=>{document.querySelector('[data-level="'+result+'"]').click();modal.classList.add('hidden');modal.classList.remove('flex')}});
+window.addEventListener('scroll',()=>{if(document.getElementById('reader-page').classList.contains('active')){const max=document.documentElement.scrollHeight-innerHeight,p=max>0?Math.round(scrollY/max*100):0;document.getElementById('progress-bar').style.width=p+'%';document.getElementById('mobile-progress').textContent=p+'%'}});
+</script>
+</body>
+</html>
