@@ -4,6 +4,16 @@ Last verified: 2026-11-12 (Asia/Taipei).
 
 ## In progress
 
+### docs/reading-tools-mockup
+
+- Task: add the designer 美幸's interactive prototype (received 2026-11-13) as a design reference in `doc/design/miyuki-2026-11-mockup/`, at the owner's request. Its New Story screen is stale (iterated in this week's meeting); the main references are Story View's reading tools and two-mode vocabulary panel, the "Which level should I choose?" dialog layout, and My Stories' horizontal history row of every generated story. No issue; local branch from `main` at `f2f6201`, not linked.
+- PR: none yet.
+- Code checkpoint: `ab40dda` (docs only, no app code).
+- State: committed locally; awaiting the owner's approval to push and open the PR.
+- Verification: 2026-11-15, `npm run lint` and `npm run build` passed; the copied prototype is byte-identical to the original; it renders in the browser pane (the pane's `data:` snapshot blocks `localStorage`, so its only console error comes from the pane).
+- Pending: **P-30**: push this branch and open the PR. Why: pushing is outward-facing. Blocks: the PR.
+- Next action: on P-30 approval, push and open the PR with the `open-pr` skill; after it merges, remove this subsection.
+
 ### feat/curated-starter-stories
 
 - Task: [#27 — Offer curated starter stories without requiring a Gemini API key](https://github.com/pomodorozhong/extensive-reading-assistant/issues/27). Local branch carrying only an old handoff commit; not linked to #27. Rebuild it from `main` (or create a fresh branch from the issue) when starting the code.
