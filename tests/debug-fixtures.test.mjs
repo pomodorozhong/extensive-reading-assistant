@@ -132,3 +132,15 @@ test('example words stay out of stored fixture state, while the reader\'s own ma
   saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true, addExampleVocabulary: false })
   assert.deepEqual(loadVocabulary().map((word) => word.key), ['garden'])
 })
+
+test('the "How this story was made" card is off by default and turns on only for a saved true', () => {
+  assert.equal(loadSettings().showGenerationDetails, false)
+  for (const setting of [{ cefrLevel: 'B1' }, { showGenerationDetails: 'true' }, { showGenerationDetails: 1 }]) {
+    localStorage.setItem('era.v1.settings', JSON.stringify(setting))
+    assert.equal(loadSettings().showGenerationDetails, false)
+  }
+  saveSettings({ ...DEFAULT_SETTINGS, showGenerationDetails: true })
+  assert.equal(loadSettings().showGenerationDetails, true)
+  saveSettings({ ...DEFAULT_SETTINGS, showGenerationDetails: false })
+  assert.equal(loadSettings().showGenerationDetails, false)
+})

@@ -50,6 +50,8 @@ export type Settings = {
   /** Debugging: show example words in the fixture articles as marked unknown, so exams have words to use. */
   addExampleVocabulary: boolean
   showVocabularyReport: boolean
+  /** Debugging: show the "How this story was made" card (saved choices, model, and prompts) in Story View. */
+  showGenerationDetails: boolean
   /** Open a short reading comprehension exam when the reader finishes a story. */
   offerExamAfterStory: boolean
 }

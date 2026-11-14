@@ -3,12 +3,12 @@ import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@r
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { StoryChips } from '../components/StoryChips'
 import { StoryFinish } from '../components/StoryFinish'
 import { StoryGenerationDetails } from '../components/StoryGenerationDetails'
 import { VocabularyReport } from '../components/VocabularyReport'
 import { isDebugFixture } from '../lib/debug-fixtures'
 import { lookupDefinition, preloadShards } from '../lib/dictionary'
-import { TEXT_TYPE_INFO } from '../lib/generation-options'
 import { loadProgress } from '../lib/progress'
 import { getStory, loadSettings, updateWordExplanation, updateWordMark } from '../lib/storage'
 import { tokenize } from '../lib/tokenize'
@@ -37,6 +37,7 @@ function StoryReader({ id }: { id: string | undefined }) {
   const [searchParams] = useSearchParams()
   const [story, setStory] = useState<Story | undefined>(() => (id ? getStory(id) : undefined))
   const [showVocabularyReport] = useState(() => loadSettings().showVocabularyReport)
+  const [showGenerationDetails] = useState(() => loadSettings().showGenerationDetails)
   // A lookup is 'pending' for its first moments and 'slow' once it is worth a spinner.
   const [loadingKeys, setLoadingKeys] = useState<Record<string, 'pending' | 'slow'>>({})
   const [lookupErrors, setLookupErrors] = useState<Record<string, string>>({})
@@ -327,12 +328,11 @@ function StoryReader({ id }: { id: string | undefined }) {
               My Stories
             </Link>
           </Button>
+          <Heading size="7" mb="2">{story.title}</Heading>
           <Flex align="center" gap="2" wrap="wrap" mb="2">
-            <Heading size="7">{story.title}</Heading>
-            <Badge color="blue">{story.level}</Badge>
-            {story.textType && <Badge color="gray">{TEXT_TYPE_INFO[story.textType].label}</Badge>}
-            {isDebugFixture(story.id) && <Badge color="amber">Debug fixture</Badge>}
-            {loadProgress().read.includes(story.id) && <Badge color="green">Read</Badge>}
+            <StoryChips story={story} />
+            {isDebugFixture(story.id) && <Badge size="2" color="amber" radius="full">Debug fixture</Badge>}
+            {loadProgress().read.includes(story.id) && <Badge size="2" color="green" radius="full">Read</Badge>}
           </Flex>
           <Text as="p" size="2" color="gray">
             Tap a word to see its meaning. Choose Mark as unknown to highlight it and keep it
@@ -420,8 +420,9 @@ function StoryReader({ id }: { id: string | undefined }) {
             </div>
             <div className="story-after">
               <StoryFinish storyId={story.id} />
-              {/* A fixture's topic only labels it as debug content; it was not generated. */}
-              {!isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
+              {/* The chips under the title show the main choices, so the full record is a debugging aid.
+                  A fixture's topic only labels it as debug content; it was not generated. */}
+              {showGenerationDetails && !isDebugFixture(story.id) && <StoryGenerationDetails story={story} />}
               {showVocabularyReport && <VocabularyReport body={story.body} level={story.level} />}
             </div>
           </div>

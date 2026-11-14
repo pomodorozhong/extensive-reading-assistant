@@ -22,6 +22,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showDebugFixtures: false,
   addExampleVocabulary: false,
   showVocabularyReport: false,
+  showGenerationDetails: false,
   offerExamAfterStory: true,
 }
 
@@ -64,6 +65,7 @@ export function loadSettings(): Settings {
       showDebugFixtures: parsed.showDebugFixtures === true,
       addExampleVocabulary: parsed.showDebugFixtures === true && parsed.addExampleVocabulary === true,
       showVocabularyReport: parsed.showVocabularyReport === true,
+      showGenerationDetails: parsed.showGenerationDetails === true,
       offerExamAfterStory: parsed.offerExamAfterStory !== false,
       apiBaseUrl:
         !legacyOpenAi && typeof parsed.apiBaseUrl === 'string' && parsed.apiBaseUrl.trim()

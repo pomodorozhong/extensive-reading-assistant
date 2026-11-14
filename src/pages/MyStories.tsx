@@ -1,7 +1,7 @@
 import { Badge, Button, Card, Container, Flex, Heading, Text } from '@radix-ui/themes'
 import { Link } from 'react-router-dom'
+import { StoryChips } from '../components/StoryChips'
 import { isDebugFixture } from '../lib/debug-fixtures'
-import { TEXT_TYPE_INFO } from '../lib/generation-options'
 import { loadProgress } from '../lib/progress'
 import { loadVisibleStories } from '../lib/storage'
 
@@ -40,24 +40,24 @@ export function MyStories() {
               <Link to={`/stories/${story.id}`} className="card-link">
                 <Flex justify="between" align="start" gap="3">
                   <div>
-                    {isDebugFixture(story.id) && <Badge color="amber" mb="1">Debug fixture</Badge>}
+                    {isDebugFixture(story.id) && <Badge size="2" color="amber" radius="full" mb="1">Debug fixture</Badge>}
                     <Heading size="4" mb="1">
                       {story.title}
                     </Heading>
-                    <Text as="p" size="2" color="gray">
+                    <Text as="p" size="2" color="gray" mb="2">
                       {formatDate(story.createdAt)}
-                      {story.textType ? ` · ${TEXT_TYPE_INFO[story.textType].label}` : ''}
-                      {story.topic ? ` · ${story.topic}` : ''}
                     </Text>
+                    <Flex gap="2" wrap="wrap">
+                      <StoryChips story={story} />
+                    </Flex>
                   </div>
                   <Flex gap="2" wrap="wrap" justify="end" className="story-card-badges">
-                    {progress.read.includes(story.id) && <Badge color="green">Read</Badge>}
+                    {progress.read.includes(story.id) && <Badge size="2" color="green" radius="full">Read</Badge>}
                     {progress.readingResults[story.id] && (
-                      <Badge color="gray">
+                      <Badge size="2" color="gray" radius="full">
                         Exam {progress.readingResults[story.id].score}/{progress.readingResults[story.id].total}
                       </Badge>
                     )}
-                    <Badge color="blue">{story.level}</Badge>
                   </Flex>
                 </Flex>
               </Link>

@@ -343,6 +343,19 @@ export function SettingsPage() {
             Off by default. Shows an approximate vocabulary report below saved stories and fixture
             articles in Story View.
           </Text>
+          <Text as="label" size="2" mt="4">
+            <Flex align="center" gap="2">
+              <Switch
+                checked={settings.showGenerationDetails}
+                onCheckedChange={(checked) => patch({ showGenerationDetails: checked })}
+              />
+              Show how each story was made
+            </Flex>
+          </Text>
+          <Text as="p" size="2" color="gray" mt="2">
+            Off by default. Shows a card below each generated story in Story View with every saved
+            choice and, when recorded, the model, temperature, word target, and prompts.
+          </Text>
         </div>
       </Flex>
     </Container>
