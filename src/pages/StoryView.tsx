@@ -1,14 +1,14 @@
 import { ArrowLeftIcon, Cross2Icon } from '@radix-ui/react-icons'
-import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text, VisuallyHidden } from '@radix-ui/themes'
+import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { StoryChips } from '../components/StoryChips'
 import { StoryFinish } from '../components/StoryFinish'
 import { StoryGenerationDetails } from '../components/StoryGenerationDetails'
 import { VocabularyReport } from '../components/VocabularyReport'
 import { isDebugFixture } from '../lib/debug-fixtures'
 import { lookupDefinition, preloadShards } from '../lib/dictionary'
-import { TEXT_TYPE_INFO, TONE_LABELS } from '../lib/generation-options'
 import { loadProgress } from '../lib/progress'
 import { getStory, loadSettings, updateWordExplanation, updateWordMark } from '../lib/storage'
 import { tokenize } from '../lib/tokenize'
@@ -328,34 +328,8 @@ function StoryReader({ id }: { id: string | undefined }) {
             </Link>
           </Button>
           <Heading size="7" mb="2">{story.title}</Heading>
-          {/* The choices the story was made with, in the home page's order and chip style: the topic
-              (the home page's bar), then level, length, and text type in gray, then tone in the accent
-              color, as home shows an option changed from its default. A fixture's topic only labels it
-              as debug content; it was not generated. */}
           <Flex align="center" gap="2" wrap="wrap" mb="2">
-            {story.topic && !isDebugFixture(story.id) && (
-              <Badge size="2" variant="soft" color="gray" radius="full">
-                <VisuallyHidden>Topic: </VisuallyHidden>{story.topic}
-              </Badge>
-            )}
-            <Badge size="2" variant="soft" color="gray" radius="full">
-              <VisuallyHidden>Vocabulary level: </VisuallyHidden>{story.level}
-            </Badge>
-            {story.readingMinutes && (
-              <Badge size="2" variant="soft" color="gray" radius="full">
-                <VisuallyHidden>Reading length: </VisuallyHidden>{story.readingMinutes} min
-              </Badge>
-            )}
-            {story.textType && (
-              <Badge size="2" variant="soft" color="gray" radius="full">
-                <VisuallyHidden>Text type: </VisuallyHidden>{TEXT_TYPE_INFO[story.textType].label}
-              </Badge>
-            )}
-            {story.tone && (
-              <Badge size="2" variant="soft" radius="full">
-                <VisuallyHidden>Tone: </VisuallyHidden>{TONE_LABELS[story.tone]}
-              </Badge>
-            )}
+            <StoryChips story={story} />
             {isDebugFixture(story.id) && <Badge size="2" color="amber" radius="full">Debug fixture</Badge>}
             {loadProgress().read.includes(story.id) && <Badge size="2" color="green" radius="full">Read</Badge>}
           </Flex>
