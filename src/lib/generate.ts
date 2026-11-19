@@ -224,7 +224,6 @@ export async function generateStory(options: {
       : []),
     'Include a title on the first line.',
     ...(dialogue ? [DIALOGUE_GUIDE[dialogue]] : []),
-    'End with THE END.',
     'No preamble, no notes, no word list — only the title and the text.',
   ].join('\n')
 

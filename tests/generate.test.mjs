@@ -12,7 +12,7 @@ import { DEFAULT_SETTINGS, getStory, loadSettings, loadStories, loadVocabulary, 
 const apiKey = 'synthetic-generation-test-key-do-not-send'
 const settings = { ...DEFAULT_SETTINGS, cefrLevel: 'C2', model: 'saved-custom-model', apiKey }
 const choices = { level: 'B1', topic: '  A weekend in Tokyo  ', textType: null, tone: null, pointOfView: null, readingMinutes: 5, model: DEFAULT_MODEL }
-const responseText = 'Title: "A Weekend"\n\nA friend visits a garden.\n\nTHE END.'
+const responseText = 'Title: "A Weekend"\n\nA friend visits a garden.'
 
 beforeEach((t) => {
   t.mock.method(globalThis, 'fetch', () => { throw new Error('Unexpected request; tests must mock Gemini') })
@@ -69,13 +69,14 @@ test('each reading length sends its agreed word band and selected level and mode
     assert.ok(!prompt.includes('CEFR C2'))
     assert.match(prompt, /\nTopic: A weekend in Tokyo\n/)
     assert.ok(prompt.includes(`${min}-${max} words, approximately ${readingMinutes} minutes`))
+    assert.ok(!prompt.includes('THE END'))
     assert.ok(!request.body.includes(apiKey))
     assert.ok(!request.url.includes(apiKey))
     assert.ok(!request.body.includes('Gemini 3.1 Flash Lite'))
     assert.deepEqual(result, {
       ok: true,
       title: 'A Weekend',
-      body: 'A friend visits a garden.\n\nTHE END.',
+      body: 'A friend visits a garden.',
       generation: {
         model: 'gemini-3.1-flash-lite',
         temperature: request.json.generationConfig.temperature,
@@ -448,6 +449,8 @@ test('title and body parsing retain existing supported response formats', () => 
     assert.deepEqual(parseGeneratedStory(raw), { title: 'A Day', body: 'A cat sits.' })
   }
   assert.deepEqual(parseGeneratedStory('A cat sits.'), { title: 'Untitled story', body: 'A cat sits.' })
+  // Texts generated before #77 still close with THE END.; parsing keeps it as written.
+  assert.deepEqual(parseGeneratedStory('Title: A Day\n\nA cat sits.\n\nTHE END.'), { title: 'A Day', body: 'A cat sits.\n\nTHE END.' })
 })
 
 test('the key is sent only to Google’s HTTPS endpoint, never to other or redirected destinations', async (t) => {

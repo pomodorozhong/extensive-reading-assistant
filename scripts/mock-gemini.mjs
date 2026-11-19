@@ -31,7 +31,7 @@ const server = createServer(async (request, response) => {
     const tone = prompt.match(/^Tone: (\w+)\./m)?.[1] ?? 'any tone'
     const pointOfView = prompt.match(/^Tell it in the (first|third) person/m)?.[1] ?? 'any'
     if (!level || !length) throw new Error('Missing generation choices')
-    const text = `Title: Generation options fixture\n\nThis local fixture received CEFR ${level}, ${length[3]} minutes, and a target of ${length[1]}-${length[2]} words.\n\nThe topic is ${topic}. The text type is ${textType}, the tone is ${tone}, and the point of view is ${pointOfView}. A friend visits a garden.\n\nTHE END.`
+    const text = `Title: Generation options fixture\n\nThis local fixture received CEFR ${level}, ${length[3]} minutes, and a target of ${length[1]}-${length[2]} words.\n\nThe topic is ${topic}. The text type is ${textType}, the tone is ${tone}, and the point of view is ${pointOfView}. A friend visits a garden.`
     response.end(JSON.stringify({ candidates: [{ content: { parts: [{ text }] }, finishReason: 'STOP' }] }))
   } catch {
     response.writeHead(400).end(JSON.stringify({ error: { message: 'The fixture could not read the generation choices.' } }))
