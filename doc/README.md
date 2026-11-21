@@ -8,7 +8,6 @@
 - [CEFR vocabulary validation](cefr-vocabulary-validation.md): implementation, flowcharts, and coverage audit.
 - [Vocabulary verification](vocabulary-verification.md): disposable fixtures and persistence checks.
 - [Bundled CEFR vocabulary](../data/cefr/README.md): source attribution, calculation, and limitations.
-- [Session handoff](../HANDOFF.md): current branch checkpoints, ranked work, and pending approvals.
 
 ## Design mockups
 
