@@ -67,6 +67,16 @@ test('the first change saves one copy of the starter, and later changes update i
   assert.deepEqual(loadVocabulary().map((word) => word.key).sort(), ['fur', 'puppy'])
 })
 
+test('a saved starter takes its text from the bundle and keeps the reader\'s marks and definitions', () => {
+  const stale = { ...STARTER_STORIES[1], body: 'Old text with *** in it', title: 'Old title', wordMarks: { pal: 'unknown' }, explanations: { pal: 'a friend' } }
+  localStorage.setItem('era.v1.stories', JSON.stringify([stale]))
+  const story = getStory('starter-a2')
+  assert.equal(story?.body, STARTER_STORIES[1].body)
+  assert.equal(story?.title, 'My New Pen Pal')
+  assert.deepEqual(story?.wordMarks, { pal: 'unknown' })
+  assert.deepEqual(story?.explanations, { pal: 'a friend' })
+})
+
 test('marking a word known in Vocabulary does not save untouched starters', () => {
   updateWordMark('starter-b1', 'aisle', 'unknown')
   markVocabularyKnown('aisle')

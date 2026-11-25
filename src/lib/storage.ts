@@ -110,6 +110,9 @@ export function loadStories(): Story[] {
       .map(({ theme, ...story }) => ({
         ...story,
         ...(typeof theme === 'string' && story.topic === undefined ? { topic: theme } : {}),
+        // A saved starter keeps only the reader's marks and definitions; its text and details come
+        // from the bundle, so later fixes to a starter reach readers who saved it.
+        ...STARTER_STORIES.find((starter) => starter.id === story.id),
         wordMarks: story.wordMarks ?? {},
         explanations: story.explanations ?? {},
       }))
