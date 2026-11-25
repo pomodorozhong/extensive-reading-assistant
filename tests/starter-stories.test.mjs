@@ -31,8 +31,8 @@ test('four reviewed starters, one per level from A1 to B2, each a 2-minute read 
     assert.ok(story.generation?.userPrompt.includes(`CEFR ${story.level}`), story.title)
     assert.ok(story.textType && story.topic, story.title)
     assert.doesNotMatch(story.body, /THE END/, story.title)
-    // Markdown emphasis shows literally in the reader.
-    assert.doesNotMatch(story.body, /\*\w/, story.title)
+    // The reader shows Markdown emphasis and separators literally.
+    assert.doesNotMatch(story.body, /\*/, story.title)
     assert.ok(words(story) >= 160 && words(story) <= 280, `${story.title}: ${words(story)} words`)
   }
 })
