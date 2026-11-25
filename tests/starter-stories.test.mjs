@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { beforeEach, test } from 'node:test'
 import { STARTER_STORIES, isStarterStory } from '../src/lib/starter-stories.ts'
-import { tokenize } from '../src/lib/tokenize.ts'
+import { splitSectionBreaks, tokenize } from '../src/lib/tokenize.ts'
 import {
   DEFAULT_SETTINGS, getStory, loadStories, loadVisibleStories, loadVocabulary, markVocabularyKnown,
   saveSettings, updateWordExplanation, updateWordMark, upsertStory,
@@ -31,8 +31,8 @@ test('four reviewed starters, one per level from A1 to B2, each a 2-minute read 
     assert.ok(story.generation?.userPrompt.includes(`CEFR ${story.level}`), story.title)
     assert.ok(story.textType && story.topic, story.title)
     assert.doesNotMatch(story.body, /THE END/, story.title)
-    // The reader shows Markdown emphasis and separators literally.
-    assert.doesNotMatch(story.body, /\*/, story.title)
+    // The reader shows Markdown emphasis literally; only a section-break line may use asterisks.
+    assert.doesNotMatch(splitSectionBreaks(story.body).join(''), /\*/, story.title)
     assert.ok(words(story) >= 160 && words(story) <= 280, `${story.title}: ${words(story)} words`)
   }
 })

@@ -405,6 +405,18 @@ body {
   white-space: pre-wrap;
 }
 
+.story-section-break {
+  display: block;
+  margin-block: 1.6em;
+  text-align: center;
+  line-height: 1;
+  color: var(--gray-10);
+}
+
+.story-section-break::before {
+  content: '\2022\2003\2022\2003\2022';
+}
+
 .story-word {
   max-width: 100%;
   overflow-wrap: anywhere;
