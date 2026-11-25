@@ -4,7 +4,8 @@ import { ExamQuiz } from '../components/ExamQuiz'
 import { ExamResults } from '../components/ExamResults'
 import { buildVocabularyExam, practiceMissedQuestions, storyCandidates } from '../lib/exam'
 import { loadProgress, saveVocabularyResult, scoreAnswers, type ExamQuestion, type ExamResult } from '../lib/progress'
-import { loadVisibleStories, loadVocabulary } from '../lib/storage'
+import { isStarterStory } from '../lib/starter-stories'
+import { loadStories, loadVisibleStories, loadVocabulary } from '../lib/storage'
 
 type Source = 'stories' | 'vocabulary'
 
@@ -20,7 +21,12 @@ type Phase =
   | { name: 'result'; result: ExamResult; practice: boolean }
 
 export function Exam() {
-  const [stories] = useState(() => loadVisibleStories())
+  // Past stories: a starter counts once the reader has opened it enough to mark a word or finish it.
+  const [stories] = useState(() => {
+    const saved = new Set(loadStories().map((story) => story.id))
+    const read = loadProgress().read
+    return loadVisibleStories().filter((story) => !isStarterStory(story.id) || saved.has(story.id) || read.includes(story.id))
+  })
   const [saved] = useState(() => loadVocabulary())
   const [storyWordCount] = useState(() => storyCandidates(stories).length)
   const [source, setSource] = useState<Source>('stories')

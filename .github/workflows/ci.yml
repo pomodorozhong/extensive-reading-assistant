@@ -21,6 +21,7 @@ jobs:
       - run: npm run build
       - run: npm run test:generation
       - run: npm run test:cefr
+      - run: npm run test:starters
       - run: npm run test:vocabulary
       - run: npm run test:dictionary
       - run: npm run test:level-check

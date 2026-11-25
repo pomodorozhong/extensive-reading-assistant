@@ -1,6 +1,7 @@
 import { CEFR_LEVELS, type CefrLevel, type Settings, type Story, type WordMark } from '../types.ts'
 import { DEBUG_FIXTURES, EXAMPLE_VOCABULARY, isDebugFixture } from './debug-fixtures.ts'
 import { DEFAULT_GENERATION_LEVEL, DEFAULT_MODEL } from './generation-options.ts'
+import { STARTER_STORIES, isStarterStory } from './starter-stories.ts'
 import { normalizeWord } from './tokenize.ts'
 import { reconcileVocabulary, type VocabularyWord } from './vocabulary.ts'
 
@@ -172,7 +173,8 @@ export function markVocabularyKnown(key: string): void {
   const normalized = normalizeWord(key)
   const saved = loadStories()
   const savedIds = new Set(saved.map((story) => story.id))
-  const fixtures = loadVisibleStories().filter((story) => !savedIds.has(story.id))
+  // Unsaved starters have no marks to change, so only fixtures need their separate state updated.
+  const fixtures = loadVisibleStories().filter((story) => isDebugFixture(story.id) && !savedIds.has(story.id))
   saveStories(saved.map((story) => markStoryWordKnown(story, normalized)))
   for (const fixture of fixtures) saveStoryChanges(markStoryWordKnown(fixture, normalized))
   writeVocabulary(readVocabulary().filter((word) => word.key !== normalized))
@@ -189,14 +191,19 @@ function loadFixtureState(): Record<string, FixtureState> {
   }
 }
 
-/** Debug fixtures are a view overlay; they never become generated/saved stories. */
+/**
+ * Saved stories, then the starter stories not yet saved, then the debug fixtures when they are on.
+ * Starters and fixtures are a view overlay: a starter is saved only once the reader changes it, and
+ * fixtures never become saved stories.
+ */
 export function loadVisibleStories(): Story[] {
   const saved = loadStories()
   const settings = loadSettings()
-  if (!settings.showDebugFixtures) return saved
-  const state = loadFixtureState()
   const savedIds = new Set(saved.map((story) => story.id))
-  return [...saved, ...DEBUG_FIXTURES.filter((story) => !savedIds.has(story.id)).map((story) => ({
+  const stories = [...saved, ...STARTER_STORIES.filter((story) => !savedIds.has(story.id))]
+  if (!settings.showDebugFixtures) return stories
+  const state = loadFixtureState()
+  return [...stories, ...DEBUG_FIXTURES.filter((story) => !savedIds.has(story.id)).map((story) => ({
     ...story,
     // The reader's own marks win, so an example word marked known stays known.
     wordMarks: { ...(settings.addExampleVocabulary ? exampleMarks(story.id) : {}), ...state[story.id]?.wordMarks },
@@ -218,6 +225,9 @@ function saveStoryChanges(story: Story): void {
   if (index >= 0) {
     saved[index] = story
     saveStories(saved)
+  } else if (isStarterStory(story.id)) {
+    // The first change to a starter saves a full copy under its own id, after the reader's stories.
+    saveStories([...saved, story])
   } else if (isDebugFixture(story.id) && loadSettings().showDebugFixtures) {
     const state = loadFixtureState()
     // Example words are an overlay too: store only marks that differ from it, so turning

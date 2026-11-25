@@ -1364,6 +1364,11 @@ body {
   }
 }
 
+.starter-stories {
+  margin-top: var(--space-7);
+  scroll-margin-top: var(--space-5);
+}
+
 .story-card-badges,
 .exam-review-badge {
   flex-shrink: 0;

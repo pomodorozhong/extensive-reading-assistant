@@ -9,6 +9,12 @@ A small web app for extensive reading: set a CEFR level, generate a story at tha
 
 Stories, word marks, and settings are stored in this browser (`localStorage`). There is no account or server.
 
+## Starter stories
+
+My Stories always lists four **Starter stories**, one for each level from A1 to B2, below the reader's own stories, so anyone can read without a Gemini key: *My New Friend* (A1 diary), *My New Pen Pal* (A2 letters), *The Whispering Books* (B1 short story), and *The Ghost in My Pocket* (B2 reflective essay). They show whatever the key state and however many stories the reader has generated. The Gemini key dialog on New Story links to them with **Read a starter story** for readers not ready to add a key. The owner chose them from 32 Gemini drafts ([#27](https://github.com/pomodorozhong/extensive-reading-assistant/issues/27)); each is a 2-minute read (160–240 words) and keeps the request that produced it, so **How this story was made** shows its model and prompts. Their text lives in `src/lib/starter-stories.ts`.
+
+They read like any other story: dictionary lookups, marks, Vocabulary, and **Finish reading** all work, while the reading comprehension exam after a story still needs a key. A starter is not stored until the reader changes it, such as by marking a word; it is then saved once under its own id (`starter-a1` to `starter-b2`), keeps its place in the starter list, and reopening it never makes a duplicate. The Exam tab's **Past stories** counts a starter only after the reader has marked a word in it or finished it.
+
 ## Vocabulary
 
 Open **Vocabulary** from the desktop/mobile menu to review unknown words across stories. Words are grouped without regard to case, with each source story's saved definition, sentence, and link to the occurrence. Missing definitions remain visible. The collection has its own browser-local storage: removing a saved story keeps its unknown words, definitions, and sentences, with the source labeled **Story removed**. **Mark as known** in Vocabulary clears a word from the collection and marks it known in all remaining saved stories and enabled debugging fixtures. Marking a word known inside one story clears only that source; another unknown source, including a removed saved story, keeps the word tracked.
