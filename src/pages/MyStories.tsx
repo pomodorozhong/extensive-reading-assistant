@@ -33,6 +33,7 @@ function StoryCard({ story, progress }: { story: Story; progress: Progress }) {
               </Text>
             )}
             <Flex gap="2" wrap="wrap" mt={starter ? '2' : undefined}>
+              {starter && <Badge size="2" variant="surface" color="violet" radius="full">Example</Badge>}
               <StoryChips story={story} />
             </Flex>
           </div>
