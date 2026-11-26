@@ -7,6 +7,10 @@ import {
   DEFAULT_SETTINGS, getStory, loadSettings, loadStories, loadVisibleStories,
   loadVocabulary, markVocabularyKnown, saveSettings, updateWordExplanation, updateWordMark, upsertStory,
 } from '../src/lib/storage.ts'
+import { isStarterStory } from '../src/lib/starter-stories.ts'
+
+// Starter stories are always listed; these tests are about the fixtures and saved stories around them.
+const visibleWithoutStarters = () => loadVisibleStories().filter((story) => !isStarterStory(story.id))
 
 beforeEach(() => {
   const values = new Map()
@@ -22,19 +26,19 @@ beforeEach(() => {
 
 test('fixtures are hidden by default, including for legacy and invalid settings', () => {
   assert.equal(loadSettings().showDebugFixtures, false)
-  assert.equal(loadVisibleStories().length, 0)
+  assert.equal(visibleWithoutStarters().length, 0)
   assert.equal(getStory('debug-cefr-a1'), undefined)
   for (const setting of [{ cefrLevel: 'B1' }, { showDebugFixtures: 'true' }, { showDebugFixtures: 1 }]) {
     localStorage.setItem('era.v1.settings', JSON.stringify(setting))
     assert.equal(loadSettings().showDebugFixtures, false)
   }
   localStorage.setItem('era.v1.settings', '{broken')
-  assert.equal(loadVisibleStories().length, 0)
+  assert.equal(visibleWithoutStarters().length, 0)
 })
 
 test('enable shows six readable fixtures without adding them to saved story storage', () => {
   saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true })
-  assert.deepEqual(loadVisibleStories().map((story) => story.level), ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'])
+  assert.deepEqual(visibleWithoutStarters().map((story) => story.level), ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'])
   assert.equal(new Set(DEBUG_FIXTURES.map((story) => story.id)).size, 6)
   assert.equal(loadStories().length, 0)
   assert.equal(localStorage.getItem('era.v1.stories'), null)
@@ -67,11 +71,11 @@ test('toggling preserves saved stories and their ordinary mark/definition update
   upsertStory(saved)
   const originalStorage = localStorage.getItem('era.v1.stories')
   saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: true })
-  assert.equal(loadVisibleStories().length, 7)
-  assert.equal(loadVisibleStories()[0].id, 'saved-story')
+  assert.equal(visibleWithoutStarters().length, 7)
+  assert.equal(visibleWithoutStarters()[0].id, 'saved-story')
   saveSettings({ ...DEFAULT_SETTINGS, showDebugFixtures: false })
   assert.equal(localStorage.getItem('era.v1.stories'), originalStorage)
-  assert.deepEqual(loadVisibleStories(), [saved])
+  assert.deepEqual(visibleWithoutStarters(), [saved])
   updateWordMark(saved.id, 'garden', 'unknown')
   updateWordExplanation(saved.id, 'garden', 'A saved definition.')
   assert.equal(getStory(saved.id).wordMarks.garden, 'unknown')

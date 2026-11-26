@@ -1,6 +1,6 @@
 import { ArrowLeftIcon, Cross2Icon } from '@radix-ui/react-icons'
 import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { StoryChips } from '../components/StoryChips'
@@ -11,7 +11,7 @@ import { isDebugFixture } from '../lib/debug-fixtures'
 import { lookupDefinition, preloadShards } from '../lib/dictionary'
 import { loadProgress } from '../lib/progress'
 import { getStory, loadSettings, updateWordExplanation, updateWordMark } from '../lib/storage'
-import { tokenize } from '../lib/tokenize'
+import { splitSectionBreaks, tokenize } from '../lib/tokenize'
 import type { Story } from '../types'
 
 // Wide enough for the story and the side panel; the panel moves below the story otherwise.
@@ -345,7 +345,17 @@ function StoryReader({ id }: { id: string | undefined }) {
             <div className="story-body" ref={bodyRef}>
               {tokens.map((token, index) => {
                 if (token.type !== 'word') {
-                  return <span key={`other-${index}`}>{token.value}</span>
+                  const parts = splitSectionBreaks(token.value, index === 0, index === tokens.length - 1)
+                  return (
+                    <span key={`other-${index}`}>
+                      {parts.map((part, partIndex) => (
+                        <Fragment key={partIndex}>
+                          {partIndex > 0 && <span role="separator" className="story-section-break" />}
+                          {part}
+                        </Fragment>
+                      ))}
+                    </span>
+                  )
                 }
 
                 const mark = story.wordMarks[token.key]

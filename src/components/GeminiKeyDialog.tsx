@@ -128,6 +128,14 @@ export function GeminiKeyDialog({ open, onOpenChange, onSaved, isOnline, returnF
             </Text>
           )}
 
+          <Text as="p" size="2" mt="4">
+            Not ready for a key?{' '}
+            <Link asChild>
+              <RouterLink to="/stories#starter-stories">Read a starter story</RouterLink>
+            </Link>{' '}
+            in My Stories instead.
+          </Text>
+
           <Flex gap="3" mt="5" align="center" justify="between" wrap="wrap">
             <Text size="2">
               <Link asChild color="gray">

@@ -175,7 +175,7 @@ const STEPS: Step[] = [
     title: 'A few things to know',
     body: (
       <ul className="ob-facts">
-        <li>Add your Gemini API key in Settings to create stories. This guide needs no key.</li>
+        <li>Add your Gemini API key in Settings to create stories. The starter stories in My Stories and this guide need no key.</li>
         <li>Creating a story needs an internet connection.</li>
         <li>Stories and words are saved in this browser only. They don’t sync to other devices.</li>
       </ul>
