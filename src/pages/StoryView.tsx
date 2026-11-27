@@ -554,7 +554,7 @@ function StoryReader({ id }: { id: string | undefined }) {
               <Card className="glossary">
                 <Flex align="center" justify="between" gap="2" mb="1">
                   <Heading as="h2" size="4">
-                    Words in this story
+                    Saved words
                   </Heading>
                   {/* Not pressed is Reading mode, which hides the meanings; pressed is Review mode. */}
                   {unknownEntries.length > 0 && (
@@ -573,10 +573,10 @@ function StoryReader({ id }: { id: string | undefined }) {
                 </Flex>
                 <Text as="p" size="2" color="gray" mb={unknownEntries.length > 0 ? '3' : undefined}>
                   {unknownEntries.length === 0
-                    ? 'No saved words yet. Words you save stay here until you unsave them.'
+                    ? 'Nothing saved yet. Tap a word in the story and choose Save to keep it here.'
                     : reviewMode
-                      ? 'Words you save stay here until you unsave them.'
-                      : `${wordCount}. Meanings stay hidden while you read; choose the eye button to see them.`}
+                      ? `${wordCount} from this story. Choose × when you know a word.`
+                      : `${wordCount} from this story. Meanings stay hidden so you can focus on reading.`}
                 </Text>
                 {unknownEntries.length > 0 && wordList(reviewMode)}
               </Card>
@@ -616,7 +616,7 @@ function StoryReader({ id }: { id: string | undefined }) {
         >
           <Flex justify="between" align="start" gap="3">
             <Dialog.Title size="4" mb="1">
-              Words in this story
+              Saved words
             </Dialog.Title>
             <Dialog.Close>
               <IconButton variant="ghost" color="gray" aria-label="Close">
