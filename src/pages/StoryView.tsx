@@ -307,7 +307,7 @@ function StoryReader({ id }: { id: string | undefined }) {
         )}
         {story?.wordMarks[key] === 'unknown' ? (
           <button type="button" className="gloss-action" onClick={() => markWord(key, 'known')}>
-            Mark as known
+            Unsave
           </button>
         ) : (
           <button type="button" className="gloss-action" onClick={() => markWord(key, 'unknown')}>
@@ -370,10 +370,10 @@ function StoryReader({ id }: { id: string | undefined }) {
               <button
                 type="button"
                 className="gloss-action glossary-known"
-                aria-label={`Mark ${entry.sample} as known`}
+                aria-label={`Unsave ${entry.sample}`}
                 onClick={() => markWord(entry.key, 'known')}
               >
-                Mark as known
+                Unsave
               </button>
             )}
           </Flex>
@@ -402,7 +402,7 @@ function StoryReader({ id }: { id: string | undefined }) {
           </Flex>
           <Text as="p" size="2" color="gray">
             Tap a word to see its meaning. Choose Save to highlight it and keep it in
-            Vocabulary until you mark it as known.
+            Vocabulary until you unsave it.
           </Text>
         </div>
 
@@ -570,9 +570,9 @@ function StoryReader({ id }: { id: string | undefined }) {
                 </Flex>
                 <Text as="p" size="2" color="gray" mb={unknownEntries.length > 0 ? '3' : undefined}>
                   {unknownEntries.length === 0
-                    ? 'No saved words yet. Words you save stay here until you mark them as known.'
+                    ? 'No saved words yet. Words you save stay here until you unsave them.'
                     : reviewMode
-                      ? 'Words you save stay here until you mark them as known.'
+                      ? 'Words you save stay here until you unsave them.'
                       : `${wordCount}. Meanings stay hidden while you read; choose the eye button to see them.`}
                 </Text>
                 {unknownEntries.length > 0 && wordList(reviewMode)}

@@ -15,8 +15,8 @@ export function Vocabulary() {
     <Container size="2" px="4">
       <Heading size="7" mb="2">Vocabulary</Heading>
       <Text as="p" color="gray" mb="5">
-        Words you are learning stay here even if their stories are removed. Mark a word as known
-        to clear it here and in all visible stories. Debug fixture words appear while fixture
+        Words you are learning stay here even if their stories are removed. Unsave a word once
+        you know it to clear it here and in all visible stories. Debug fixture words appear while fixture
         articles are enabled in Settings. CEFR groups are approximate and use the bundled offline
         vocabulary data, independently of each story's level and your Settings level.
       </Text>
@@ -45,13 +45,13 @@ export function Vocabulary() {
                       <Button
                         variant="soft"
                         size="2"
-                        aria-label={`Mark ${entry.word} as known`}
+                        aria-label={`Unsave ${entry.word}`}
                         onClick={() => {
                           markVocabularyKnown(entry.key)
                           setWords(loadVocabulary())
                         }}
                       >
-                        Mark as known
+                        Unsave
                       </Button>
                     </Flex>
                     <Flex direction="column" gap="4">

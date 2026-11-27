@@ -137,7 +137,7 @@ export function Exam() {
               <Flex direction="column" width="100%">
                 <Text weight="bold">Past stories</Text>
                 <Text size="2" color="gray">
-                  Harder words across My Stories that you have not marked as known.
+                  Harder words across My Stories that you have not unsaved.
                 </Text>
                 <Text size="1" color="gray" mt="1">
                   {storyWordCount} {storyWordCount === 1 ? 'word' : 'words'}
