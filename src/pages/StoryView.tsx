@@ -1,5 +1,18 @@
 import { ArrowLeftIcon, Cross2Icon } from '@radix-ui/react-icons'
-import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
+import {
+  Badge,
+  Button,
+  Card,
+  Container,
+  Dialog,
+  Flex,
+  Heading,
+  IconButton,
+  Progress,
+  Spinner,
+  Switch,
+  Text,
+} from '@radix-ui/themes'
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
@@ -27,6 +40,11 @@ function useSidePanel() {
   return useSyncExternalStore(subscribeToSidePanelQuery, () => window.matchMedia(SIDE_PANEL_QUERY).matches)
 }
 
+// About the height of the bottom bar, which covers the end of the viewport on narrow screens.
+const BOTTOM_BAR_HEIGHT = 72
+
+type WordEntry = { key: string; sample: string; index: number }
+
 export function StoryView() {
   const { id } = useParams()
   // A new key starts the page fresh, so lookups and the open note never carry over between stories.
@@ -46,6 +64,12 @@ function StoryReader({ id }: { id: string | undefined }) {
   // On wide screens the clicked word's meaning shows in the side Dictionary card
   // instead of a note under the word.
   const sidePanel = useSidePanel()
+  // Reading mode keeps the meanings in the word list hidden; Review mode shows them.
+  const [reviewMode, setReviewMode] = useState(false)
+  // On narrow screens, Review words opens the word list in a bottom sheet.
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const pickedFromSheet = useRef<WordEntry | null>(null)
+  const [readPercent, setReadPercent] = useState(0)
   const pendingLookups = useRef(new Set<string>())
   const storyRef = useRef(story)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -72,7 +96,7 @@ function StoryReader({ id }: { id: string | undefined }) {
       return []
     }
     const seen = new Set<string>()
-    const entries: Array<{ key: string; sample: string; index: number }> = []
+    const entries: WordEntry[] = []
     tokens.forEach((token, index) => {
       if (token.type === 'word' && story.wordMarks[token.key] === 'unknown' && !seen.has(token.key)) {
         seen.add(token.key)
@@ -81,6 +105,26 @@ function StoryReader({ id }: { id: string | undefined }) {
     })
     return entries
   }, [story, tokens])
+
+  // How much of the story has scrolled into view, for the bottom bar on narrow screens.
+  useEffect(() => {
+    if (sidePanel) return
+    function update() {
+      const body = bodyRef.current
+      if (!body) return
+      const rect = body.getBoundingClientRect()
+      const seen = window.innerHeight - BOTTOM_BAR_HEIGHT - rect.top
+      const fraction = rect.height > 0 ? seen / rect.height : 1
+      setReadPercent(Math.round(Math.min(1, Math.max(0, fraction)) * 100))
+    }
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [sidePanel, tokens])
 
   useLayoutEffect(() => {
     const target = searchParams.get('word')
@@ -274,52 +318,74 @@ function StoryReader({ id }: { id: string | undefined }) {
     )
   }
 
-  const unknownWordList = (
-    <Flex direction="column" gap="3">
-      {unknownEntries.map((entry) => (
-        <Flex key={entry.key} gap="3" align="start" justify="between">
-          <button
-            type="button"
-            className="glossary-item"
-            aria-label={`Go to ${entry.sample} in the story`}
-            onClick={() => {
-              openWord(entry.key, entry.index)
-              requestAnimationFrame(() => {
-                const word = document.getElementById(`word-${entry.index}`)
-                word?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                word?.focus({ preventScroll: true })
-              })
-            }}
-          >
-            <Text weight="medium" size="2">
-              {entry.sample}
-            </Text>
-            <span className="glossary-definition">
-              {loadingKeys[entry.key] === 'pending' ? (
-                '\u00a0'
-              ) : loadingKeys[entry.key] === 'slow' ? (
-                <><Spinner size="1" /> Looking up…</>
+  function goToWord(entry: WordEntry) {
+    openWord(entry.key, entry.index)
+    requestAnimationFrame(() => {
+      const word = document.getElementById(`word-${entry.index}`)
+      word?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      word?.focus({ preventScroll: true })
+    })
+  }
+
+  // In Reading mode each word keeps a blank where its meaning goes, so switching
+  // modes does not move the list. Tapping a word still looks it up.
+  function wordList(showMeanings: boolean, inSheet = false) {
+    return (
+      <Flex direction="column" gap="3">
+        {unknownEntries.map((entry) => (
+          <Flex key={entry.key} gap="3" align="start" justify="between">
+            <button
+              type="button"
+              className="glossary-item"
+              aria-label={`Go to ${entry.sample} in the story`}
+              onClick={() => {
+                if (inSheet) {
+                  // The sheet's close handler moves to the word once the sheet is gone.
+                  pickedFromSheet.current = entry
+                  setSheetOpen(false)
+                } else {
+                  goToWord(entry)
+                }
+              }}
+            >
+              <Text weight="medium" size="2">
+                {entry.sample}
+              </Text>
+              {showMeanings ? (
+                <span className="glossary-definition">
+                  {loadingKeys[entry.key] === 'pending' ? (
+                    '\u00a0'
+                  ) : loadingKeys[entry.key] === 'slow' ? (
+                    <><Spinner size="1" /> Looking up…</>
+                  ) : (
+                    lookupErrors[entry.key] ?? story?.explanations[entry.key] ??
+                    'Tap to look up a definition.'
+                  )}
+                </span>
               ) : (
-                lookupErrors[entry.key] ?? story.explanations[entry.key] ??
-                'Tap to look up a definition.'
+                <span className="glossary-hidden" aria-hidden="true" />
               )}
-            </span>
-          </button>
-          <button
-            type="button"
-            className="gloss-action glossary-known"
-            aria-label={`Mark ${entry.sample} as known`}
-            onClick={() => markWord(entry.key, 'known')}
-          >
-            Mark as known
-          </button>
-        </Flex>
-      ))}
-    </Flex>
-  )
+            </button>
+            {showMeanings && (
+              <button
+                type="button"
+                className="gloss-action glossary-known"
+                aria-label={`Mark ${entry.sample} as known`}
+                onClick={() => markWord(entry.key, 'known')}
+              >
+                Mark as known
+              </button>
+            )}
+          </Flex>
+        ))}
+      </Flex>
+    )
+  }
+
+  const wordCount = `${unknownEntries.length} ${unknownEntries.length === 1 ? 'word' : 'words'}`
 
   return (
-    <Container size="4" maxWidth="1024px" px="4">
+    <Container size="4" maxWidth="1024px" px="4" className={sidePanel ? undefined : 'story-page-with-bar'}>
       <Flex direction="column" gap="4">
         <div>
           <Button asChild variant="ghost" size="2" mb="3">
@@ -484,20 +550,85 @@ function StoryReader({ id }: { id: string | undefined }) {
                 </Card>
               )}
               <Card className="glossary">
-                <Heading as="h2" size="4" mb="1">
-                  Words in this story
-                </Heading>
+                <Flex justify="between" align="center" gap="3" mb="1" wrap="wrap">
+                  <Heading as="h2" size="4">
+                    Words in this story
+                  </Heading>
+                  {unknownEntries.length > 0 && (
+                    <Flex align="center" gap="2">
+                      <Text size="1" color="gray" weight="medium" aria-hidden="true">
+                        {reviewMode ? 'Review mode' : 'Reading mode'}
+                      </Text>
+                      <Switch
+                        size="1"
+                        checked={reviewMode}
+                        onCheckedChange={setReviewMode}
+                        aria-label="Show meanings"
+                      />
+                    </Flex>
+                  )}
+                </Flex>
                 <Text as="p" size="2" color="gray" mb={unknownEntries.length > 0 ? '3' : undefined}>
-                  {unknownEntries.length > 0
-                    ? 'Words you mark as unknown stay here until you mark them as known.'
-                    : 'No words marked as unknown yet. Words you mark as unknown stay here until you mark them as known.'}
+                  {unknownEntries.length === 0
+                    ? 'No words marked as unknown yet. Words you mark as unknown stay here until you mark them as known.'
+                    : reviewMode
+                      ? 'Words you mark as unknown stay here until you mark them as known.'
+                      : `${wordCount}. Meanings stay hidden while you read; turn on Review mode to see them.`}
                 </Text>
-                {unknownEntries.length > 0 && unknownWordList}
+                {unknownEntries.length > 0 && wordList(reviewMode)}
               </Card>
             </aside>
           )}
         </div>
       </Flex>
+
+      {!sidePanel && (
+        <div className="story-bottom-bar">
+          <div className="story-bottom-progress">
+            <Text size="2" color="gray">
+              <Text weight="bold" highContrast>{readPercent}%</Text> read
+              {unknownEntries.length > 0 && ` · ${wordCount}`}
+            </Text>
+            <Progress value={readPercent} size="1" aria-label="Reading progress" />
+          </div>
+          {unknownEntries.length > 0 && (
+            <Button size="3" onClick={() => setSheetOpen(true)}>
+              Review words
+            </Button>
+          )}
+        </div>
+      )}
+
+      <Dialog.Root open={sheetOpen} onOpenChange={setSheetOpen}>
+        <Dialog.Content
+          className="word-sheet"
+          onCloseAutoFocus={(event) => {
+            // Picking a word closes the sheet and moves focus to that word instead of the button.
+            const entry = pickedFromSheet.current
+            if (!entry) return
+            event.preventDefault()
+            pickedFromSheet.current = null
+            goToWord(entry)
+          }}
+        >
+          <Flex justify="between" align="start" gap="3">
+            <Dialog.Title size="4" mb="1">
+              Words in this story
+            </Dialog.Title>
+            <Dialog.Close>
+              <IconButton variant="ghost" color="gray" aria-label="Close">
+                <Cross2Icon />
+              </IconButton>
+            </Dialog.Close>
+          </Flex>
+          <Dialog.Description size="2" color="gray" mb="3">
+            {unknownEntries.length > 0
+              ? 'Tap a word to find it in the story.'
+              : 'No words left to review.'}
+          </Dialog.Description>
+          {wordList(true, true)}
+        </Dialog.Content>
+      </Dialog.Root>
     </Container>
   )
 }
