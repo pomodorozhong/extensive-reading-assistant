@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, ChevronDownIcon, Cross2Icon, EyeNoneIcon, EyeOpenIcon } from '@radix-ui/react-icons'
+import { ArrowLeftIcon, Cross2Icon, EyeNoneIcon, EyeOpenIcon } from '@radix-ui/react-icons'
 import {
   Badge,
   Button,
@@ -68,6 +68,9 @@ function StoryReader({ id }: { id: string | undefined }) {
   const [reviewMode, setReviewMode] = useState(false)
   // On narrow screens, Review words opens the word list in a bottom sheet.
   const [sheetOpen, setSheetOpen] = useState(false)
+  const sheetRef = useRef<HTMLDivElement>(null)
+  // Where a drag on the sheet's top started, and how far down it has gone.
+  const sheetDrag = useRef<{ startY: number; dy: number; onHandle: boolean } | null>(null)
   const pickedFromSheet = useRef<WordEntry | null>(null)
   const [readPercent, setReadPercent] = useState(0)
   const pendingLookups = useRef(new Set<string>())
@@ -615,7 +618,13 @@ function StoryReader({ id }: { id: string | undefined }) {
 
       <Dialog.Root open={sheetOpen} onOpenChange={setSheetOpen}>
         <Dialog.Content
+          ref={sheetRef}
           className="word-sheet"
+          onOpenAutoFocus={(event) => {
+            // Focus the sheet, not its first button, so the handle doesn't open with a focus ring.
+            event.preventDefault()
+            sheetRef.current?.focus()
+          }}
           onCloseAutoFocus={(event) => {
             // Picking a word closes the sheet and moves focus to that word instead of the button.
             const entry = pickedFromSheet.current
@@ -625,17 +634,45 @@ function StoryReader({ id }: { id: string | undefined }) {
             goToWord(entry)
           }}
         >
-          <Flex justify="between" align="start" gap="3">
+          {/* Like an iOS sheet: tap the handle, or drag the top of the sheet down, to close it. */}
+          <div
+            className="word-sheet-top"
+            onPointerDown={(event) => {
+              const onHandle = (event.target as Element).classList.contains('word-sheet-handle')
+              sheetDrag.current = { startY: event.clientY, dy: 0, onHandle }
+              // Capturing sends the click to this wrapper, so a tap on the handle closes in pointerup.
+              event.currentTarget.setPointerCapture(event.pointerId)
+            }}
+            onPointerMove={(event) => {
+              const drag = sheetDrag.current
+              const sheet = sheetRef.current
+              if (!drag || !sheet) return
+              drag.dy = Math.max(0, event.clientY - drag.startY)
+              if (drag.dy < 4) return
+              sheet.style.transition = 'none'
+              sheet.style.transform = `translateY(${drag.dy}px)`
+            }}
+            onPointerUp={() => {
+              const drag = sheetDrag.current
+              const sheet = sheetRef.current
+              sheetDrag.current = null
+              if (!drag || !sheet) return
+              sheet.style.transition = ''
+              sheet.style.transform = ''
+              if (drag.dy > 80 || (drag.onHandle && drag.dy < 4)) setSheetOpen(false)
+            }}
+            onPointerCancel={() => {
+              sheetDrag.current = null
+              if (sheetRef.current) sheetRef.current.style.transform = ''
+            }}
+          >
+            <Dialog.Close>
+              <button type="button" className="word-sheet-handle" aria-label="Close" />
+            </Dialog.Close>
             <Dialog.Title size="4" mb="1">
               Saved words
             </Dialog.Title>
-            <Dialog.Close>
-              {/* A down chevron, not ×, which in this sheet means Unsave. */}
-              <IconButton variant="ghost" color="gray" aria-label="Close">
-                <ChevronDownIcon />
-              </IconButton>
-            </Dialog.Close>
-          </Flex>
+          </div>
           <Dialog.Description size="2" color="gray" mb="3">
             {unknownEntries.length > 0
               ? 'Tap a word to find it in the story.'
