@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, Cross2Icon } from '@radix-ui/react-icons'
+import { ArrowLeftIcon, Cross2Icon, EyeNoneIcon, EyeOpenIcon } from '@radix-ui/react-icons'
 import {
   Badge,
   Button,
@@ -10,8 +10,8 @@ import {
   IconButton,
   Progress,
   Spinner,
-  Switch,
   Text,
+  Tooltip,
 } from '@radix-ui/themes'
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
@@ -549,22 +549,31 @@ function StoryReader({ id }: { id: string | undefined }) {
                 </div>
               </Card>
               <Card className="glossary">
-                <Heading as="h2" size="4" mb="1">
-                  Words in this story
-                </Heading>
-                {/* Off is Reading mode, which hides the meanings; on is Review mode. */}
-                {unknownEntries.length > 0 && (
-                  <Text as="label" size="2" weight="medium" className="glossary-mode">
-                    Review mode
-                    <Switch size="1" checked={reviewMode} onCheckedChange={setReviewMode} />
-                  </Text>
-                )}
+                <Flex align="center" justify="between" gap="2" mb="1">
+                  <Heading as="h2" size="4">
+                    Words in this story
+                  </Heading>
+                  {/* Not pressed is Reading mode, which hides the meanings; pressed is Review mode. */}
+                  {unknownEntries.length > 0 && (
+                    <Tooltip content={reviewMode ? 'Hide meanings' : 'Show meanings'}>
+                      <IconButton
+                        variant={reviewMode ? 'soft' : 'ghost'}
+                        color={reviewMode ? undefined : 'gray'}
+                        aria-label="Show meanings"
+                        aria-pressed={reviewMode}
+                        onClick={() => setReviewMode((on) => !on)}
+                      >
+                        {reviewMode ? <EyeOpenIcon /> : <EyeNoneIcon />}
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Flex>
                 <Text as="p" size="2" color="gray" mb={unknownEntries.length > 0 ? '3' : undefined}>
                   {unknownEntries.length === 0
                     ? 'No saved words yet. Words you save stay here until you mark them as known.'
                     : reviewMode
                       ? 'Words you save stay here until you mark them as known.'
-                      : `${wordCount}. Meanings stay hidden while you read; turn on Review mode to see them.`}
+                      : `${wordCount}. Meanings stay hidden while you read; choose the eye button to see them.`}
                 </Text>
                 {unknownEntries.length > 0 && wordList(reviewMode)}
               </Card>
