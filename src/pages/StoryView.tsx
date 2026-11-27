@@ -503,52 +503,51 @@ function StoryReader({ id }: { id: string | undefined }) {
             </div>
           </div>
 
-          {(sidePanel || unknownEntries.length > 0) && (
+          {/* Narrow screens show meanings in notes under the words and the word list in the bottom bar's sheet. */}
+          {sidePanel && (
             <aside className="story-side" aria-label="Dictionary and words in this story">
-              {sidePanel && (
-                <Card
-                  id="side-dictionary"
-                  className="side-dictionary"
-                  onKeyDown={(event) => {
-                    if (event.key === 'Escape' && activeToken) {
-                      event.preventDefault()
-                      closeNote()
-                    }
-                  }}
-                >
-                  <Text as="p" size="1" weight="bold" className="side-eyebrow">
-                    Dictionary
-                  </Text>
-                  {/* Always mounted, so screen readers announce each new word and its meaning. */}
-                  <div aria-live="polite">
-                    {activeToken?.type === 'word' ? (
-                      <>
-                        <button
-                          type="button"
-                          className="side-dictionary-close"
-                          aria-label="Close definition"
-                          onClick={closeNote}
-                        >
-                          <Cross2Icon />
-                        </button>
-                        <Heading as="h2" size="4" mt="1" className="side-dictionary-word">
-                          {activeToken.value}
-                        </Heading>
-                        <Text as="p" size="2" mt="1" className="side-dictionary-body">
-                          {glossBody()}
-                        </Text>
-                        <Flex gap="3" wrap="wrap" mt="2">
-                          {glossActions(activeToken.key)}
-                        </Flex>
-                      </>
-                    ) : (
-                      <Text as="p" size="2" color="gray" mt="1">
-                        Tap a word in the story to see its meaning here.
+              <Card
+                id="side-dictionary"
+                className="side-dictionary"
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape' && activeToken) {
+                    event.preventDefault()
+                    closeNote()
+                  }
+                }}
+              >
+                <Text as="p" size="1" weight="bold" className="side-eyebrow">
+                  Dictionary
+                </Text>
+                {/* Always mounted, so screen readers announce each new word and its meaning. */}
+                <div aria-live="polite">
+                  {activeToken?.type === 'word' ? (
+                    <>
+                      <button
+                        type="button"
+                        className="side-dictionary-close"
+                        aria-label="Close definition"
+                        onClick={closeNote}
+                      >
+                        <Cross2Icon />
+                      </button>
+                      <Heading as="h2" size="4" mt="1" className="side-dictionary-word">
+                        {activeToken.value}
+                      </Heading>
+                      <Text as="p" size="2" mt="1" className="side-dictionary-body">
+                        {glossBody()}
                       </Text>
-                    )}
-                  </div>
-                </Card>
-              )}
+                      <Flex gap="3" wrap="wrap" mt="2">
+                        {glossActions(activeToken.key)}
+                      </Flex>
+                    </>
+                  ) : (
+                    <Text as="p" size="2" color="gray" mt="1">
+                      Tap a word in the story to see its meaning here.
+                    </Text>
+                  )}
+                </div>
+              </Card>
               <Card className="glossary">
                 <Flex justify="between" align="center" gap="3" mb="1" wrap="wrap">
                   <Heading as="h2" size="4">
