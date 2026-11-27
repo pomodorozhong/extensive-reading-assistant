@@ -311,7 +311,7 @@ function StoryReader({ id }: { id: string | undefined }) {
           </button>
         ) : (
           <button type="button" className="gloss-action" onClick={() => markWord(key, 'unknown')}>
-            Mark as unknown
+            Save
           </button>
         )}
       </>
@@ -401,8 +401,8 @@ function StoryReader({ id }: { id: string | undefined }) {
             {loadProgress().read.includes(story.id) && <Badge size="2" color="green" radius="full">Read</Badge>}
           </Flex>
           <Text as="p" size="2" color="gray">
-            Tap a word to see its meaning. Choose Mark as unknown to highlight it and keep it
-            in Vocabulary until you mark it as known.
+            Tap a word to see its meaning. Choose Save to highlight it and keep it in
+            Vocabulary until you mark it as known.
           </Text>
         </div>
 
@@ -561,9 +561,9 @@ function StoryReader({ id }: { id: string | undefined }) {
                 )}
                 <Text as="p" size="2" color="gray" mb={unknownEntries.length > 0 ? '3' : undefined}>
                   {unknownEntries.length === 0
-                    ? 'No words marked as unknown yet. Words you mark as unknown stay here until you mark them as known.'
+                    ? 'No saved words yet. Words you save stay here until you mark them as known.'
                     : reviewMode
-                      ? 'Words you mark as unknown stay here until you mark them as known.'
+                      ? 'Words you save stay here until you mark them as known.'
                       : `${wordCount}. Meanings stay hidden while you read; turn on Review mode to see them.`}
                 </Text>
                 {unknownEntries.length > 0 && wordList(reviewMode)}
