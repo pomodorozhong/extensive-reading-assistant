@@ -39,6 +39,10 @@ Production builds (`npm run build`) add a Content Security Policy `<meta>` tag d
 
 To check it, run `npm run build && npm run preview` and watch the browser console for Content Security Policy errors while reading a story, looking up a word, and opening each page.
 
+## Word positions
+
+Saved words point back to their story by token position: each Vocabulary source stores a `tokenIndex` into the story's tokens from [`src/lib/tokenize.ts`](../src/lib/tokenize.ts), and Story View's word marks use the same positions. Changing how `tokenize` splits text shifts every stored position and breaks the links in existing data, so keep it as it is. To draw something new in a story, such as the `***` section breaks of the starter stories, handle it at render time in Story View instead of adding new token types.
+
 ## GitHub Pages
 
 This repo deploys the production build with GitHub Actions. Hash-based routes (`#/stories`, `#/settings`) work on Pages without extra rewrite rules. The Vite `base` path is set automatically from the repository name.
