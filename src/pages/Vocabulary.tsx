@@ -1,4 +1,5 @@
-import { Badge, Button, Card, Container, Flex, Heading, Text } from '@radix-ui/themes'
+import { Cross2Icon } from '@radix-ui/react-icons'
+import { Badge, Button, Card, Container, Flex, Heading, IconButton, Text, Tooltip } from '@radix-ui/themes'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { isDebugFixture } from '../lib/debug-fixtures'
@@ -15,8 +16,8 @@ export function Vocabulary() {
     <Container size="2" px="4">
       <Heading size="7" mb="2">Vocabulary</Heading>
       <Text as="p" color="gray" mb="5">
-        Words you are learning stay here even if their stories are removed. Unsave a word once
-        you know it to clear it here and in all visible stories. Debug fixture words appear while fixture
+        Words you are learning stay here even if their stories are removed. Choose × on a word
+        once you know it to clear it here and in all visible stories. Debug fixture words appear while fixture
         articles are enabled in Settings. CEFR groups are approximate and use the bundled offline
         vocabulary data, independently of each story's level and your Settings level.
       </Text>
@@ -42,17 +43,19 @@ export function Vocabulary() {
                   <Card key={entry.key}>
                     <Flex justify="between" align="start" gap="3" wrap="wrap" mb="3">
                       <Heading as="h3" size="5">{entry.word}</Heading>
-                      <Button
-                        variant="soft"
-                        size="2"
-                        aria-label={`Unsave ${entry.word}`}
-                        onClick={() => {
-                          markVocabularyKnown(entry.key)
-                          setWords(loadVocabulary())
-                        }}
-                      >
-                        Unsave
-                      </Button>
+                      <Tooltip content="Unsave">
+                        <IconButton
+                          variant="ghost"
+                          color="gray"
+                          aria-label={`Unsave ${entry.word}`}
+                          onClick={() => {
+                            markVocabularyKnown(entry.key)
+                            setWords(loadVocabulary())
+                          }}
+                        >
+                          <Cross2Icon />
+                        </IconButton>
+                      </Tooltip>
                     </Flex>
                     <Flex direction="column" gap="4">
                       {groupVocabularyDefinitions(entry.sources).map((group) => (

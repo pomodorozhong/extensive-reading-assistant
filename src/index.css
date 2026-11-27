@@ -512,10 +512,6 @@ body {
   outline-offset: 2px;
 }
 
-.glossary-known {
-  flex-shrink: 0;
-}
-
 /* The word whose meaning is shown is underlined in blue, whether or not it is marked. */
 .story-word.active {
   box-shadow: inset 0 -2px 0 var(--blue-9);

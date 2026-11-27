@@ -367,14 +367,17 @@ function StoryReader({ id }: { id: string | undefined }) {
               )}
             </button>
             {showMeanings && (
-              <button
-                type="button"
-                className="gloss-action glossary-known"
-                aria-label={`Unsave ${entry.sample}`}
-                onClick={() => markWord(entry.key, 'known')}
-              >
-                Unsave
-              </button>
+              <Tooltip content="Unsave">
+                <IconButton
+                  size="1"
+                  variant="ghost"
+                  color="gray"
+                  aria-label={`Unsave ${entry.sample}`}
+                  onClick={() => markWord(entry.key, 'known')}
+                >
+                  <Cross2Icon />
+                </IconButton>
+              </Tooltip>
             )}
           </Flex>
         ))}
