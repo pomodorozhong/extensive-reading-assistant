@@ -327,8 +327,8 @@ function StoryReader({ id }: { id: string | undefined }) {
     })
   }
 
-  // In Reading mode each word keeps a blank where its meaning goes, so switching
-  // modes does not move the list. Tapping a word still looks it up.
+  // Both modes lay the list out the same way, so switching modes moves nothing.
+  // Tapping a word still looks it up.
   function wordList(showMeanings: boolean, inSheet = false) {
     return (
       <Flex direction="column" gap="3">
@@ -351,8 +351,12 @@ function StoryReader({ id }: { id: string | undefined }) {
               <Text weight="medium" size="2">
                 {entry.sample}
               </Text>
-              {showMeanings ? (
-                <span className="glossary-definition">
+              {/* Reading mode keeps the meaning in place but covers each line with a grey bar. */}
+              <span
+                className={showMeanings ? 'glossary-definition' : 'glossary-definition is-hidden'}
+                aria-hidden={showMeanings ? undefined : true}
+              >
+                <span>
                   {loadingKeys[entry.key] === 'pending' ? (
                     '\u00a0'
                   ) : loadingKeys[entry.key] === 'slow' ? (
@@ -362,11 +366,10 @@ function StoryReader({ id }: { id: string | undefined }) {
                     'Tap to look up a definition.'
                   )}
                 </span>
-              ) : (
-                <span className="glossary-hidden" aria-hidden="true" />
-              )}
+              </span>
             </button>
-            {showMeanings && (
+            {/* Hidden, not removed, in Reading mode so the rows keep their width. */}
+            <span className={showMeanings ? undefined : 'glossary-unsave-hidden'}>
               <Tooltip content="Unsave">
                 <IconButton
                   size="1"
@@ -378,7 +381,7 @@ function StoryReader({ id }: { id: string | undefined }) {
                   <Cross2Icon />
                 </IconButton>
               </Tooltip>
-            )}
+            </span>
           </Flex>
         ))}
       </Flex>
@@ -560,7 +563,7 @@ function StoryReader({ id }: { id: string | undefined }) {
                   {unknownEntries.length > 0 && (
                     <Tooltip content={reviewMode ? 'Hide meanings' : 'Show meanings'}>
                       <IconButton
-                        variant={reviewMode ? 'soft' : 'ghost'}
+                        variant="soft"
                         color={reviewMode ? undefined : 'gray'}
                         aria-label="Show meanings"
                         aria-pressed={reviewMode}
@@ -572,11 +575,19 @@ function StoryReader({ id }: { id: string | undefined }) {
                   )}
                 </Flex>
                 <Text as="p" size="2" color="gray" mb={unknownEntries.length > 0 ? '3' : undefined}>
-                  {unknownEntries.length === 0
-                    ? 'Nothing saved yet. Tap a word in the story and choose Save to keep it here.'
-                    : reviewMode
-                      ? `${wordCount} from this story. Choose × when you know a word.`
-                      : `${wordCount} from this story. Meanings stay hidden so you can focus on reading.`}
+                  {unknownEntries.length === 0 ? (
+                    'Nothing saved yet. Tap a word in the story and choose Save to keep it here.'
+                  ) : (
+                    // Both lines share one grid cell, so the taller one sets the height in both modes.
+                    <span className="glossary-mode-text">
+                      <span className={reviewMode ? 'is-off' : undefined} aria-hidden={reviewMode || undefined}>
+                        {wordCount} from this story. Meanings stay hidden so you can focus on reading.
+                      </span>
+                      <span className={reviewMode ? undefined : 'is-off'} aria-hidden={!reviewMode || undefined}>
+                        {wordCount} from this story. Choose × when you know a word.
+                      </span>
+                    </span>
+                  )}
                 </Text>
                 {unknownEntries.length > 0 && wordList(reviewMode)}
               </Card>

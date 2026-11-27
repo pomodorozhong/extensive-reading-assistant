@@ -655,15 +655,35 @@ body {
   color: var(--gray-11);
 }
 
-/* Reading mode: a blank bar where the meaning would be. */
-.glossary-hidden {
-  display: block;
-  width: 8rem;
-  max-width: 100%;
-  height: 0.6rem;
-  margin-top: 0.5em;
-  border-radius: 999px;
+/* Reading mode: the meaning stays in place, each line covered by a grey bar. */
+.glossary-definition.is-hidden > span {
+  color: transparent;
   background: var(--gray-a4);
+  border-radius: 4px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  user-select: none;
+}
+
+.glossary-definition.is-hidden .rt-Spinner {
+  visibility: hidden;
+}
+
+.glossary-unsave-hidden {
+  visibility: hidden;
+}
+
+/* The two mode lines share one grid cell, so the card's line count never changes. */
+.glossary-mode-text {
+  display: grid;
+}
+
+.glossary-mode-text > span {
+  grid-area: 1 / 1;
+}
+
+.glossary-mode-text > .is-off {
+  visibility: hidden;
 }
 
 /* Narrow screens: reading progress and Review words stay at the bottom of the screen. */
