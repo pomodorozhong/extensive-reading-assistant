@@ -1,5 +1,18 @@
-import { ArrowLeftIcon, Cross2Icon } from '@radix-ui/react-icons'
-import { Badge, Button, Card, Container, Flex, Heading, Spinner, Text } from '@radix-ui/themes'
+import { ArrowLeftIcon, Cross2Icon, EyeNoneIcon, EyeOpenIcon } from '@radix-ui/react-icons'
+import {
+  Badge,
+  Button,
+  Card,
+  Container,
+  Dialog,
+  Flex,
+  Heading,
+  IconButton,
+  Progress,
+  Spinner,
+  Text,
+  Tooltip,
+} from '@radix-ui/themes'
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
@@ -27,6 +40,11 @@ function useSidePanel() {
   return useSyncExternalStore(subscribeToSidePanelQuery, () => window.matchMedia(SIDE_PANEL_QUERY).matches)
 }
 
+// About the height of the bottom bar, which covers the end of the viewport on narrow screens.
+const BOTTOM_BAR_HEIGHT = 72
+
+type WordEntry = { key: string; sample: string; index: number }
+
 export function StoryView() {
   const { id } = useParams()
   // A new key starts the page fresh, so lookups and the open note never carry over between stories.
@@ -46,6 +64,15 @@ function StoryReader({ id }: { id: string | undefined }) {
   // On wide screens the clicked word's meaning shows in the side Dictionary card
   // instead of a note under the word.
   const sidePanel = useSidePanel()
+  // Reading mode keeps the meanings in the word list hidden; Review mode shows them.
+  const [reviewMode, setReviewMode] = useState(false)
+  // On narrow screens, Review words opens the word list in a bottom sheet.
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const sheetRef = useRef<HTMLDivElement>(null)
+  // Where a drag on the sheet's top started, and how far down it has gone.
+  const sheetDrag = useRef<{ startY: number; dy: number; onHandle: boolean } | null>(null)
+  const pickedFromSheet = useRef<WordEntry | null>(null)
+  const [readPercent, setReadPercent] = useState(0)
   const pendingLookups = useRef(new Set<string>())
   const storyRef = useRef(story)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -72,7 +99,7 @@ function StoryReader({ id }: { id: string | undefined }) {
       return []
     }
     const seen = new Set<string>()
-    const entries: Array<{ key: string; sample: string; index: number }> = []
+    const entries: WordEntry[] = []
     tokens.forEach((token, index) => {
       if (token.type === 'word' && story.wordMarks[token.key] === 'unknown' && !seen.has(token.key)) {
         seen.add(token.key)
@@ -81,6 +108,26 @@ function StoryReader({ id }: { id: string | undefined }) {
     })
     return entries
   }, [story, tokens])
+
+  // How much of the story has scrolled into view, for the bottom bar on narrow screens.
+  useEffect(() => {
+    if (sidePanel) return
+    function update() {
+      const body = bodyRef.current
+      if (!body) return
+      const rect = body.getBoundingClientRect()
+      const seen = window.innerHeight - BOTTOM_BAR_HEIGHT - rect.top
+      const fraction = rect.height > 0 ? seen / rect.height : 1
+      setReadPercent(Math.round(Math.min(1, Math.max(0, fraction)) * 100))
+    }
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [sidePanel, tokens])
 
   useLayoutEffect(() => {
     const target = searchParams.get('word')
@@ -263,63 +310,91 @@ function StoryReader({ id }: { id: string | undefined }) {
         )}
         {story?.wordMarks[key] === 'unknown' ? (
           <button type="button" className="gloss-action" onClick={() => markWord(key, 'known')}>
-            Mark as known
+            Unsave
           </button>
         ) : (
           <button type="button" className="gloss-action" onClick={() => markWord(key, 'unknown')}>
-            Mark as unknown
+            Save
           </button>
         )}
       </>
     )
   }
 
-  const unknownWordList = (
-    <Flex direction="column" gap="3">
-      {unknownEntries.map((entry) => (
-        <Flex key={entry.key} gap="3" align="start" justify="between">
-          <button
-            type="button"
-            className="glossary-item"
-            aria-label={`Go to ${entry.sample} in the story`}
-            onClick={() => {
-              openWord(entry.key, entry.index)
-              requestAnimationFrame(() => {
-                const word = document.getElementById(`word-${entry.index}`)
-                word?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                word?.focus({ preventScroll: true })
-              })
-            }}
-          >
-            <Text weight="medium" size="2">
-              {entry.sample}
-            </Text>
-            <span className="glossary-definition">
-              {loadingKeys[entry.key] === 'pending' ? (
-                '\u00a0'
-              ) : loadingKeys[entry.key] === 'slow' ? (
-                <><Spinner size="1" /> Looking up…</>
-              ) : (
-                lookupErrors[entry.key] ?? story.explanations[entry.key] ??
-                'Tap to look up a definition.'
-              )}
+  function goToWord(entry: WordEntry) {
+    openWord(entry.key, entry.index)
+    requestAnimationFrame(() => {
+      const word = document.getElementById(`word-${entry.index}`)
+      word?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      word?.focus({ preventScroll: true })
+    })
+  }
+
+  // Both modes lay the list out the same way, so switching modes moves nothing.
+  // Tapping a word still looks it up.
+  function wordList(showMeanings: boolean, inSheet = false) {
+    return (
+      <Flex direction="column" gap="3">
+        {unknownEntries.map((entry) => (
+          <Flex key={entry.key} gap="3" align="start" justify="between">
+            <button
+              type="button"
+              className="glossary-item"
+              aria-label={`Go to ${entry.sample} in the story`}
+              onClick={() => {
+                if (inSheet) {
+                  // The sheet's close handler moves to the word once the sheet is gone.
+                  pickedFromSheet.current = entry
+                  setSheetOpen(false)
+                } else {
+                  goToWord(entry)
+                }
+              }}
+            >
+              <Text weight="medium" size="2">
+                {entry.sample}
+              </Text>
+              {/* Reading mode keeps the meaning in place but covers each line with a grey bar. */}
+              <span
+                className={showMeanings ? 'glossary-definition' : 'glossary-definition is-hidden'}
+                aria-hidden={showMeanings ? undefined : true}
+              >
+                <span>
+                  {loadingKeys[entry.key] === 'pending' ? (
+                    '\u00a0'
+                  ) : loadingKeys[entry.key] === 'slow' ? (
+                    <><Spinner size="1" /> Looking up…</>
+                  ) : (
+                    lookupErrors[entry.key] ?? story?.explanations[entry.key] ??
+                    'Tap to look up a definition.'
+                  )}
+                </span>
+              </span>
+            </button>
+            {/* Hidden, not removed, in Reading mode so the rows keep their width. */}
+            <span className={showMeanings ? undefined : 'glossary-unsave-hidden'}>
+              <Tooltip content="Unsave">
+                <IconButton
+                  size="1"
+                  variant="ghost"
+                  color="gray"
+                  aria-label={`Unsave ${entry.sample}`}
+                  onClick={() => markWord(entry.key, 'known')}
+                >
+                  <Cross2Icon />
+                </IconButton>
+              </Tooltip>
             </span>
-          </button>
-          <button
-            type="button"
-            className="gloss-action glossary-known"
-            aria-label={`Mark ${entry.sample} as known`}
-            onClick={() => markWord(entry.key, 'known')}
-          >
-            Mark as known
-          </button>
-        </Flex>
-      ))}
-    </Flex>
-  )
+          </Flex>
+        ))}
+      </Flex>
+    )
+  }
+
+  const wordCount = `${unknownEntries.length} ${unknownEntries.length === 1 ? 'word' : 'words'}`
 
   return (
-    <Container size="4" maxWidth="1024px" px="4">
+    <Container size="4" maxWidth="1024px" px="4" className={sidePanel ? undefined : 'story-page-with-bar'}>
       <Flex direction="column" gap="4">
         <div>
           <Button asChild variant="ghost" size="2" mb="3">
@@ -335,8 +410,8 @@ function StoryReader({ id }: { id: string | undefined }) {
             {loadProgress().read.includes(story.id) && <Badge size="2" color="green" radius="full">Read</Badge>}
           </Flex>
           <Text as="p" size="2" color="gray">
-            Tap a word to see its meaning. Choose Mark as unknown to highlight it and keep it
-            in Vocabulary until you mark it as known.
+            Tap a word to see its meaning. Choose Save to highlight it and keep it in
+            Vocabulary until you unsave it.
           </Text>
         </div>
 
@@ -437,67 +512,175 @@ function StoryReader({ id }: { id: string | undefined }) {
             </div>
           </div>
 
-          {(sidePanel || unknownEntries.length > 0) && (
+          {/* Narrow screens show meanings in notes under the words and the word list in the bottom bar's sheet. */}
+          {sidePanel && (
             <aside className="story-side" aria-label="Dictionary and words in this story">
-              {sidePanel && (
-                <Card
-                  id="side-dictionary"
-                  className="side-dictionary"
-                  onKeyDown={(event) => {
-                    if (event.key === 'Escape' && activeToken) {
-                      event.preventDefault()
-                      closeNote()
-                    }
-                  }}
-                >
-                  <Text as="p" size="1" weight="bold" className="side-eyebrow">
-                    Dictionary
-                  </Text>
-                  {/* Always mounted, so screen readers announce each new word and its meaning. */}
-                  <div aria-live="polite">
-                    {activeToken?.type === 'word' ? (
-                      <>
-                        <button
-                          type="button"
-                          className="side-dictionary-close"
-                          aria-label="Close definition"
-                          onClick={closeNote}
-                        >
-                          <Cross2Icon />
-                        </button>
-                        <Heading as="h2" size="4" mt="1" className="side-dictionary-word">
-                          {activeToken.value}
-                        </Heading>
-                        <Text as="p" size="2" mt="1" className="side-dictionary-body">
-                          {glossBody()}
-                        </Text>
-                        <Flex gap="3" wrap="wrap" mt="2">
-                          {glossActions(activeToken.key)}
-                        </Flex>
-                      </>
-                    ) : (
-                      <Text as="p" size="2" color="gray" mt="1">
-                        Tap a word in the story to see its meaning here.
-                      </Text>
-                    )}
-                  </div>
-                </Card>
-              )}
-              <Card className="glossary">
-                <Heading as="h2" size="4" mb="1">
-                  Words in this story
-                </Heading>
-                <Text as="p" size="2" color="gray" mb={unknownEntries.length > 0 ? '3' : undefined}>
-                  {unknownEntries.length > 0
-                    ? 'Words you mark as unknown stay here until you mark them as known.'
-                    : 'No words marked as unknown yet. Words you mark as unknown stay here until you mark them as known.'}
+              <Card
+                id="side-dictionary"
+                className="side-dictionary"
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape' && activeToken) {
+                    event.preventDefault()
+                    closeNote()
+                  }
+                }}
+              >
+                <Text as="p" size="1" weight="bold" className="side-eyebrow">
+                  Dictionary
                 </Text>
-                {unknownEntries.length > 0 && unknownWordList}
+                {/* Always mounted, so screen readers announce each new word and its meaning. */}
+                <div aria-live="polite">
+                  {activeToken?.type === 'word' ? (
+                    <>
+                      <button
+                        type="button"
+                        className="side-dictionary-close"
+                        aria-label="Close definition"
+                        onClick={closeNote}
+                      >
+                        <Cross2Icon />
+                      </button>
+                      <Heading as="h2" size="4" mt="1" className="side-dictionary-word">
+                        {activeToken.value}
+                      </Heading>
+                      <Text as="p" size="2" mt="1" className="side-dictionary-body">
+                        {glossBody()}
+                      </Text>
+                      <Flex gap="3" wrap="wrap" mt="2">
+                        {glossActions(activeToken.key)}
+                      </Flex>
+                    </>
+                  ) : (
+                    <Text as="p" size="2" color="gray" mt="1">
+                      Tap a word in the story to see its meaning here.
+                    </Text>
+                  )}
+                </div>
+              </Card>
+              <Card className="glossary">
+                <Flex align="center" justify="between" gap="2" mb="1">
+                  <Heading as="h2" size="4">
+                    Saved words
+                  </Heading>
+                  {/* Not pressed is Reading mode, which hides the meanings; pressed is Review mode. */}
+                  {unknownEntries.length > 0 && (
+                    <Tooltip content={reviewMode ? 'Hide meanings' : 'Show meanings'}>
+                      <IconButton
+                        variant="soft"
+                        color={reviewMode ? undefined : 'gray'}
+                        aria-label="Show meanings"
+                        aria-pressed={reviewMode}
+                        onClick={() => setReviewMode((on) => !on)}
+                      >
+                        {reviewMode ? <EyeOpenIcon /> : <EyeNoneIcon />}
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Flex>
+                <Text as="p" size="2" color="gray" mb={unknownEntries.length > 0 ? '3' : undefined}>
+                  {unknownEntries.length === 0 ? (
+                    'Nothing saved yet. Tap a word in the story and choose Save to keep it here.'
+                  ) : (
+                    // Both lines share one grid cell, so the taller one sets the height in both modes.
+                    <span className="glossary-mode-text">
+                      <span className={reviewMode ? 'is-off' : undefined} aria-hidden={reviewMode || undefined}>
+                        {wordCount} from this story. Meanings stay hidden so you can focus on reading.
+                      </span>
+                      <span className={reviewMode ? undefined : 'is-off'} aria-hidden={!reviewMode || undefined}>
+                        {wordCount} from this story. Choose × when you know a word.
+                      </span>
+                    </span>
+                  )}
+                </Text>
+                {unknownEntries.length > 0 && wordList(reviewMode)}
               </Card>
             </aside>
           )}
         </div>
       </Flex>
+
+      {!sidePanel && (
+        <div className="story-bottom-bar">
+          <div className="story-bottom-progress">
+            <Text size="2" color="gray">
+              <Text weight="bold" highContrast>{readPercent}%</Text> read
+              {unknownEntries.length > 0 && ` · ${wordCount}`}
+            </Text>
+            <Progress value={readPercent} size="1" aria-label="Reading progress" />
+          </div>
+          {unknownEntries.length > 0 && (
+            <Button size="3" onClick={() => setSheetOpen(true)}>
+              Review words
+            </Button>
+          )}
+        </div>
+      )}
+
+      <Dialog.Root open={sheetOpen} onOpenChange={setSheetOpen}>
+        <Dialog.Content
+          ref={sheetRef}
+          className="word-sheet"
+          onOpenAutoFocus={(event) => {
+            // Focus the sheet, not its first button, so the handle doesn't open with a focus ring.
+            event.preventDefault()
+            sheetRef.current?.focus()
+          }}
+          onCloseAutoFocus={(event) => {
+            // Picking a word closes the sheet and moves focus to that word instead of the button.
+            const entry = pickedFromSheet.current
+            if (!entry) return
+            event.preventDefault()
+            pickedFromSheet.current = null
+            goToWord(entry)
+          }}
+        >
+          {/* Like an iOS sheet: tap the handle, or drag the top of the sheet down, to close it. */}
+          <div
+            className="word-sheet-top"
+            onPointerDown={(event) => {
+              const onHandle = (event.target as Element).classList.contains('word-sheet-handle')
+              sheetDrag.current = { startY: event.clientY, dy: 0, onHandle }
+              // Capturing sends the click to this wrapper, so a tap on the handle closes in pointerup.
+              event.currentTarget.setPointerCapture(event.pointerId)
+            }}
+            onPointerMove={(event) => {
+              const drag = sheetDrag.current
+              const sheet = sheetRef.current
+              if (!drag || !sheet) return
+              drag.dy = Math.max(0, event.clientY - drag.startY)
+              if (drag.dy < 4) return
+              sheet.style.transition = 'none'
+              sheet.style.transform = `translateY(${drag.dy}px)`
+            }}
+            onPointerUp={() => {
+              const drag = sheetDrag.current
+              const sheet = sheetRef.current
+              sheetDrag.current = null
+              if (!drag || !sheet) return
+              sheet.style.transition = ''
+              sheet.style.transform = ''
+              if (drag.dy > 80 || (drag.onHandle && drag.dy < 4)) setSheetOpen(false)
+            }}
+            onPointerCancel={() => {
+              sheetDrag.current = null
+              if (sheetRef.current) sheetRef.current.style.transform = ''
+            }}
+          >
+            <Dialog.Close>
+              <button type="button" className="word-sheet-handle" aria-label="Close" />
+            </Dialog.Close>
+            <Dialog.Title size="4" mb="1">
+              Saved words
+            </Dialog.Title>
+          </div>
+          <Dialog.Description size="2" color="gray" mb="3">
+            {unknownEntries.length > 0
+              ? 'Tap a word to find it in the story.'
+              : 'No words left to review.'}
+          </Dialog.Description>
+          {wordList(true, true)}
+        </Dialog.Content>
+      </Dialog.Root>
     </Container>
   )
 }

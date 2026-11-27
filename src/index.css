@@ -512,16 +512,12 @@ body {
   outline-offset: 2px;
 }
 
-.glossary-known {
-  flex-shrink: 0;
-}
-
 /* The word whose meaning is shown is underlined in blue, whether or not it is marked. */
 .story-word.active {
   box-shadow: inset 0 -2px 0 var(--blue-9);
 }
 
-/* Below 941px: story, then the word list, then the finishing cards. */
+/* Below 941px: the story, then the finishing cards; the word list lives in the bottom bar's sheet. */
 .story-layout {
   display: flex;
   flex-direction: column;
@@ -657,6 +653,118 @@ body {
   margin-top: 0.25em;
   font-size: 0.875rem;
   color: var(--gray-11);
+}
+
+/* Reading mode: the meaning stays in place, each line covered by a grey bar. */
+.glossary-definition.is-hidden > span {
+  color: transparent;
+  background: var(--gray-a4);
+  border-radius: 4px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  user-select: none;
+}
+
+.glossary-definition.is-hidden .rt-Spinner {
+  visibility: hidden;
+}
+
+.glossary-unsave-hidden {
+  visibility: hidden;
+}
+
+/* The two mode lines share one grid cell, so the card's line count never changes. */
+.glossary-mode-text {
+  display: grid;
+}
+
+.glossary-mode-text > span {
+  grid-area: 1 / 1;
+}
+
+.glossary-mode-text > .is-off {
+  visibility: hidden;
+}
+
+/* Narrow screens: reading progress and Review words stay at the bottom of the screen. */
+.story-page-with-bar {
+  padding-bottom: 72px;
+}
+
+.story-bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+  border-top: 1px solid var(--gray-a5);
+  background: var(--color-panel-solid);
+}
+
+.story-bottom-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  width: 11rem;
+}
+
+/* The word list opens as a sheet from the bottom of the screen. */
+.rt-DialogScrollPadding:has(> .word-sheet) {
+  padding: 48px 0 0;
+  margin-block: auto 0;
+}
+
+.rt-DialogContent.word-sheet {
+  width: 100%;
+  max-width: 40rem;
+  max-height: 75vh;
+  margin: 0 auto;
+  border-radius: 20px 20px 0 0;
+  padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+}
+
+/* The top of the sheet, with its grab handle, can be dragged down to close it. */
+.word-sheet-top {
+  margin: calc(var(--space-5) * -1) calc(var(--space-5) * -1) 0;
+  padding: 0 var(--space-5);
+  touch-action: none;
+}
+
+.word-sheet-handle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 28px;
+  margin-bottom: var(--space-1);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+}
+
+.word-sheet-handle::before {
+  content: '';
+  width: 36px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--gray-a6);
+}
+
+.word-sheet-handle:focus-visible {
+  outline: none;
+}
+
+.word-sheet-handle:focus-visible::before {
+  outline: 2px solid var(--accent-9);
+  outline-offset: 3px;
 }
 
 .app-main {

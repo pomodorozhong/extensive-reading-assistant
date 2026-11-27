@@ -111,7 +111,7 @@ function VocabularyScene() {
         <span className="ob-vocab-row">drifted</span>
         <span className="ob-vocab-row">lantern</span>
         <span className="ob-vocab-row ob-vocab-new">
-          glimmering <span className="ob-known">✓ Known</span>
+          glimmering <span className="ob-known">✓ Learned</span>
         </span>
       </div>
     </div>
@@ -168,7 +168,7 @@ const STEPS: Step[] = [
   },
   {
     title: 'Review words in Vocabulary',
-    body: 'Words you mark as unknown wait in Vocabulary. Mark them as known once you’ve learned them.',
+    body: 'Words you save wait in Vocabulary. Unsave them once you’ve learned them.',
     scene: VocabularyScene,
   },
   {

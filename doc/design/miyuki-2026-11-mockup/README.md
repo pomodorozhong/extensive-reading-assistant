@@ -17,6 +17,6 @@ Ignore the **New Story** home screen and its **Advanced options** dialog. The te
 ## Differences from the current app
 
 - Story View has no text size or font controls.
-- In the app, tapping a word opens its meaning in a Dictionary card or note, and **Mark as unknown** tracks it. In the prototype, tapping a word collects it in the panel, and its meaning is shown only in Review mode.
+- In the app, tapping a word opens its meaning in a Dictionary card or note, and **Save** tracks it. In the prototype, tapping a word collects it in the panel, and its meaning is shown only in Review mode.
 - My Stories lists only saved stories; generated stories that were never saved are not kept.
 - The app's reading level check asks which words the reader knows. The prototype's check asks six multiple-choice questions about short passages instead.
