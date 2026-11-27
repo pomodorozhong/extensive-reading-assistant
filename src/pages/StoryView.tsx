@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, Cross2Icon, EyeNoneIcon, EyeOpenIcon } from '@radix-ui/react-icons'
+import { ArrowLeftIcon, ChevronDownIcon, Cross2Icon, EyeNoneIcon, EyeOpenIcon } from '@radix-ui/react-icons'
 import {
   Badge,
   Button,
@@ -630,8 +630,9 @@ function StoryReader({ id }: { id: string | undefined }) {
               Saved words
             </Dialog.Title>
             <Dialog.Close>
+              {/* A down chevron, not ×, which in this sheet means Unsave. */}
               <IconButton variant="ghost" color="gray" aria-label="Close">
-                <Cross2Icon />
+                <ChevronDownIcon />
               </IconButton>
             </Dialog.Close>
           </Flex>
