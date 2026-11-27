@@ -549,24 +549,16 @@ function StoryReader({ id }: { id: string | undefined }) {
                 </div>
               </Card>
               <Card className="glossary">
-                <Flex justify="between" align="center" gap="3" mb="1" wrap="wrap">
-                  <Heading as="h2" size="4">
-                    Words in this story
-                  </Heading>
-                  {unknownEntries.length > 0 && (
-                    <Flex align="center" gap="2">
-                      <Text size="1" color="gray" weight="medium" aria-hidden="true">
-                        {reviewMode ? 'Review mode' : 'Reading mode'}
-                      </Text>
-                      <Switch
-                        size="1"
-                        checked={reviewMode}
-                        onCheckedChange={setReviewMode}
-                        aria-label="Show meanings"
-                      />
-                    </Flex>
-                  )}
-                </Flex>
+                <Heading as="h2" size="4" mb="1">
+                  Words in this story
+                </Heading>
+                {/* Off is Reading mode, which hides the meanings; on is Review mode. */}
+                {unknownEntries.length > 0 && (
+                  <Text as="label" size="2" weight="medium" className="glossary-mode">
+                    Review mode
+                    <Switch size="1" checked={reviewMode} onCheckedChange={setReviewMode} />
+                  </Text>
+                )}
                 <Text as="p" size="2" color="gray" mb={unknownEntries.length > 0 ? '3' : undefined}>
                   {unknownEntries.length === 0
                     ? 'No words marked as unknown yet. Words you mark as unknown stay here until you mark them as known.'
